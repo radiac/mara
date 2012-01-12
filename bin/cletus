@@ -1,0 +1,312 @@
+#!/usr/bin/python
+
+import getopt
+import sys
+
+from socketproxy.common import Host, ProxyError
+import socketproxy.settings as settings
+import socketproxy.log as log
+
+# Exit codes
+USAGE_ERROR = 2
+RUNTIME_ERROR = 2
+
+# Help
+help_intro = """socketproxy
+
+A socket proxy to persist a session across multiple temporary connections
+"""
+help_usage = """Usage:
+    socketproxy help
+        Display this message and options
+        
+    socketproxy server [OPTIONS] TARGET:PORT
+        Run a proxy server for the specified target server
+        
+    socketproxy status [OPTIONS]
+        Display the status of the specified proxy server
+    
+    socketproxy client [OPTIONS]
+        Run the test client
+"""
+help_options = """Options:
+    -h, --help
+        Show this message
+    
+    -p IP:PORT, --proxy=IP:PORT
+        The IP and port of the socketproxy server
+        If the IP is missing, it will default to localhost
+        If the port is missing, it will default to 9009
+        Default: localhost:9009
+    
+    -l LOGFILE, --logfile=LOGFILE
+        Path to the logfile to use for the server
+        Default: /var/log/socketproxy.log
+    
+    -v, --verbosity=LEVEL
+        Log verbosity level for the server
+        """ + "        \n".join( log.help_verbosity.strip().splitlines() ) + """
+        Default: 0
+    
+    --session-timeout=SECONDS
+        How long before a session times out, in seconds
+        Default: 10
+    
+    --client-timeout=SECONDS
+        How long the client should wait for a response, in seconds
+        Default: 0.1
+    
+    --buffer-size=BYTES
+        Size of the connection buffer
+        Set this too low and suffer CPU
+        Set this too high and suffer occasional hangs in the client class
+        while the recv waits to timeout after client-timeout seconds
+        Default: 1024
+    
+    --handshake-timeout=SECONDS
+        Time allowed for the handshake, in seconds
+        Default: 10
+"""
+
+def usage(state=0):
+    if not state:
+        print help_intro
+    print help_usage
+    if not state:
+        print help_options
+    sys.exit(state)
+
+
+#
+# Command functions
+#
+
+def server(target):
+    """
+    Set up the proxy server
+    """
+    from socketproxy.server import Proxy
+    
+    proxy = Proxy(
+        target = target,
+        listen = settings.proxy_address
+    )
+    
+    exit_msg = None
+    try:
+        proxy.main()
+        
+    except ProxyError, e:
+        exit_msg = 'Fatal proxy error: %s' % e
+        log.process(msg)
+        
+    except Exception, e:
+        import traceback
+        exit_msg = "Fatal unexpected exception: %s" % e
+        log.process(
+            exit_msg,
+            traceback.format_exc(),
+        )
+    
+    log.process('Server terminating')
+    
+    # Raise exit message so process can exit correctly
+    if exit_msg:
+        raise ProxyError(exit_msg)
+
+def status():
+    """
+    Connect to the proxy server and perform a command
+    """
+    from socketproxy.client import Client
+    import socketproxy.handshake as handshake
+
+    client = Client(settings.proxy_address)
+    
+    # Build and send command handshake
+    msg = handshake.hello("%s;%s" % (handshake.HELLO_CMD, handshake.CMD_STATUS))
+    client.send(msg)
+    reply = client.recv()
+    client.close()
+    
+    return reply
+
+
+def client():
+    """
+    Command-line polling client for testing
+    """
+    from socketproxy.client import PollingClientSession
+    
+    id = None
+    secret = None
+    
+    print "Type: ` to poll without sending anything, `! to disconnect"
+    running = True
+    user = ''
+    while running:
+        # Create the client
+        try:
+            client = PollingClientSession(settings.proxy_address, id, secret)
+        except ProxyError, e:
+            print "Error connecting: %s" % e
+            break
+        
+        # Send
+        if user:
+            client.send(user)
+        
+        # Get data
+        try:
+            response = client.recv()
+        except ProxyError, e:
+            print "Error reading: %s" % e
+            break
+        
+        if response:
+            print response
+        
+        id = client.id
+        secret = client.secret
+        client.close()
+        
+        # Ask for input
+        user = raw_input("> ") + "\r\n"
+        
+        if user.rstrip() == '`':
+            user = ''
+        elif user.rstrip() == "`!":
+            running = False
+    
+    print "Disconnected"
+
+
+#
+# Argument parser and command dispatcher
+#
+def parse_host(raw, default=None):
+    """
+    Parse a string in the format [IP][:Port] and return a Host
+    Raises a ValueError if it is not a full definition and no default is provided
+    """
+    parts = raw.split(':', 2)
+    
+    # Sort out host
+    host = parts[0]
+    if not host:
+        if not default:
+            raise ValueError('No host provided')
+        host = default.host
+    
+    # Sort out port
+    if len(parts) == 2 and parts[1]:
+        try:
+            port = int(parts[1])
+        except ValueError, e:
+            raise ValueError('Invalid port provided; %s' % e)
+    elif not default:
+        raise ValueError('No port provided')
+    else:
+        port = default.port
+    
+    return Host(host, port)
+    
+def main(argv):
+    """
+    Main function to parse arguments and dispatch
+    """
+    # Find command
+    if len(argv) < 1:
+        usage(USAGE_ERROR)
+    cmd = argv.pop(0)
+    
+    try:
+        opts, args = getopt.getopt(argv, 'hp:d', [
+            'help', 'proxy=', 'logfile=', 'verbosity=',
+            'session-timeout=', 'client-timeout=',
+            'buffer-size=', 'handshake-timeout='
+        ])
+    except getopt.GetoptError, e:
+        print "Invalid command line options: %s" % e
+        usage(USAGE_ERROR)
+    
+    # Process options
+    for opt, arg in opts:
+        if opt in ('-h', '--help'):
+            usage()
+        
+        elif opt == '--logfile':
+            settings.logfile = arg
+        
+        elif opt == '--verbosity':
+            settings.verbosity = int(arg)
+        
+        elif opt == '--session-timeout':
+            settings.session_timeout = datetime.timedelta(seconds=float(arg))
+        
+        elif opt == '--client-timeout':
+            settings.client_timeout = float(arg)
+        
+        elif opt == '--buffer-size':
+            settings.buffer_size = int(arg)
+        
+        elif opt == '--handshake-timeout':
+            settings.handshake_timeout = datetime.timedelta(seconds=float(arg))
+            
+        elif opt in ('-p', '--proxy'):
+            settings.proxy_address = parse_host(arg, settings.proxy_address)
+        
+    # Server
+    if cmd == 'help':
+        usage()
+        
+    elif cmd == 'server':
+        # One argument, target:port
+        if len(args) != 1:
+            usage(USAGE_ERROR)
+        
+        try:
+            target = parse_host(args[0])
+        except ValueError, e:
+            print "Invalid target host: %s" % e
+            usage(USAGE_ERROR)
+        
+        # Run the server
+        try:
+            server(target)
+        except ProxyError, e:
+            print >> sys.stderr, "Error: %s" % e
+            sys.exit(RUNTIME_ERROR)
+    
+    elif cmd == 'status':
+        if len(args) > 0:
+            usage(USAGE_ERROR)
+            
+        # Run the status
+        try:
+            print status()
+        except ProxyError, e:
+            print >> sys.stderr, "Error: %s" % e
+            sys.exit(RUNTIME_ERROR)
+    
+    elif cmd == 'client':
+        if len(args) > 0:
+            usage(USAGE_ERROR)
+            
+        # Run the client
+        try:
+            client()
+        except ProxyError, e:
+            print >> sys.stderr, "Error: %s" % e
+            sys.exit(RUNTIME_ERROR)
+    
+    else:
+        usage(USAGE_ERROR)
+
+
+if __name__ == "__main__":
+    try:
+        main(sys.argv[1:])
+    except KeyboardInterrupt:
+        sys.exit(1)
+

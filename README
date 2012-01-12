@@ -1,5 +1,32 @@
-socketproxy
+cletus
 ===========
+
+
+Developer Overview
+------------------
+
+The cletus script in bin calls cletus.cli.run, which starts a core.Manager:
+
+    manager = cletus.core.Manager(settings)
+    manager.start()
+
+That will initialise commands and plugins, then create a connection.Server,
+which will in turn create each user.User as they connect.
+
+
+self.settings = manager.settings;
+
+
+Known bugs
+----------
+2.0.0   2.0.x   Denial of service is possible
+                Solution: The max_connections refusal should try to disconnect
+                any unnamed user, oldest first, before refusing new connections
+                Change: connection.Server._new_client
+
+
+OLD
+===
 
 This socket proxy is designed to persist a session across multiple temporary
 connections, primarily to build HTTP gateways. This package includes an example

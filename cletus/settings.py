@@ -10,9 +10,11 @@ import datetime
 
 # IP to listen on
 # Set to '' for all
+# Override with --host=HOST
 host = ''
 
 # Port to listen on
+# Override with --port=PORT
 port = 9000
 
 # Time to listen to the socket before polling other tasks
@@ -49,7 +51,7 @@ timeout_named = 0
 #
 
 # Path to plugin directory
-plugin_path = '.'
+plugins = None
 
 
 #
@@ -57,10 +59,16 @@ plugin_path = '.'
 #
 
 # Path to logfile
+# Override with --logfile=PATH
 logfile = 'cletus.log'
+
+# Debug mode
+# Logging is sent to STDOUT instead of the log file
+debug = False
 
 # Log verbosity
 # See log.py for levels
+# Override with --verbosity=LEVEL
 verbosity = 0
 
 # Log with process ID

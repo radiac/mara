@@ -75,7 +75,7 @@ Manager to make it check for rooms when listing or sending to users.
 
 Changelog
 ---------
-2.0.0       Initial release of new version in python
+0.0.1       Initial release of new version in python
 
 
 Known bugs
@@ -85,8 +85,8 @@ None
 
 Roadmap
 -------
-2.1.0       Command support
-            Different Manager styles (IRC, MUD)
-2.2.0       Event support
-2.3.0       Plugin support
-2.4.0       Persistent storage for user data
+0.1.0       Implement events
+            Finish implementing command support
+            Shift login and IRC-style chat out of core into plugins using events
+            Write MUD-style chat plugins
+0.2.0       Persistent storage for user data

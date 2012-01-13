@@ -20,6 +20,18 @@ help_options = """Options:
     -h, --help
         Show this message
     
+    --host=HOST
+        Host to listen on
+        Default: '' (all)
+    
+    --port=PORT
+        Port to listen on
+        Default: 9000
+    
+    --plugins=PATH
+        Path to plugin directory
+        Default: None
+    
     -l LOGFILE, --logfile=LOGFILE
         Path to the logfile to use for the server
         Default: /var/log/socketproxy.log
@@ -40,17 +52,6 @@ def usage(state=0):
 
 
 #
-# Command functions
-#
-
-def cmd_run():
-    """
-    Set up the proxy server
-    """
-    cli.run(settings)
-    
-   
-#
 # Argument parser and command dispatcher
 #
 
@@ -58,14 +59,10 @@ def main(argv):
     """
     Main function to parse arguments and dispatch
     """
-    # Find command
-    cmd = None
-    if len(argv) > 0:
-        cmd = argv.pop(0)
-    
+    # Find options
     try:
-        opts, args = getopt.getopt(argv, 'hp:d', [
-            'help', 'logfile=', 'verbosity=',
+        opts, args = getopt.getopt(argv, 'hd', [
+            'help', 'logfile=', 'verbosity=', 'plugins=', 'debug'
         ])
     except getopt.GetoptError, e:
         print "Invalid command line options: %s" % e
@@ -81,12 +78,15 @@ def main(argv):
         
         elif opt == '--verbosity':
             settings.verbosity = int(arg)
+            
+        elif opt == '--plugins':
+            settings.plugins = arg
+        
+        elif opt in ('-d', '--debug'):
+            settings.debug = True
         
     # Server
-    if cmd:
-        usage(USAGE_ERROR)
-    else:
-        cmd_run()
+    cli.run(settings)
 
 
 if __name__ == "__main__":

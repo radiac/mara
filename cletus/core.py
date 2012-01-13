@@ -4,6 +4,7 @@ Cletus core
 
 from cletus.connection import Server
 import cletus.log as log
+from cletus.plugins import PluginRegistry
 import cletus.util as util
 
 class Manager(object):
@@ -17,8 +18,8 @@ class Manager(object):
         self._users = []
         self.server = None
         
-        # Load plugins
-        # ++
+        # Initialise plugin registry
+        self.plugins = PluginRegistry(self)
     
     
     #
@@ -30,6 +31,11 @@ class Manager(object):
         Start the server
         """
         log.manager('Manager starting')
+        
+        # Load plugins
+        self.plugins.load()
+        
+        # Start server
         self.server = Server(self)
         self.server.listen()
         
@@ -69,6 +75,8 @@ class Manager(object):
     #
     # User management
     #
+    
+    # +++ MOVE FROM HERE INTO PLUGINS USING EVENTS
     
     def find_others(self, target):
         """

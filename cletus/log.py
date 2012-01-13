@@ -12,25 +12,29 @@ import settings
 NONE        = 0
 MANAGER     = 1
 SERVER      = 2
-CLIENT      = 3
+PLUGIN      = 3
+CLIENT      = 4
+DEBUG       = 5
 
 help_verbosity = '''
 0 = No logging
 1 = Manager events (start, stop)
 2 = Server events (start, stop)
-3 = Client events (connect, disconnect)
+3 = Plugin events (load, error)
+4 = Client events (connect, disconnect)
+5 = Debug messages
 '''
 
 class Logger(object):
-    def __init__(self, disabled=False):
+    def __init__(self):
         """
         Initialise
         """
         # Start disabled, so open() will not close()
-        self.disabled = True
+        self.file = None
         self.prefix = ''
         
-    def open(self, disabled=False):
+    def open(self):
         """
         Open or re-open the log file
         Call this if:
@@ -41,9 +45,12 @@ class Logger(object):
         self.close()
         
         # Disable
-        self.disabled = True
-        if disabled:
+        if settings.verbosity == NONE:
             # This logger is supposed to be turned off
+            return
+        
+        # See if printing to STDOUT
+        if settings.debug:
             return
         
         # Try to enable
@@ -63,7 +70,7 @@ class Logger(object):
         Write lines to the log file
         """
         # Skip if disabled, or verbosity says no
-        if self.disabled or level > settings.verbosity:
+        if level > settings.verbosity:
             return
         
         # Add pid prefix
@@ -73,6 +80,12 @@ class Logger(object):
             prefix = datetime.datetime.today().strftime('%b %d %X') + " " + prefix
             lines = [prefix + line for line in lines]
         
+        
+        # See if printing to STDOUT
+        if not self.file:
+            print "\n".join(lines)
+            return
+        
         # Write lines
         self.file.write("\n".join(lines) + "\n")
         self.file.flush()
@@ -81,9 +94,8 @@ class Logger(object):
         """
         Close the log file
         """
-        if self.disabled:
-            return
-        self.file.close()
+        if self.file:
+            self.file.close()
     
     def __del__(self):
         """
@@ -93,8 +105,8 @@ class Logger(object):
         self.close()
         
 
-# Initialise logger; disable if verbosity == NONE
-logger = Logger( disabled=(settings.verbosity == NONE) )
+# Initialise logger
+logger = Logger()
 
 def init():
     """
@@ -102,21 +114,13 @@ def init():
     """
     logger.open()
 
-def manager(*lines):
-    """
-    Log a manager event
-    """
-    logger.write(MANAGER, *lines)
+def logger_factory(level):
+    def fn(*lines):
+        logger.write(level, *lines)
+    return fn
 
-def server(*lines):
-    """
-    Log a server event
-    """
-    logger.write(SERVER, *lines)
-
-def client(*lines):
-    """
-    Log a client event
-    """
-    logger.write(CLIENT, *lines)
-
+manager = logger_factory(MANAGER)
+server = logger_factory(SERVER)
+plugin = logger_factory(PLUGIN)
+client = logger_factory(CLIENT)
+debug = logger_factory(DEBUG)

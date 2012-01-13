@@ -1,6 +1,57 @@
 cletus
 ===========
 
+Installation
+------------
+
+Installation is easy:
+  python setup.py install
+
+Alternatively, you may prefer to install it into a virtual environment:
+  mkdir cletus
+  virtualenv --clear --distribute socketproxy
+  pip -E cletus install -e git+ssh://git@uzeweb.com/radiac-projects/cletus.git#egg=cletus
+
+
+Running the server
+------------------
+
+To run a server:
+  cletus run
+
+If you installed it into a virtual environment, remember to switch into that first:
+  cd cletus
+  source bin/activate
+  cletus run
+
+
+Running the server as a daemon
+------------------------------
+
+The recommended method is using ``upstart``:
+  http://upstart.ubuntu.com/
+  
+Chances are your linux distribution will at least support it, if not already
+have it installed.
+
+Create an upstart script 'cletus', (probably in /etc/init/ or /etc/event.d/):
+
+  description "Cletus server for localhost:9000"
+  start on runlevel [2345]
+  stop on runlevel [!2345]
+  respawn
+  exec /usr/bin/cletus run
+
+If you installed into a virtual environment, change the exec path to cletus:
+  exec /path/to/cletus/bin/cletus
+
+Customising this should be obvious; just change the description and exec lines
+to reflect what you're doing.
+
+You can then start and stop the process using upstart:
+  sudo start cletus
+  sudo stop cletus
+
 
 Developer Overview
 ------------------
@@ -16,148 +67,26 @@ which will in turn create each user.User as they connect.
 
 self.settings = manager.settings;
 
-
-Known bugs
-----------
-2.0.0   2.0.x   Denial of service is possible
-                Solution: The max_connections refusal should try to disconnect
-                any unnamed user, oldest first, before refusing new connections
-                Change: connection.Server._new_client
-
-
-OLD
-===
-
-This socket proxy is designed to persist a session across multiple temporary
-connections, primarily to build HTTP gateways. This package includes an example
-HTTP to telnet gateway.
-
-The flow of connections would typically look something like this:
-
-  Website <--JSON--> CGI socketproxy client <--> socketproxy <--> Destination
-
-The core of this package is the ``socketproxy`` script, which runs a the proxy
-server. This listens on a port (by default ``localhost:9009``) for connections
-by a socketproxy client.
-
-When a socketproxy client connects, the proxy server will create a new session
-and a new connection to the destination server. Behind the scenes, this
-session will be assigned a unique ID and a secret for authentication, which
-will be returned to the client using a simple handshake protocol.
-
-The client can now disconnect, and the session and connection to the
-destination server will be preserved. Any data that the destination server
-sends will be buffered for when the session is resumed.
-
-The session can be resumed by a new socketproxy client, provided it sends the
-correct ID and matching secret in the connection handshake. Once authenticated,
-any information on the buffer will now be sent to the client.
-
-
-Installation
-------------
-
-Installation is easy:
-  python setup.py install
-
-Alternatively, you may prefer to install it into a virtual environment:
-  mkdir socketproxy
-  virtualenv --clear --distribute socketproxy
-  pip -E socketproxy install -e git+ssh://git@uzeweb.com/antikaria/proxy.git#egg=socketproxy
-
-
-Running the proxy server
-------------------------
-
-To run a proxy server for ``example.com:9000``, listening for proxy clients on ``localhost:9009``:
-  socketproxy server --proxy=localhost:9009 example.com:9000
-
-Actually, the default proxy address is ``localhost:9009``, so you could shorten the above to:
-  socketproxy server example.com:9000
-
-Both the proxy address IP and port are optional and will default independently, so these are equal:
-  socketproxy server --proxy=localhost example.com:9000
-  socketproxy server --proxy=:9009 example.com:9000
-
-If you installed it into a virtual environment, remember to switch into that first:
-  cd socketproxy
-  source bin/activate
-  socketproxy server example.com:9000
-
-
-Running the proxy server as a daemon
-------------------------------------
-
-The recommended method is using ``upstart``:
-  http://upstart.ubuntu.com/
-  
-Chances are your linux distribution will at least support it, if not already
-have it installed.
-
-In the root of this package, there is an example upstart.conf file:
-
-  description "Socketproxy server for example.com:9000"
-  start on runlevel [2345]
-  stop on runlevel [!2345]
-  respawn
-  exec /usr/bin/socketproxy server\
-   --proxy=localhost:9009 example.com:9000
-
-Customising this should be obvious; just change the description and exec lines
-to reflect what you're doing.
-
-Installing in Ubuntu 8.10 and earlier:
-  sudo cp upstart.conf.example /etc/event.d/socketproxy_example
-
-Installing in Ubuntu 9.04 and later:
-  sudo cp upstart.conf.example /etc/init/socketproxy_example.conf
-
-You can then start and stop the process using upstart:
-  sudo start socketproxy_example
-  sudo stop socketproxy_example
-
-
-Testing with the command line client
-------------------------------------
-
-To run the test command line client against the proxy server on ``localhost:9009``:
-  socketproxy client
-
-Again, the default proxy address is ``localhost:9009``, but it can be
-overridden by the ``--proxy`` option.
-
-This will talk to the proxy and let you test if things are working. It's fairly
-basic implementation of a simple polling model; every time you press enter, a
-new connection will be made to the socketproxy server, and any buffered data in
-the session will be sent through to the test client.
-
-
-Managing the proxy server
--------------------------
-
-The ``socketproxy`` script supports a couple of management commands
-This will let you issue management commands to the running server.
-
-To display information about the current connections and sessions:
-  socketproxy status
-
-
-Running a web client
---------------------
-
-An example polling client is provided in the web directory. It will need socketproxy to be in the library path.
+The code is designed so that most changes can be achieved by creating plugins
+or by subclassing Manager. For example, to add support for rooms you would make
+a 'rooms' plugin, set the property on the user's plugin data, then subclass
+Manager to make it check for rooms when listing or sending to users.
 
 
 Changelog
 ---------
-0.0.1       Polling mode ready
-0.1.0       Logging, changed order of connect() so no longer blocking
+2.0.0       Initial release of new version in python
+
 
 Known bugs
 ----------
-None at this time
+None
+
 
 Roadmap
 -------
-0.2.0       Mode for comet
-0.3.0       Mode for comet through nginx
+2.1.0       Command support
+            Different Manager styles (IRC, MUD)
+2.2.0       Event support
+2.3.0       Plugin support
+2.4.0       Persistent storage for user data

@@ -2,5 +2,8 @@
 Functionality for calls from the command line
 """
 
-# run
-# restart
+from cletus.core import Manager
+
+def run(settings):
+    manager = Manager(settings)
+    manager.start()

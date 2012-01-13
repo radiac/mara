@@ -3,8 +3,9 @@
 import getopt
 import sys
 
-import cletus.settings as settings
 import cletus.cli as cli
+import cletus.log as log
+import cletus.settings as settings
 
 # Help
 help_intro = """cli
@@ -42,12 +43,12 @@ def usage(state=0):
 # Command functions
 #
 
-def cmd_run(target):
+def cmd_run():
     """
     Set up the proxy server
     """
     cli.run(settings)
-   
+    
    
 #
 # Argument parser and command dispatcher
@@ -89,4 +90,7 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    try:
+        main(sys.argv[1:])
+    except KeyboardInterrupt:
+        sys.exit(1)

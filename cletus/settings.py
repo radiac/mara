@@ -1,23 +1,34 @@
+"""
+Cletus settings
+"""
+
 import datetime
 
 #
 # Connection
 #
 
-# Host and port to bind to
-host = 'localhost'
+# IP to listen on
+# Set to '' for all
+host = ''
+
+# Port to listen on
 port = 9000
 
-# Default size of socket buffer
-buffer_size = 1024
+# Time to listen to the socket before polling other tasks
+# Floating point number in seconds
+listen_for = 1
+
+# Size of socket buffer
+socket_buffer_size = 1024
+
+# Internal buffer size
+# Maximum length of a single line of input
+# Set to 0 for no limit
+internal_buffer_size = 10240
 
 # Keepalive
 keepalive = True
-
-# Maximum number of connections at any one time
-# Set to 0 to remove limit on trusted networks
-# After this limit is reached, new connections will be refused
-max_connections = 1000
 
 
 #
@@ -25,10 +36,20 @@ max_connections = 1000
 #
 
 # Timeout once the user has first connected
-timeout_connected = datetime.timedelta(seconds=30)
+timeout_unnamed = datetime.timedelta(seconds=30)
 
 # Timeout after the user has identified themselves (if user.name != None)
-timeout_user = datetime.timedelta(minutes=5)
+# Set to 0 for no limit
+#timeout_named = datetime.timedelta(minutes=5)
+timeout_named = 0
+
+
+#
+# Customisation
+#
+
+# Path to plugin directory
+plugin_path = '.'
 
 
 #
@@ -36,7 +57,7 @@ timeout_user = datetime.timedelta(minutes=5)
 #
 
 # Path to logfile
-logfile = '/var/log/socketproxy.log'
+logfile = 'cletus.log'
 
 # Log verbosity
 # See log.py for levels

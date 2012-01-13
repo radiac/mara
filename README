@@ -1,5 +1,5 @@
 cletus
-===========
+======
 
 Installation
 ------------
@@ -9,7 +9,7 @@ Installation is easy:
 
 Alternatively, you may prefer to install it into a virtual environment:
   mkdir cletus
-  virtualenv --clear --distribute socketproxy
+  virtualenv --clear --distribute cletus
   pip -E cletus install -e git+ssh://git@uzeweb.com/radiac-projects/cletus.git#egg=cletus
 
 

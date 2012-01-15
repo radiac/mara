@@ -4,6 +4,7 @@ Plugin management
 
 import os
 
+from cletus.events import listen_factory, Event
 import cletus.log as log
 
 def RegistryType_factory(reg_list):
@@ -28,6 +29,7 @@ class PluginRegistry(object):
         self.reset()
     
     def reset(self):
+        self.manager.events.call('reload')
         self._input_processors = []
     
     commands = property(lambda self: self._commands, doc="Commands")
@@ -46,30 +48,35 @@ class PluginRegistry(object):
             __metaclass__ = RegistryType_factory(self._input_processors)
             abstract = True
         
-        env_local = {}
         env_global = {
             'manager':  self.manager,
+            'events':   self.manager.events,
+            'listen':   listen_factory(self.manager.events),
             'InputProcessor':  InputProcessor
         }
-        
+
         for plugin_file in self._find_files():
             log.plugin('Plugin found: %s' % plugin_file)
             try:
-                execfile(plugin_file, env_global, env_local)
+                execfile(plugin_file, env_global)
             except Exception, e:
                 from traceback import print_exc, format_exception
+                import sys
                 exceptions = format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)
                 log.plugin(
                     'Plugin error: %s' % str(sys.exc_info()[0]), *exceptions
                 )
-    
-    def _find_files(self):
+        self.manager.events.call('init')
+        
+    def _find_files(self, path=None):
         """
         Get a list of all plugins
         Plugin filenames must start with a number and end in '.py'
         They are sorted alphanumerically
         """
-        path = os.path.abspath(self.path)
+        if not path:
+            path = os.path.abspath(self.path)
+        
         files = os.listdir(path)
         files.sort()
         found = []

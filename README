@@ -73,6 +73,51 @@ a 'rooms' plugin, set the property on the user's plugin data, then subclass
 Manager to make it check for rooms when listing or sending to users.
 
 
+Writing plugins
+---------------
+
+Although plugins are in separate files, they share scope - a function defined
+in one can be accessed in another.
+
+They are loaded in alphanumeric order, depth-first; that is 10-mud/20-comm.py
+will be loaded before 10-zoo.py.
+
+The following variables will be available in the scope:
+
+    manager     The manager object
+    events      The events registry (manager.events)
+    @listen     Decorator for functions which need to listen to events
+    InputProcessor  The InputProcessor class
+
+
+Events
+------
+
+Event objects have the following attributes:
+    name        Name of the event
+    handled     If a handler sets this to True, no more handlers will be called
+    registry    The EventRegistry which raised this
+    manager     The Manager instance
+
+Events may also add their own attributes to the Event object - see below.
+
+Events:
+
+init            Called once all plugins have loaded
+reload          Called when plugins are about to be reloaded (followed by init)
+start           Server initialised but not yet listening
+
+connect         A user has connected
+                    user        User object
+disconnect      A user has disconnected
+                    user        User object
+input           A user has sent input
+                    user        User object
+                    input       Line of input from user
+poll            Called each server loop
+shutdown        The server is about to shut down
+
+
 Changelog
 ---------
 0.0.1       Initial release of new version in python

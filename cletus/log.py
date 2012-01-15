@@ -14,15 +14,17 @@ MANAGER     = 1
 SERVER      = 2
 PLUGIN      = 3
 CLIENT      = 4
-DEBUG       = 5
+EVENT       = 5
+DEBUG       = 6
 
 help_verbosity = '''
 0 = No logging
-1 = Manager events (start, stop)
-2 = Server events (start, stop)
-3 = Plugin events (load, error)
-4 = Client events (connect, disconnect)
-5 = Debug messages
+1 = Manager (start, stop)
+2 = Server (start, stop)
+3 = Plugin registry (load, error)
+4 = Event registry (listen, unlisten)
+5 = Client (connect, disconnect)
+6 = Debug messages (event calls)
 '''
 
 class Logger(object):
@@ -123,4 +125,5 @@ manager = logger_factory(MANAGER)
 server = logger_factory(SERVER)
 plugin = logger_factory(PLUGIN)
 client = logger_factory(CLIENT)
+event = logger_factory(EVENT)
 debug = logger_factory(DEBUG)

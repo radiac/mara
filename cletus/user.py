@@ -99,7 +99,7 @@ class User(object):
             callback(self, line)
             
         else:
-            self.manager.process(self, line)
+            self.manager.input(self, line)
         
     def write(self, *lines):
         """

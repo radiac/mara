@@ -12,23 +12,27 @@ def listen_factory(registry):
         return closed
     return decorator
 
-reserved = ['name', 'handled', 'registry', 'manager']
+reserved = ['name', 'registry', 'manager', 'stop']
 class Event(object):
     """
     Event object
     """
-    def __init__(self, *args, **kwargs):
-        self.args = args
-        
+    def __init__(self, **kwargs):
         for (kwarg, val) in kwargs.items():
-            if kwarg in reserved:
+            if kwarg in reserved or kwarg[0] == '_':
                 raise KeyError('The event argument %s is reserved for internal use' % kwarg)
             setattr(self, kwarg, val)
         
         self.name       = None
-        self.handled    = False
+        self._stopped   = False
         self.registry   = None
         self.manager    = None
+    
+    def stop(self):
+        """
+        Stop the event from being passed to any more handlers
+        """
+        self._stopped = True
 
 class EventRegistry(object):
     def __init__(self, manager):
@@ -51,6 +55,7 @@ class EventRegistry(object):
     
     def call(self, name, event=None):
         log.debug('Event %s' % name)
+        
         if not self.registry.has_key(name):
             return
         
@@ -60,6 +65,6 @@ class EventRegistry(object):
         
         for handler in self.registry[name]:
             handler(event)
-            if event.handled:
+            if event._stopped:
                 break
         

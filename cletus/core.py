@@ -78,7 +78,14 @@ class Manager(object):
         A poll from the server
         """
         self.events.call('poll')
-            
+    
+    def reload(self):
+        """
+        Reset events and reload plugins
+        """
+        self.events.reset()
+        self.plugins.load()
+
     def stop(self):
         """
         Stop the server

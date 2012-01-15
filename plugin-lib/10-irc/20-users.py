@@ -7,12 +7,12 @@ def user_name_validate(target, name):
     Validate user's name
     """
     if not name.isalnum():
-        target.write('Names must consist of only letters and numbers')
+        write(target, 'Names must consist of only letters and numbers')
         return False
     
     for user in manager.users:
         if user.name == name:
-            target.write('That name is already taken')
+            write(target, 'That name is already taken')
             return False
     return True
 
@@ -29,9 +29,9 @@ def user_named(user, name):
     # Look
     others = find_others(user)
     if len(others) == 1:
-        user.write('Also here: %s' % ', '.join([o.name for o in others]))
+        write(user, 'Also here: %s' % ', '.join([o.name for o in others]))
     else:
-        user.write('Nobody else is here.')
+        write(user, 'Nobody else is here.')
 
    
 #
@@ -43,8 +43,8 @@ def connect(e):
     """
     Do something when the user connected
     """
-    e.user.write('-- Welcome to Cletus --')
-    e.user.prompt('Enter your name: ', user_named, user_name_validate)
+    write(e.user, '-- Welcome to Cletus --')
+    prompt(e.user, 'Enter your name: ', user_named, user_name_validate)
 
 @listen('disconnect')
 def disconnect(e):

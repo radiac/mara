@@ -95,9 +95,9 @@ Events
 
 Event objects have the following attributes:
     name        Name of the event
-    handled     If a handler sets this to True, no more handlers will be called
     registry    The EventRegistry which raised this
     manager     The Manager instance
+    stop()      If a handler calls this, no more handlers will be called
 
 Events may also add their own attributes to the Event object - see below.
 
@@ -120,8 +120,12 @@ shutdown        The server is about to shut down
 
 Changelog
 ---------
-0.0.1       Initial release of new version in python
-
+0.0.1       2012-01-13
+            Feature: Initial release of new version in python
+0.1.0       2012-01-15
+            Feature: Events, plugins
+            Feature: IRC- and MUD-style chat
+            Internal: Moved all non-core code into plugins
 
 Known bugs
 ----------
@@ -130,8 +134,9 @@ None
 
 Roadmap
 -------
-0.1.0       Implement events
-            Finish implementing command support
-            Shift login and IRC-style chat out of core into plugins using events
-            Write MUD-style chat plugins
 0.2.0       Persistent storage for user data
+                Collect from user._data, or event?
+                Non-persistent user._data storage using prefix or different store?
+            Logins
+0.3.0       Multiple room support
+0.3.1       Inventory and items

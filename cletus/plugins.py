@@ -7,21 +7,6 @@ import os
 from cletus.events import listen_factory, Event
 import cletus.log as log
 
-def RegistryType_factory(reg_list):
-    """
-    A metaclass to add classes to a registry list
-    """
-    class RegistryType(type):
-        def __new__(cls, name, bases, dct):
-            new_cls = super(RegistryType, cls).__new__(cls, name, bases, dct)
-            
-            if not dct.get('abstract', False):
-                reg_list.append(new_cls)
-            
-            return new_cls
-    return RegistryType
-
-
 class PluginRegistry(object):
     def __init__(self, manager):
         self.manager = manager
@@ -43,16 +28,10 @@ class PluginRegistry(object):
         if not self.path:
             return
         
-        # Define registry classes, bound to attributes on this instance
-        class InputProcessor(object):
-            __metaclass__ = RegistryType_factory(self._input_processors)
-            abstract = True
-        
         env_global = {
             'manager':  self.manager,
             'events':   self.manager.events,
-            'listen':   listen_factory(self.manager.events),
-            'InputProcessor':  InputProcessor
+            'listen':   listen_factory(self.manager.events)
         }
 
         for plugin_file in self._find_files():

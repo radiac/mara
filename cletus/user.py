@@ -3,6 +3,7 @@ User management
 """
 
 import datetime
+import socket
 
 class User(object):
     """
@@ -45,6 +46,14 @@ class User(object):
         doc = 'Get or set the user name'
     )
     
+    def store(self, name):
+        """
+        Get a store
+        """
+        if not self._data.has_key(name):
+            self._data[name] = {}
+        return self._data[name]
+        
     def timeout(self, when):
         """
         See if the user has timed out at the given time
@@ -83,44 +92,20 @@ class User(object):
         if not "\r\n" in self.buffer:
             return
         
-        # Split off first line
+        # Send first line for processing
         (line, self.buffer) = self.buffer.split("\r\n")
-        
-        # See if this is a prompt
-        if self._prompt:
-            if self._prompt.has_key('validate'):
-                if not self._prompt['validate'](self, line):
-                    self.prompt(**self._prompt)
-                    return
-            
-            # Get the callback, then clear the prompt        
-            callback = self._prompt['callback']
-            self._prompt = None
-            callback(self, line)
-            
-        else:
-            self.manager.input(self, line)
+        self.manager.input(self, line)
         
     def write(self, *lines):
         """
         Send data
         """
-        self.socket.send("\r\n".join(lines) + "\r\n")
-    
-    def prompt(self, prompt, callback, validate=None):
-        """
-        Send a prompt and get a single line in response
-        The callback and validate functions will be passed:
-            user    This user
-            data    The response from the user
-        The validate function must return a boolean value
-        """
-        self.socket.send(prompt)
-        self._prompt = {
-            'prompt':   prompt,
-            'callback': callback,
-            'validate': validate
-        }
+        if not self.socket:
+            return
+        try:
+            self.socket.send("\r\n".join(lines) + "\r\n")
+        except socket.error, e:
+            self.disconnected()
         
     def close(self):
         """
@@ -134,4 +119,5 @@ class User(object):
         """
         The socket has been closed
         """
+        self.socket = None
         self._is_connected = False

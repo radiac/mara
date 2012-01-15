@@ -9,6 +9,12 @@ def find_others(target):
     """
     return [user for user in manager.users if user.name and user != target]
     
+def write(user, *lines):
+    """
+    Write something to a user
+    """
+    user.write(*lines)
+    
 def write_all(*lines):
     """
     Write something to everyone who has logged on
@@ -17,7 +23,7 @@ def write_all(*lines):
         if user.name:
             user.write(*lines)
     
-def write_except(self, target, *lines):
+def write_except(target, *lines):
     """
     Write something to everyone except the specified user
     """

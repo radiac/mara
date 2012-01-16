@@ -5,52 +5,65 @@ Installation
 ------------
 
 Installation is easy:
-  python setup.py install
+    python setup.py install
 
 Alternatively, you may prefer to install it into a virtual environment:
-  mkdir cletus
-  virtualenv --clear --distribute cletus
-  pip -E cletus install -e git+ssh://git@uzeweb.com/radiac-projects/cletus.git#egg=cletus
+    mkdir cletus
+    virtualenv --clear --distribute cletus
+    pip -E cletus install -e git+ssh://git@uzeweb.com/radiac-projects/cletus.git#egg=cletus
+
+If you're missing virtualenv and pip, install them in ubuntu with:
+    apt-get install python-setuptools python-dev build-essential
+    easy_install -U pip
+    pip install -U virtualenv
 
 
 Running the server
 ------------------
 
 To run a server:
-  cletus run
+    cletus run
 
 If you installed it into a virtual environment, remember to switch into that first:
-  cd cletus
-  source bin/activate
-  cletus run
+    cd cletus
+    source bin/activate
+    cletus
+
+You could also run it by specifying the full path to the command:
+    cletus/bin/cletus
 
 
 Running the server as a daemon
 ------------------------------
 
 The recommended method is using ``upstart``:
-  http://upstart.ubuntu.com/
+    http://upstart.ubuntu.com/
   
 Chances are your linux distribution will at least support it, if not already
 have it installed.
 
-Create an upstart script 'cletus', (probably in /etc/init/ or /etc/event.d/):
+Your upstart script should be:
 
-  description "Cletus server for localhost:9000"
-  start on runlevel [2345]
-  stop on runlevel [!2345]
-  respawn
-  exec /usr/bin/cletus run
+    description "Cletus server for localhost:9000"
+    start on runlevel [2345]
+    stop on runlevel [!2345]
+    respawn
+    exec /usr/bin/cletus
+
+If your version of upstart supports user jobs it would be best to put it there,
+otherwise if it's in ''/etc/init/'' or ''/etc/event.d/'' you will probably want
+to change user to avoid running it as root (replace ARGS with cletus args):
+    exec start-stop-daemon --start --chuid USER --exec /usr/bin/cletus -- ARGS
 
 If you installed into a virtual environment, change the exec path to cletus:
-  exec /path/to/cletus/bin/cletus
+    exec /path/to/cletus/bin/cletus
 
 Customising this should be obvious; just change the description and exec lines
 to reflect what you're doing.
 
 You can then start and stop the process using upstart:
-  sudo start cletus
-  sudo stop cletus
+    sudo start cletus
+    sudo stop cletus
 
 
 Developer Overview
@@ -63,9 +76,6 @@ The cletus script in bin calls cletus.cli.run, which starts a core.Manager:
 
 That will initialise commands and plugins, then create a connection.Server,
 which will in turn create each user.User as they connect.
-
-
-self.settings = manager.settings;
 
 The code is designed so that most changes can be achieved by creating plugins
 or by subclassing Manager. For example, to add support for rooms you would make
@@ -122,14 +132,17 @@ Changelog
 ---------
 0.0.1       2012-01-13
             Feature: Initial release of new version in python
+            
 0.1.0       2012-01-15
             Feature: Events, plugins
             Feature: IRC- and MUD-style chat
             Internal: Moved all non-core code into plugins
 
+
 Known bugs
 ----------
-None
+Since       Fix due
+-           -           -
 
 
 Roadmap
@@ -137,7 +150,9 @@ Roadmap
 0.2.0       Persistent storage for user data
                 Collect from user._data, or event?
                 Non-persistent user._data storage using prefix or different store?
-            Logins
+            Account and login support
+0.2.1       Specify custom settings files on the command line
+0.2.2       Multiple plugin paths with support for excludes, 
 0.3.0       Proper telnet negotiation
 0.4.0       Multiple room support
 0.4.1       Inventory and items

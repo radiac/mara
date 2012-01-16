@@ -13,9 +13,13 @@ def cmd_emote(e):
     e.stop()
 
 @command('who')
-@command('look')
 def cmd_who(e):
     list_users(e.user)
+
+@command('look')
+def cmd_look(e):
+    list_users(e.user)
+    write_except(e.user, '%s looks around' % e.user.name)
 
 @command('quit')
 def cmd_quit(e):

@@ -2,9 +2,9 @@
 Commands for IRC-style
 """
 
-@command('me')
+@command('me', args=[('action', str)])
 def cmd_emote(e):
-    write_all("%s %s" % (e.user.name, e.input))
+    write_all("%s %s" % (e.user.name, e.args.action))
     e.stop()
 
 @command('who')

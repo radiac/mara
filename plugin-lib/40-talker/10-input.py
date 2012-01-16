@@ -18,11 +18,14 @@ def input_command(e):
         cmd = e.input
         input = ''
     
-    # Find and run command
+    # Find command
     if not commands.has_key(cmd):
         write(e.user, 'That command was not recognised')
         return
     
+    # Put input back onto the event
     e.input = input
-    commands[cmd](e)
+    
+    # Run command
+    commands[cmd].call(e)
 

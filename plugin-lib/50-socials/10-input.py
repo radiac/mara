@@ -9,4 +9,4 @@ def social(cmd, to_others):
     def closure(e):
         write(e.user, "You %s" % cmd)
         write_except(e.user, "%s %s" % (e.user.name, to_others))
-    commands[cmd] = closure
+    commands[cmd] = Command(cmd, closure)

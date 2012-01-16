@@ -2,6 +2,18 @@
 Single room management
 """
 
+def find_user(name):
+    """
+    Find a User object from a name
+    """
+    if not name:
+        return None
+    
+    for user in manager.users:
+        if user.name == name:
+            return user
+    return None
+
 def find_others(target):
     """
     Get a list of users who are visible to the specified user

@@ -219,3 +219,12 @@ class Server(object):
     def __del__(self):
         log.server('Server stopped')
     
+"""
+IAC = '\xff'
+REQ = {'WILL':'\xfb','DO':'\xfc','WONT':'\xfd','DONT':'\xfe'}
+OPTION = {'ECHO':'\x01' , 'AHEAD':'\x03' }
+
+def getIACCommand(req,option):
+    buf = IAC + REQ[req] + OPTION[option]
+    return buf
+"""

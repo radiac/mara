@@ -50,7 +50,15 @@ timeout_named = 0
 # Customisation
 #
 
-# Path to plugin directory
+# Path to find plugins
+#   None    No plugins will be loaded
+#   str     Path to plugin file or dir
+#   list    List of plugin files or dirs
+# The list's order will be maintained
+# When specifying files and dirs, normal name matching will not apply. Files
+# will be loaded according to their filetype suffix:
+#   .py     Plugin
+#   .list   List of plugins to load now, relative to current path
 plugins = None
 
 

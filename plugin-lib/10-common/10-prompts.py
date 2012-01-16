@@ -14,7 +14,7 @@ def prompt(user, prompt, callback, validate=None):
         return
     
     user.socket.send(prompt)
-    user.store('prompt').update({
+    user.session('prompt').update({
         'prompt':   prompt,
         'callback': callback,
         'validate': validate
@@ -22,17 +22,17 @@ def prompt(user, prompt, callback, validate=None):
 
 @listen('input')
 def input_prompt(e):
-    store = e.user.store('prompt')
-    if not store:
+    data = e.user.session('prompt')
+    if not data:
         return
 
     e.stop()
 
-    if store['validate'] and not store['validate'](e.user, e.input):
-        prompt(e.user, **store)
+    if data['validate'] and not data['validate'](e.user, e.input):
+        prompt(e.user, **data)
         return
     
     # Clear the prompt and get the callback
-    callback = store['callback']
-    store.clear()
+    callback = data['callback']
+    data.clear()
     callback(e.user, e.input)

@@ -1,0 +1,14 @@
+# List of plugins for an IRC-style chatroom
+
+# Common functionality
+10-common
+
+# Single room
+20-single_room
+
+# No authentication
+30-without_auth
+
+# IRC-style chat and commands
+40-irc
+

@@ -27,33 +27,46 @@ class User(object):
         self.buffer = ''
         self._prompt = None
         
-        # User data
-        self._data = {
-            'core': {
+        # User data which can be saved
+        # Profile info, location data etc
+        self._store = {
+            'profile': {
                 'name': None
             }
         }
+        
+        # User data which can't be saved
+        # Game info etc
+        self._session = {}
         
     is_connected = property(
         fget = lambda self: self._is_connected,
         doc = 'State of the connection'
     )
     
-    # Name is common to all managers and plugins; make easy to access
+    def store(self, name):
+        """
+        Get a store dict
+        """
+        if not self._store.has_key(name):
+            self._store[name] = {}
+        return self._store[name]
+    
+    def session(self, name):
+        """
+        Get a session dict
+        """
+        if not self._session.has_key(name):
+            self._session[name] = {}
+        return self._session[name]
+        
+    # Name is going to be common to almost all use-cases - make it easy to access
     name = property(
-        fget = lambda self: self._data['core']['name'],
-        fset = lambda self, name: self._data['core'].__setitem__('name', name),
+        fget = lambda self: self.store('profile')['name'],
+        fset = lambda self, name: self.store('profile').__setitem__('name', name),
         doc = 'Get or set the user name'
     )
     
-    def store(self, name):
-        """
-        Get a store
-        """
-        if not self._data.has_key(name):
-            self._data[name] = {}
-        return self._data[name]
-        
     def timeout(self, when):
         """
         See if the user has timed out at the given time

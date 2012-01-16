@@ -1,14 +1,6 @@
 """
-IRC-style chat
+Input handlers for IRC-style commands and command-less chat
 """
-
-# Command decorator
-commands = {}
-def command(name):
-    def closure(fn):
-        commands[name] = fn
-        return fn
-    return closure
 
 @listen('input')
 def input_command(e):
@@ -36,18 +28,3 @@ def input_command(e):
 def input_say(e):
     if e.input:
         write_all("%s: %s" % (e.user.name, e.input))
-
-@command('me')
-def cmd_emote(e):
-    write_all("%s %s" % (e.user.name, e.input))
-    e.stop()
-
-@command('who')
-@command('look')
-def cmd_who(e):
-    list_users(e.user)
-
-@command('quit')
-def cmd_quit(e):
-    write(e.user, 'Goodbye!')
-    e.user.close()

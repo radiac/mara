@@ -1,5 +1,5 @@
 """
-Unauthenticated users
+Unauthenticated users for IRC-style chat
 """
 
 def user_name_validate(target, name):
@@ -38,6 +38,7 @@ def connect(e):
     """
     Do something when the user connected
     """
+    print "CONNECT"
     write(e.user, '-- Welcome to Cletus --')
     prompt(e.user, 'Enter your name: ', user_named, user_name_validate)
 

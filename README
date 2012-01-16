@@ -4,8 +4,10 @@ cletus
 Installation
 ------------
 
+This has been tested on Python 2.7, but should work with 2.4.
+
 Installation is easy:
-    python setup.py install
+    pip -E cletus install -e git+ssh://git@uzeweb.com/radiac-projects/cletus.git#egg=cletus
 
 Alternatively, you may prefer to install it into a virtual environment:
     mkdir cletus
@@ -21,16 +23,21 @@ If you're missing virtualenv and pip, install them in ubuntu with:
 Running the server
 ------------------
 
-To run a server:
-    cletus run
+To run a bare server:
+    cletus
+
+That will let you connect. Load some plugins so it's a bit more useful:
+    cletus --plugins=cletus/src/plugins/irc.list
+
+See [[#Loading plugins]] for more information on what to load.
 
 If you installed it into a virtual environment, remember to switch into that first:
     cd cletus
     source bin/activate
-    cletus
+    cletus ARGS
 
 You could also run it by specifying the full path to the command:
-    cletus/bin/cletus
+    cletus/bin/cletus ARGS
 
 
 Running the server as a daemon
@@ -64,6 +71,33 @@ to reflect what you're doing.
 You can then start and stop the process using upstart:
     sudo start cletus
     sudo stop cletus
+
+
+Loading plugins
+---------------
+
+On the command line, you can specify a .py plugin, a .list file, or a dir. In a
+settings file you can do the same, or provide a list directly.
+
+A .list file is a text file with a .list suffix. It should contain a list of
+dirs, .py plugins or .list files, relative to the path of the list file, one on
+each line. It can contain empty lines, and lines which start with # will be
+ignored.
+
+There are two default plugin lists provided in plugin-lib:
+
+    irc.list    A basic IRC-style chatroom:
+                    Unauthenticated login
+                    Single room
+                    IRC-style chat and commands
+    talker.list A basic talker:
+                    Authenticated login
+                    Single room
+                    Talker-style chat and commands
+
+The talker will be given multiple room support at a later date. There will also
+be a third list, mud.list, which will function as a basic mud. See the roadmap
+for more details.
 
 
 Developer Overview
@@ -138,6 +172,10 @@ Changelog
             Feature: IRC- and MUD-style chat
             Internal: Moved all non-core code into plugins
 
+0.1.1       2012-01-16
+            Internal: Rearranged plugin files to improve clarity
+            Internal: Plugin lists
+
 
 Known bugs
 ----------
@@ -147,12 +185,11 @@ Since       Fix due
 
 Roadmap
 -------
-0.2.0       Persistent storage for user data
-                Collect from user._data, or event?
-                Non-persistent user._data storage using prefix or different store?
-            Account and login support
-0.2.1       Specify custom settings files on the command line
-0.2.2       Multiple plugin paths with support for excludes, 
+0.1.2       Specify custom settings files on the command line
+0.2.0       Account and login support
+            Persistent storage for user._store dict
 0.3.0       Proper telnet negotiation
-0.4.0       Multiple room support
+0.4.0       Multiple rooms
 0.4.1       Inventory and items
+0.4.2       Item-specific commands
+0.4.3       Basic health, skills and combat

@@ -138,5 +138,6 @@ Roadmap
                 Collect from user._data, or event?
                 Non-persistent user._data storage using prefix or different store?
             Logins
-0.3.0       Multiple room support
-0.3.1       Inventory and items
+0.3.0       Proper telnet negotiation
+0.4.0       Multiple room support
+0.4.1       Inventory and items

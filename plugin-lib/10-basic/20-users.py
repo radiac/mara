@@ -1,7 +1,7 @@
 """
 Unauthenticated users
 """
-    
+
 def user_name_validate(target, name):
     """
     Validate user's name
@@ -26,14 +26,9 @@ def user_named(user, name):
     # Announce
     write_all('-- %s has connected --' % user.name)
     
-    # Look
-    others = find_others(user)
-    if len(others) == 1:
-        write(user, 'Also here: %s' % ', '.join([o.name for o in others]))
-    else:
-        write(user, 'Nobody else is here.')
+    list_users(user)
 
-   
+
 #
 # Listeners
 #

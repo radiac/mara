@@ -31,3 +31,13 @@ def write_except(target, *lines):
         if user == target or not user.name:
             continue
         user.write(*lines)
+
+def list_users(user):
+    """
+    Tell the specified user who else is here
+    """
+    others = find_others(user)
+    if len(others) == 1:
+        write(user, 'Also here: %s' % ', '.join([o.name for o in others]))
+    else:
+        write(user, 'Nobody else is here.')

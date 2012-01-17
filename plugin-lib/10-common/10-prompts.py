@@ -10,10 +10,7 @@ def prompt(user, prompt, callback, validate=None):
         data    The response from the user
     The validate function must return a boolean value
     """
-    if not user.socket:
-        return
-    
-    user.socket.send(prompt)
+    user.write_raw(prompt)
     user.session('prompt').update({
         'prompt':   prompt,
         'callback': callback,

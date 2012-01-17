@@ -24,7 +24,8 @@ class User(object):
         
         # Connection management
         self._is_connected = True
-        self.buffer = ''
+        self._recv_buffer = ''
+        self._send_buffer = ''
         self._prompt = None
         
         # User data which can be saved
@@ -93,33 +94,44 @@ class User(object):
         # Update last activity for idle
         self._last_activity = datetime.datetime.now()
         
-        # Add data to buffer
-        self.buffer += data
+        # Add data to recv_buffer
+        self._recv_buffer += data
         
         # Test for buffer limit
-        if self.settings.internal_buffer_size and len(self.buffer) > self.settings.internal_buffer_size:
-            self.buffer = ''
+        if self.settings.internal_buffer_size and len(self._recv_buffer) > self.settings.internal_buffer_size:
+            self._recv_buffer = ''
             self.write('Input too long')
         
         # Test for a complete line
-        if not "\r\n" in self.buffer:
+        if not "\r\n" in self._recv_buffer:
             return
         
         # Send first line for processing
-        (line, self.buffer) = self.buffer.split("\r\n")
+        (line, self._recv_buffer) = self._recv_buffer.split("\r\n")
         self.manager.input(self, line)
         
     def write(self, *lines):
         """
-        Send data
+        Send data with newlines
         """
-        if not self.socket:
-            return
-        try:
-            self.socket.send("\r\n".join(lines) + "\r\n")
-        except socket.error, e:
-            self.disconnected()
+        self._send_buffer += "\r\n".join(lines) + "\r\n"
         
+    def write_raw(self, raw):
+        self._send_buffer += raw
+    
+    def _get_send_buffer(self):
+        out = self._send_buffer
+        self._send_buffer = ''
+        return out
+    send_buffer = property(
+        fget = _get_send_buffer,
+        doc="Get the send buffer and empty it"
+    )
+    send_pending = property(
+        fget = lambda self: len(self._send_buffer) > 0,
+        doc = "Check if there's anything on the send buffer"
+    )
+    
     def close(self):
         """
         Close gracefully

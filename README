@@ -185,10 +185,11 @@ Since       Fix due
 
 Roadmap
 -------
-0.1.2       Specify custom settings files on the command line
-0.2.0       Account and login support
+0.2.0       Proper telnet negotiation
+            Refactor User object into user.User and connection.Client
+0.2.1       Specify custom settings files on the command line
+0.3.0       Account and login support
             Persistent storage for user._store dict
-0.3.0       Proper telnet negotiation
 0.4.0       Plugin for multiple rooms
 0.4.1       Plugin for inventory and items
 0.4.2       Plugin for basic health, skills and combat

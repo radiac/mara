@@ -29,5 +29,8 @@ def English_verb_present(word, person=1, negate=False):
             
         elif word[-1:] in ('s', 'x'):
             word = word + 'es'
-    
+        
+        else:
+            word += 's'
+        
     return word

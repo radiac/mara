@@ -14,4 +14,4 @@ def cmd_who(e):
 @command('quit')
 def cmd_quit(e):
     write(e.user, 'Goodbye!')
-    e.user.close()
+    e.user.disconnect()

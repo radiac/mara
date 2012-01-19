@@ -176,6 +176,13 @@ Changelog
             Internal: Rearranged plugin files to improve clarity
             Internal: Plugin lists
 
+0.2.0       2012-01-18
+            Feature: Added telnet negotiation
+            Feature: Added socials
+            Internal: Added support for different newline types
+            Internal: Split User into User and Client objects
+            Internal: Added argument parsing to Command object
+
 
 Known bugs
 ----------
@@ -185,11 +192,12 @@ Since       Fix due
 
 Roadmap
 -------
-0.2.0       Proper telnet negotiation
-            Refactor User object into user.User and connection.Client
 0.2.1       Specify custom settings files on the command line
+0.2.2       Improve command argument error handling to be more robust
+            Improve command argument list support, particularly user lists
 0.3.0       Account and login support
             Persistent storage for user._store dict
 0.4.0       Plugin for multiple rooms
 0.4.1       Plugin for inventory and items
 0.4.2       Plugin for basic health, skills and combat
+0.5.0       Support for poll, epoll

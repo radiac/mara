@@ -31,6 +31,7 @@ class PluginRegistry(object):
         env_global = {
             'manager':  self.manager,
             'events':   self.manager.events,
+            'Event':    Event,
             'listen':   listen_factory(self.manager.events)
         }
 
@@ -41,9 +42,12 @@ class PluginRegistry(object):
             except Exception, e:
                 from traceback import print_exc, format_exception
                 import sys
-                exceptions = format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)
+                exceptions = [
+                    e.strip() for e in
+                    format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)
+                ]
                 log.plugin(
-                    'Plugin error: %s' % str(sys.exc_info()[0]), *exceptions
+                    'Plugin error: %s' % str(sys.exc_info()[0]) + "\n" + "\n".join(exceptions)
                 )
         self.manager.events.call('init')
         

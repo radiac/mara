@@ -2,6 +2,10 @@
 Unauthenticated users for IRC-style chat
 """
 
+#
+# Prompt callbacks
+#
+
 def user_name_validate(target, name):
     """
     Validate user's name
@@ -20,13 +24,19 @@ def user_named(user, name):
     """
     The user has responded to the name prompt
     """
-    # Store
+    # Update user and client
     user.name = name
-
-    # Announce
-    write_all('-- %s has connected --' % user.name)
+    user.logged_in = True
+    user.client.timeout_time = manager.settings.user_timeout
     
+    # Announce and welcome
+    write_all('-- %s has connected --' % user.name)
     list_users(user)
+    
+    # Send login event
+    events.call('login', Event(
+        user = user
+    ))
 
 
 #
@@ -40,7 +50,26 @@ def connect(e):
     """
     write(e.user, '-- Welcome to Cletus --')
     prompt(e.user, 'Enter your name: ', user_named, user_name_validate)
-
+    
 @listen('disconnect')
 def disconnect(e):
+    if not e.user.logged_in:
+        return
     write_except(e.user, '-- %s has disconnected --' % e.user.name)
+    events.call('logout', Event(
+        user = e.user
+    ))
+
+
+#
+# Commands
+#
+
+@command('name', args=[('name', str)])
+def cmd_name(e):
+    name = e.args.name
+    if not user_name_validate(name):
+        return
+    write(e.user, 'Name changed to %s' % name)
+    write_except(e.user, '-- %s changed their name to %s --' % (e.user.name, name))
+    e.user.name = name

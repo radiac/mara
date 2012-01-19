@@ -3,6 +3,9 @@
 # Common functionality
 10-common
 
+# Basic natural language processing
+10-nlp
+
 # Single room
 20-single_room
 

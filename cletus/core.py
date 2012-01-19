@@ -2,36 +2,54 @@
 Cletus core
 """
 
-from cletus.connection import Server
+import datetime
+import time
+
+from cletus.server import Server
 from cletus.events import EventRegistry, Event
 import cletus.log as log
 from cletus.plugins import PluginRegistry
+from cletus.storage import Storable
+from cletus.user import User
 import cletus.util as util
 
-class Manager(object):
+class Manager(Storable):
     """
     Abstract manager base class
     """
     def __init__(self, settings):
+        # Initialise the store
+        super(Manager, self).__init__()
+        
+        # Store settings
         self.settings = settings
         
-        # List of users
-        self._users = []
+        # Dict of users, client->user
+        self._users = {}
+        
+        # No server to being with
         self.server = None
+        
+        # Consistent time for events
+        self.time = time.time()
         
         # Initialise events
         self.events = EventRegistry(self)
 
         # Initialise plugin registry
         self.plugins = PluginRegistry(self)
-    
-
+        
     users = property(
-        fget = lambda self: self._users,
+        fget = lambda self: self._users.values(),
         doc = "Get a list of Users"
     )
     
-
+    datetime = property(
+        fget = lambda self: datetime.datetime.fromtimestamp(self.time),
+        doc = "Get the current time as a datetime object"
+    )
+    
+    
     #
     # Internal operations
     #
@@ -50,24 +68,27 @@ class Manager(object):
         self.events.call('start')
         self.server.listen()
         
-    def add_user(self, user):
+    def add_client(self, client):
         """
-        Add a user to the list of known users
+        A client has connected
         """
-        self._users.append(user)
+        user = User(self, client)
+        self._users[client] = user
         self.events.call('connect', Event(user=user))
         
-    def remove_user(self, user):
+    def remove_client(self, client):
         """
-        Remove a user from the list of known users
+        A client has disconnected
         """
+        user = self._users[client]
         self.events.call('disconnect', Event(user=user))
-        self._users.remove(user)
+        del self._users[client]
 
-    def input(self, user, input):
+    def input(self, client, input):
         """
-        Process user input
+        A client has sent input
         """
+        user = self._users[client]
         self.events.call('input', Event(
             user = user,
             input = input
@@ -77,6 +98,10 @@ class Manager(object):
         """
         A poll from the server
         """
+        # Update time
+        self.time = time.time()
+        
+        # Raise poll event
         self.events.call('poll')
     
     def reload(self):

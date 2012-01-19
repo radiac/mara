@@ -17,9 +17,10 @@ host = ''
 # Override with --port=PORT
 port = 9000
 
-# Time to listen to the socket before polling other tasks
-# Floating point number in seconds
-listen_for = 1
+# Socket activity timeout
+# How long to wait for socket activity before polling, in seconds
+# This needs to be low enough for any timed polling activity (game ticks etc)
+socket_activity_timeout = 0.1
 
 # Size of socket buffer
 socket_buffer_size = 1024
@@ -37,13 +38,37 @@ keepalive = True
 # Timeouts
 #
 
-# Timeout once the user has first connected
-timeout_unnamed = datetime.timedelta(seconds=30)
+# Timeout for a client socket, in seconds
+socket_timeout = 30
 
-# Timeout after the user has identified themselves (if user.name != None)
+# Timeout for a user, in seconds
 # Set to 0 for no limit
-#timeout_named = datetime.timedelta(minutes=5)
-timeout_named = 0
+user_timeout = 0
+
+
+#
+# Flash socket support
+#
+
+# Flash support
+# Will provide the cross-domain policy below on request
+# Note: Will cause a delay of flash_wait seconds for new non-Flash connections
+flash = True
+
+# Flash wait
+# How long to wait for Flash to send the policy request, in seconds
+# No data will be sent to the client before then
+# Set this too low and Flash may not request in time, causing a security error
+# Set this too high and your clients will not get their prompt
+# Note: This will be tested each poll, so depends on socket_activity_timeout
+flash_wait = 0.1
+
+# Flash cross-doman policy
+flash_policy = """<?xml version="1.0" encoding="UTF-8"?>
+<cross-domain-policy xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.adobe.com/xml/schemas/PolicyFileSocket.xsd">
+    <allow-access-from domain="*" to-ports="9000" secure="false" />
+</cross-domain-policy>
+\0"""
 
 
 #

@@ -61,7 +61,7 @@ flash = True
 # Set this too low and Flash may not request in time, causing a security error
 # Set this too high and your clients will not get their prompt
 # Note: This will be tested each poll, so depends on socket_activity_timeout
-flash_wait = 0.1
+flash_wait = 0.5
 
 # Flash cross-doman policy
 flash_policy = """<?xml version="1.0" encoding="UTF-8"?>

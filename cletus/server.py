@@ -217,6 +217,7 @@ class Server(object):
             # We were told the socket was ready to send, but it is not
             # Mark as disconnected, to be cleaned up next loop
             client.disconnected()
+            return
         
         # See if there is something left to send
         if sent < len(data):

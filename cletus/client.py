@@ -4,11 +4,14 @@ Manage connections
 Based on miniboa's telnet.py
 http://miniboa.googlecode.com/svn/trunk/miniboa/telnet.py
 """
+
+import datetime
 import socket
 import select
 
 import cletus.log as log
 from cletus.user import User
+from cletus.util import HR
 
 
 #
@@ -149,6 +152,23 @@ class Client(object):
         doc = 'Set if the connection is closing, but still open'
     )
     
+    def get_idle_age(self):
+        """
+        Get idle age in human-readable format
+        """
+        age_delta = datetime.timedelta(seconds = self.manager.time - self._last_activity)
+        time_units = ['day', 'hour', 'minute', 'second']
+        age = dict(zip(
+            time_units,
+            [age_delta.days, age_delta.seconds // 3600,
+                age_delta.seconds // 60 % 60, age_delta.seconds % 60
+            ]
+        ))
+        for attr in time_units:
+            if age[attr] > 0:
+                return "%d %s%s ago" % (age[attr], attr, '' if age[attr]==1 else 's')
+        return '0 seconds ago'
+    
     def timeout(self):
         """
         See if the client has timed out
@@ -211,7 +231,14 @@ class Client(object):
         """
         Send data with newlines
         """
-        self._send_buffer += "\r\n".join(lines) + "\r\n"
+        # Resolve special lines
+        out = []
+        for line in lines:
+            if isinstance(line, HR):
+                line = line.render(self.columns)
+            out.append(line)
+        
+        self._send_buffer += "\r\n".join(out) + "\r\n"
         
     def write_raw(self, raw):
         self._send_buffer += raw

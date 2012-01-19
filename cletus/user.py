@@ -2,7 +2,6 @@
 User management
 """
 
-import datetime
 import socket
 
 from cletus.storage import Storable

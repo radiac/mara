@@ -145,9 +145,7 @@ class Command(object):
         re_args = []
         syntax = []
         count = len(args)
-        i = 0
-        for arg in args:
-            i += 1
+        for i, arg in enumerate(args):
             
             # Ensure all args are Arg instances
             if isinstance(arg, (tuple, list)):
@@ -161,7 +159,7 @@ class Command(object):
             # Add whitespace
             arg_re = arg.re
             if arg.optional:
-                if i<count:
+                if i + 1 < count:
                     arg_re = r'(%s\s+)?' % arg_re
                 else:
                     arg_re += '?'

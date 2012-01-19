@@ -31,3 +31,17 @@ def colourise(data):
     for (search, replace) in COLOURS_RE:
         data = search.sub(replace, data)
     return data + COLOUR_RESET
+
+
+class HR(object):
+    """
+    Horizontal rule
+    """
+    def __init__(self, msg=None):
+        self.msg = msg
+        
+    def render(self, width):
+        if not self.msg:
+            return '-' * width
+        
+        return (" %s " % self.msg).center(width, '-')

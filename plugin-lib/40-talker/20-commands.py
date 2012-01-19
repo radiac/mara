@@ -2,6 +2,7 @@
 Talker-style communication and commands
 """
 
+
 @command('say', args=[('message', str)])
 def cmd_say(e):
     write(e.user, "You say: %s" % e.args.message)
@@ -30,7 +31,20 @@ def cmd_tell(e):
 
 @command('who')
 def cmd_who(e):
-    list_users(e.user)
+    # Find users
+    users = find_others(e.user)
+    users.append(e.user)
+    users.sort(key=lambda user: user.name)
+    
+    # Build lines of output
+    lines = [HR('Currently here')]
+    for user in users:
+        lines.append(
+            "%s\t%s" % (user.name, user.client.get_idle_age())
+        )
+    lines.append(HR())
+    
+    write(e.user, *lines)
 
 @command('look')
 def cmd_look(e):
@@ -39,5 +53,5 @@ def cmd_look(e):
 
 @command('quit')
 def cmd_quit(e):
-    write(e.user, 'Goodbye!')
+    write(e.user, HR('Goodbye!'))
     e.user.disconnect()

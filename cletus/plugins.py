@@ -6,6 +6,7 @@ import os
 
 from cletus.events import listen_factory, Event
 import cletus.log as log
+from cletus.util import HR
 
 class PluginRegistry(object):
     def __init__(self, manager):
@@ -32,7 +33,8 @@ class PluginRegistry(object):
             'manager':  self.manager,
             'events':   self.manager.events,
             'Event':    Event,
-            'listen':   listen_factory(self.manager.events)
+            'listen':   listen_factory(self.manager.events),
+            'HR':       HR
         }
 
         for file_path in self._find_plugins():

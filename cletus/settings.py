@@ -53,6 +53,7 @@ user_timeout = 0
 # Flash support
 # Will provide the cross-domain policy below on request
 # Note: Will cause a delay of flash_wait seconds for new non-Flash connections
+# To avoid a delay, set flash=False and serve policy requests on port 843
 flash = True
 
 # Flash wait

@@ -54,6 +54,7 @@ class Logger(object):
         
         # See if printing to STDOUT
         if settings.debug:
+            self.disabled = False
             return
         
         # Try to enable

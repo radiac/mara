@@ -217,7 +217,7 @@ class Command(object):
             except ArgException, e:
                 write(event.user, "%s" % e)
                 return False
-        
+            
         return CommandArguments(data)
     
 

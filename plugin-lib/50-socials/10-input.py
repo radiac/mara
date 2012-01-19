@@ -7,16 +7,19 @@ def social(cmd, *preps):
     Build and register a social command, with optional prepositions
     """
     def closure(e):
-        prep = ''
+        extra = ''
         target = e.args.target
-        if target and preps:
-            prep = '%s %s' % (e.args.prep or preps[0], target.name)
+        if target:
+            if preps:
+                extra = '%s %s' % (e.args.prep or preps[0], target.name)
+            else:
+                extra = target.name
         
         verb_third = English_verb_present(cmd, person=3)
         
         if target:
-            write(e.user, "You %s %s" % (cmd, prep))
-            write_except(e.user, "%s %s %s" % (e.user.name, verb_third, prep))
+            write(e.user, "You %s %s" % (cmd, extra))
+            write_except(e.user, "%s %s %s" % (e.user.name, verb_third, extra))
         else:
             write(e.user, "You %s" % cmd)
             write_except(e.user, "%s %s" % (e.user.name, verb_third))

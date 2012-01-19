@@ -136,6 +136,9 @@ class Client(object):
         # Start telnet negotiation
         self._tn_request(DO, TTYPE)   # Get terminal type
         self._tn_request(DO, NAWS)    # Do NAWS
+        
+        # Log
+        log.client('Client %s connected' % self.ip)
     
     is_connected = property(
         fget = lambda self: self._is_connected,
@@ -155,6 +158,7 @@ class Client(object):
             return False
             
         if self._last_activity < self.manager.time - self.timeout_time:
+            log.client('Client %s timed out' % self.ip)
             return True
             
         return False
@@ -238,7 +242,7 @@ class Client(object):
         """
         Send the flash policy
         """
-        log.client('Client %s asked for Flash policy' % self.socket)
+        log.client('Client %s asked for Flash policy' % self.ip)
         
         # The _flash_waiting flag has been cleared, so overwrite _send_buffer
         self._send_buffer = self.settings.flash_policy % {
@@ -269,6 +273,7 @@ class Client(object):
         """
         The socket has been closed
         """
+        log.client('Client %s disconnected' % self.ip)
         self.socket = None
         self._is_connected = False
         self._is_closing = False

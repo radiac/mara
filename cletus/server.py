@@ -109,7 +109,6 @@ class Server(object):
                 
                 # Timeouts
                 if client.timeout():
-                    log.client('Client %s timed out' % client_socket)
                     client.write('You have been idle for too long')
                     client.close()
                 
@@ -177,7 +176,6 @@ class Server(object):
         
         # Add to known client sockets
         self._client_sockets.append(client_socket)
-        log.client('Client %s connected' % client_socket)
         
         # Create new client and register
         client = Client(self.manager, client_socket)
@@ -197,7 +195,6 @@ class Server(object):
         except socket.error, e:
             # We were told there was something to read, but there is not
             # Mark as disconnected, to be cleaned up next loop
-            log.client('Client %s disconnected' % read_socket)
             client.disconnected()
             return
             
@@ -219,7 +216,6 @@ class Server(object):
         except socket.error, e:
             # We were told the socket was ready to send, but it is not
             # Mark as disconnected, to be cleaned up next loop
-            log.client('Client %s disconnected' % read_socket)
             client.disconnected()
         
         # See if there is something left to send

@@ -19,7 +19,7 @@ DEBUG       = 6
 
 help_verbosity = '''
 0 = No logging
-1 = Manager (start, stop)
+1 = Manager (start, stop, fatal error)
 2 = Server (start, stop)
 3 = Plugin registry (load, error)
 4 = Event registry (listen, unlisten)
@@ -35,6 +35,7 @@ class Logger(object):
         # Start disabled, so open() will not close()
         self.file = None
         self.prefix = ''
+        self.disabled = True
         
     def open(self):
         """
@@ -72,7 +73,7 @@ class Logger(object):
         Write lines to the log file
         """
         # Skip if disabled, or verbosity says no
-        if level > settings.verbosity:
+        if self.disabled or level > settings.verbosity:
             return
         
         # Add pid prefix
@@ -81,7 +82,6 @@ class Logger(object):
             # Format as close to syslog as possible
             prefix = datetime.datetime.today().strftime('%b %d %X') + " " + prefix
             lines = [prefix + line for line in lines]
-        
         
         # See if printing to STDOUT
         if not self.file:

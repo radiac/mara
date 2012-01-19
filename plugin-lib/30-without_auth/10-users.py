@@ -68,7 +68,7 @@ def disconnect(e):
 @command('name', args=[('name', str)])
 def cmd_name(e):
     name = e.args.name
-    if not user_name_validate(name):
+    if not user_name_validate(e.user, name):
         return
     write(e.user, 'Name changed to %s' % name)
     write_except(e.user, '-- %s changed their name to %s --' % (e.user.name, name))

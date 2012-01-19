@@ -10,7 +10,10 @@ def cmd_say(e):
 
 @command('emote', args=[('action', str)])
 def cmd_emote(e):
-    write_all("%s %s" % (e.user.name, e.args.action))
+    action = e.args.action
+    if not action.startswith("'"):
+        action = ' ' + action
+    write_all("%s%s" % (e.user.name, action))
     e.stop()
 
 @command('tell', args=[Arg('target', User, many=True), ('message', str)])

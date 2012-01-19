@@ -73,7 +73,7 @@ def list_users(user):
     Tell the specified user who else is here
     """
     others = find_others(user)
-    if len(others) == 1:
+    if len(others) >= 1:
         write(user, 'Also here: %s' % ', '.join([o.name for o in others]))
     else:
         write(user, 'Nobody else is here.')

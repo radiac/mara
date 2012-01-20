@@ -48,7 +48,7 @@ def connect(e):
     """
     Do something when the user connected
     """
-    write(e.user, HR('Welcome to Cletus!'))
+    write(e.user, util.HR('Welcome to Cletus!'))
     prompt(e.user, 'Enter your name: ', user_named, user_name_validate)
     
 @listen('disconnect')

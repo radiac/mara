@@ -5,13 +5,12 @@ Based on miniboa's telnet.py
 http://miniboa.googlecode.com/svn/trunk/miniboa/telnet.py
 """
 
-import datetime
 import socket
 import select
 
 import cletus.log as log
 from cletus.user import User
-from cletus.util import HR
+import cletus.util as util
 
 
 #
@@ -156,19 +155,8 @@ class Client(object):
         """
         Get idle age in human-readable format
         """
-        age_delta = datetime.timedelta(seconds = self.manager.time - self._last_activity)
-        time_units = ['day', 'hour', 'minute', 'second']
-        age = dict(zip(
-            time_units,
-            [age_delta.days, age_delta.seconds // 3600,
-                age_delta.seconds // 60 % 60, age_delta.seconds % 60
-            ]
-        ))
-        for attr in time_units:
-            if age[attr] > 0:
-                return "%d %s%s ago" % (age[attr], attr, '' if age[attr]==1 else 's')
-        return '0 seconds ago'
-    
+        return util.pretty_age(now=self.manager.time, then=self._last_activity)
+        
     def timeout(self):
         """
         See if the client has timed out
@@ -234,7 +222,7 @@ class Client(object):
         # Resolve special lines
         out = []
         for line in lines:
-            if isinstance(line, HR):
+            if isinstance(line, util.HR):
                 line = line.render(self.columns)
             out.append(line)
         

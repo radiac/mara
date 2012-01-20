@@ -17,7 +17,8 @@ class User(Storable):
         # Initialise the store
         super(User, self).__init__()
         self.store('profile').update({
-            'name': None
+            'name': None,
+            'debug': True
         })
         
         # Store vars

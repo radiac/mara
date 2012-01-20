@@ -8,6 +8,10 @@ from cletus.user import User
 
 # Store global commands in a dict
 commands = {}
+publics['commands'] = commands
+
+# Keep track of command groups
+groups = {}
 
 class ArgException(Exception): pass
 
@@ -35,7 +39,7 @@ class Arg(object):
         # ++ Add match support for list of options, for OR (eg User OR str)
         self.name = name
         self.match = match
-        self.syntax = syntax or name
+        self.syntax = syntax or "<%s>" % name
         self.optional = optional
         self.many = many
         
@@ -106,6 +110,7 @@ class Arg(object):
             
         return data
 
+publics['Arg'] = Arg
 
 class CommandArguments(object):
     """
@@ -115,12 +120,11 @@ class CommandArguments(object):
         for kwarg, val in kwargs.items():
             setattr(self, kwarg, val)
 
-
 class Command(object):
     """
     A command
     """
-    def __init__(self, name, fn, args=None):
+    def __init__(self, name, fn, args=None, group=None):
         """
         Build a command
             name        Name of command
@@ -129,9 +133,11 @@ class Command(object):
                         The arg_name must be unique within a command
                         Match values:
                         If args==None, no arguments allowed
+            group       Command group
         """
         self.name = name
         self.fn = fn
+        self.group = group
         
         # Catch no arguments
         if not args:
@@ -166,7 +172,10 @@ class Command(object):
             
             # Add to lists
             re_args.append(arg_re)
-            syntax.append('<%s>' % arg.syntax)
+            if arg.optional:
+                syntax.append('[%s]' % arg.syntax)
+            else:
+                syntax.append(arg.syntax)
             
         
         # Build match re and syntax string
@@ -182,24 +191,35 @@ class Command(object):
             return
             
         e.args = args
-        self.fn(e)
+        
+        try:
+            self.fn(e)
+        except Exception, err:
+            details = util.detail_error()
+            report = ['Command failed: %s' % err]
+            if e.user.store('profile')['debug']:
+                report.append(util.HR('Traceback'))
+                report.extend(details)
+                report.append(util.HR())
+            e.user.write(*report)
+            
     
-    def parse(self, event):
+    def parse(self, e):
         """
         Parse the arguments
         """
         # Test for no args
         if not self.match:
-            if event.input:
-                write(event.user, "Syntax: %s" % self.name)
+            if e.input:
+                e.user.write("Syntax: %s" % self.name)
                 return False
             else:
                 return None
         
         # Try to match
-        matches = self.match.search(event.input)
+        matches = self.match.search(e.input)
         if not matches:
-            write(event.user, "Syntax: %s %s" % (self.name, self.syntax))
+            e.user.write("Syntax: %s %s" % (self.name, self.syntax))
             return False
         
         # Parse arguments types
@@ -212,16 +232,64 @@ class Command(object):
             # Parse
             try:
                 data[arg.name] = arg.parse(data[arg.name])
-            except ArgException, e:
-                write(event.user, "%s" % e)
+            except ArgException, err:
+                e.user.write("%s" % err)
                 return False
             
         return CommandArguments(data)
-    
+
 
 # Command decorator
+@public
 def command(name, *args, **kwargs):
+    # Catch if this has been called without args
+    fn = None
+    if hasattr(name, '__call__'):
+        fn = name
+        name = name.__name__
+        
+    # Has been passed args, make a closure
     def closure(fn):
-        commands[name] = Command(name, fn, *args, **kwargs)
+        # Build command
+        cmd = Command(name, fn, *args, **kwargs)
+        
+        # Register
+        commands[name] = cmd
+        if not groups.has_key(cmd.group):
+            groups[cmd.group] = []
+        groups[cmd.group].append(cmd)
+        
+        # Return original fn
         return fn
+    
+    # Without args needs to register immediately
+    if fn:
+        closure = closure(fn)
+    
     return closure
+
+@command('commands', args=[Arg('group', '\w+', optional=True, syntax="(groups|<group>)")])
+def cmd_commands(e):
+    group = e.args.group
+    if group == 'groups' or not groups.has_key(group):
+        e.user.write('Valid groups are: %s' % ', '.join(
+            [name or '(None)' for name in groups.keys()]
+        ))
+        return
+    
+    groupname = ''
+    if group:
+        groupname = group[0].upper() + group[1:] + ' '
+    
+    lines = [util.HR('%sCommands' % groupname)]
+    lines.extend(['%s\t%s' % (cmd.name, cmd.syntax) for cmd in groups[group]])
+    lines.append(util.HR())
+    e.user.write(*lines)
+
+@listen('init')
+def sort_groups(e):
+    """
+    Sort command groups
+    """
+    for name, group in groups.items():
+        groups[name].sort(key=lambda cmd: cmd.name)

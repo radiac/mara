@@ -2,7 +2,7 @@
 Admin commands
 """
 
-@command('reload')
-def cmd_reload(e):
+@command
+def reload(e):
     manager.reload()
     write_all('-- Reloading plugins --')

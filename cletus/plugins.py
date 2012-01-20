@@ -6,7 +6,7 @@ import os
 
 from cletus.events import listen_factory, Event
 import cletus.log as log
-from cletus.util import HR
+import cletus.util as util
 
 class PluginRegistry(object):
     def __init__(self, manager):
@@ -29,27 +29,36 @@ class PluginRegistry(object):
         if not self.path:
             return
         
-        env_global = {
-            'manager':  self.manager,
-            'events':   self.manager.events,
-            'Event':    Event,
-            'listen':   listen_factory(self.manager.events),
-            'HR':       HR
-        }
-
+        # Define the publics dict and @public decorator
+        publics = {}
+        def public(fn):
+            publics[fn.__name__] = fn
+            return fn
+        
+        # Load each plugin
         for file_path in self._find_plugins():
             log.plugin('Plugin found: %s' % file_path)
+            
+            # Set up a new environment
+            env_global = {
+                'publics':  publics,
+                'public':   public,
+                # ++ Move these into the manager
+                'manager':  self.manager,
+                'events':   self.manager.events,
+                'Event':    Event,
+                'listen':   listen_factory(self.manager.events),
+                'util':     util
+            }
+            
+            # Add in the publics
+            env_global.update(publics)
+            
             try:
                 execfile(file_path, env_global)
             except Exception, e:
-                from traceback import print_exc, format_exception
-                import sys
-                exceptions = [
-                    e.strip() for e in
-                    format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)
-                ]
                 log.plugin(
-                    'Plugin error: %s' % str(sys.exc_info()[0]) + "\n" + "\n".join(exceptions)
+                    'Plugin error: %s' % e + "\n".join( util.detail_error() )
                 )
         self.manager.events.call('init')
         

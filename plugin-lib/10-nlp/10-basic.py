@@ -4,6 +4,7 @@ This is really stupid, but should suffice for most common requirements
 Designed to be replaced by NodeBox's Linguistics for reliable processing
 """
 
+@public
 def English_verb_present(word, person=1, negate=False):
     if negate:
         if person == 1:

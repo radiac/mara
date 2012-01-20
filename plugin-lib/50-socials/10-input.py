@@ -2,6 +2,9 @@
 Social command management
 """
 
+from cletus.user import User
+
+@public
 def social(cmd, *preps):
     """
     Build and register a social command, with optional prepositions
@@ -38,4 +41,5 @@ def social(cmd, *preps):
     # ++ Add support for User or str
     args.append(Arg('target', User, optional=True))
     
-    commands[cmd] = Command(cmd, closure, args=args)
+    # Register
+    command(cmd, args=args, group='social')(closure)

@@ -2,14 +2,15 @@
 Talker-style communication and commands
 """
 
+from cletus.user import User
 
 @command('say', args=[('message', str)])
-def cmd_say(e):
+def say(e):
     write(e.user, "You say: %s" % e.args.message)
     write_except(e.user, "%s says: %s" % (e.user.name, e.args.message))
 
 @command('emote', args=[('action', str)])
-def cmd_emote(e):
+def emote(e):
     action = e.args.action
     if not action.startswith("'"):
         action = ' ' + action
@@ -17,7 +18,7 @@ def cmd_emote(e):
     e.stop()
 
 @command('tell', args=[Arg('target', User, many=True), ('message', str)])
-def cmd_tell(e):
+def tell(e):
     # ++ A lot of this can probably be made re-usable; add to socials
     # Validate target user
     for target in e.args.target:
@@ -32,29 +33,29 @@ def cmd_tell(e):
         write(target, '%s tells you: %s' % (e.user.name, e.args.message))
     write(e.user, 'You tell %s: %s' % (', '.join([t.name for t in e.args.target]), e.args.message))
 
-@command('who')
-def cmd_who(e):
+@command
+def who(e):
     # Find users
     users = find_others(e.user)
     users.append(e.user)
     users.sort(key=lambda user: user.name)
     
     # Build lines of output
-    lines = [HR('Currently here')]
+    lines = [util.HR('Currently here')]
     for user in users:
         lines.append(
             "%s\t%s" % (user.name, user.client.get_idle_age())
         )
-    lines.append(HR())
+    lines.append(util.HR())
     
     write(e.user, *lines)
 
-@command('look')
-def cmd_look(e):
+@command
+def look(e):
     list_users(e.user)
     write_except(e.user, '%s looks around' % e.user.name)
 
-@command('quit')
-def cmd_quit(e):
-    write(e.user, HR('Goodbye!'))
+@command
+def quit(e):
+    write(e.user, util.HR('Goodbye!'))
     e.user.disconnect()

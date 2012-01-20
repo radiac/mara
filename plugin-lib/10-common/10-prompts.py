@@ -2,6 +2,7 @@
 Prompt support
 """
 
+@public
 def prompt(user, prompt, callback, validate=None):
     """
     Send a prompt and get a single line in response

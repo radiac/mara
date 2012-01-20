@@ -56,13 +56,20 @@ class EventRegistry(object):
     def call(self, name, event=None):
         log.debug('Event %s' % name)
         
+        # Only bother calling if something has registered
         if not self.registry.has_key(name):
             return
         
+        # Make sure we've got a clean Event
+        if not event:
+            event = Event()
+        
+        # Load the Event with relevant data
         event.name = name
         event.registry = self
         event.manager = self.manager
         
+        # Call all listeners
         for handler in self.registry[name]:
             handler(event)
             if event._stopped:

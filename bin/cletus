@@ -95,7 +95,7 @@ def main(argv):
     try:
         cli.run(settings)
     except Exception, e:
-        log.plugin(
+        log.manager(
             'Fatal error: %s' % e + "\n".join( util.detail_error() )
         )
         

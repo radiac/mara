@@ -22,7 +22,7 @@ def input_command(e):
         return
     
     e.input = input
-    commands[cmd](e)
+    commands[cmd].call(e)
 
 @listen('input')
 def input_say(e):

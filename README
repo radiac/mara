@@ -164,17 +164,10 @@ shutdown        The server is about to shut down
 
 Changelog
 ---------
-0.0.1       2012-01-13
-            Feature: Initial release of new version in python
-            
-0.1.0       2012-01-15
-            Feature: Events, plugins
-            Feature: IRC- and MUD-style chat
-            Internal: Moved all non-core code into plugins
-
-0.1.1       2012-01-16
-            Internal: Rearranged plugin files to improve clarity
-            Internal: Plugin lists
+0.2.1       2012-01-20
+            Feature: Extra commands in plugins
+            Internal: Better command error handling - now piped to users
+            Internal: Plugins now private namespaces with shared dict 'publics'
 
 0.2.0       2012-01-18
             Feature: Added telnet negotiation
@@ -183,11 +176,18 @@ Changelog
             Internal: Split User into User and Client objects
             Internal: Added argument parsing to Command object
 
-0.2.1       2012-01-20
-            Feature: Extra commands in plugins
-            Internal: Better command error handling - now piped to users
-            Internal: Plugins now private namespaces with shared dict 'publics'
+0.1.1       2012-01-16
+            Internal: Rearranged plugin files to improve clarity
+            Internal: Plugin lists
 
+0.1.0       2012-01-15
+            Feature: Events, plugins
+            Feature: IRC- and MUD-style chat
+            Internal: Moved all non-core code into plugins
+
+0.0.1       2012-01-13
+            Feature: Initial release of new version in python
+            
 
 Known bugs
 ----------
@@ -197,9 +197,11 @@ Since       Fix due
 
 Roadmap
 -------
-0.2.1       Add target list support for write(), write_except()
+0.2.1       Improve plugin error handling to avoid fatal exceptions
+            Add target list support for write(), write_except()
             Improve command argument error handling to be more robust
             Improve command argument list support, particularly user lists
+                Better way of targetting a command at a subset of people
 0.3.0       Account and login support
             Persistent storage for user._store dict
             Specify custom settings files on the command line

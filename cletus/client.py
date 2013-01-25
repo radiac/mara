@@ -82,7 +82,7 @@ LINEMO  = chr( 34)      # Line Mode
 
 class TelnetOption(object):
     """
-    Simple class used to track the status of an extended Telnet option
+    Simple class used to track the status of a Telnet option
     """
     def __init__(self):
         self.local = UNKNOWN    # Local state of an option
@@ -175,6 +175,8 @@ class Client(object):
         """
         Data has arrived
         """
+        #print "RECV:%s:%s" % (data, ','.join(["%d" % ord(c) for c in data]))
+        
         # If we're closing, not interested
         if self._is_closing:
             return
@@ -326,9 +328,8 @@ class Client(object):
                 self.got_iac = True
                 
                 # Pull off anything before the IAC
-                if next_iac > -1:
-                    safe += raw[0:next_iac]
-                    raw = raw[next_iac + 1:]
+                safe += raw[0:next_iac]
+                raw = raw[next_iac + 1:]
             
             # We're in an IAC
             # Check there's something left to read
@@ -363,6 +364,8 @@ class Client(object):
                 
                 # Otherwise must be a two-byte command
                 else:
+                    if cmd == NOP:
+                        print "IAC NOP"
                     # Just going to ignore these
                     if cmd in [NOP, DATMK, IP, AO, AYT, EC, EL, GA]:
                         pass

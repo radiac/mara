@@ -2,38 +2,40 @@
 Single room management
 """
 
+from cletus.storage import Store, Field
+
+class Room(Store):
+    messages = Field([], True)
+    last = Field()
+    users = Field([])
+    
+    def log_unload(self, username):
+        self.last.insert(0, (username, manager.time))
+        if len(self.last) > 10:
+            self.last.pop()
+        
+room = Room('room', manager)
+
+
 #
 # Maintain a list of users who have logged in
 #
 
 # User list must persist across plugin reloads
-room_session = manager.session('room')
-# ++ Improve this with Session object instead of dict
-if not room_session.has_key('users'):
-    room_session['users'] = []
-users = room_session['users']
-if not room_session.has_key('last_list'):
-    room_session['last_list'] = [('-- Restart --', manager.time)]
-last_list = room_session['last_list']
-if not room_session.has_key('messages'):
-    room_session['messages'] = []
-
-
+room_session = manager.session('room', RoomSession)
 @listen('login')
 def load_user(e):
-    if e.user not in users:
-        users.append(e.user)
+    if e.user not in room_session.users:
+        room_session.users.append(e.user)
 
 @listen('disconnect')
 def unload_user(e):
-    if e.user in users:
+    if e.user in room_session.users:
         # Manage last
-        last_list.insert(0, (e.user.name, manager.time))
-        if len(last_list) > 10:
-            last_list.pop()
+        room_session.log_unload(e.user.name)
         
         # Remove user
-        users.remove(e.user)
+        room_session.users.remove(e.user)
     
 
 #
@@ -48,7 +50,7 @@ def find_user(name):
     if not name:
         return None
     
-    for user in users:
+    for user in room_session.users:
         if user.name == name:
             return user
     return None
@@ -59,7 +61,7 @@ def find_others(target):
     Get a list of users who are visible to the specified user
     Excludes the specified user
     """
-    return [user for user in users if user != target]
+    return [user for user in room_session.users if user != target]
     
 @public
 def write(user, *lines):
@@ -73,7 +75,7 @@ def write_all(*lines):
     """
     Write something to everyone who has logged on
     """
-    for user in users:
+    for user in room_session.users:
         user.write(*lines)
     
 @public
@@ -81,7 +83,7 @@ def write_except(target, *lines):
     """
     Write something to everyone except the specified user
     """
-    for user in users:
+    for user in room_session.users:
         if user == target:
             continue
         user.write(*lines)
@@ -103,7 +105,7 @@ def list_users(user):
 @command
 def last(e):
     lines = [util.HR('Latest departures')]
-    for name, when in last_list:
+    for name, when in room_session.last:
         lines.append('%s\t%s' % (
             name, util.pretty_age(now=manager.time, then=when)
         ))

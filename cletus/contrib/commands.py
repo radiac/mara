@@ -225,7 +225,7 @@ class Command(object):
         return matches.groups(), matches.groupdict()
 
 
-class CommandEvent(Receive):
+class CommandEvent(events.Receive):
     """
     Command event
     """
@@ -238,7 +238,7 @@ class CommandEvent(Receive):
 
     def __str__(self):
         # Only show the command used - skip Receive and call its parent
-        return super(Receive, self).__str__() + ': %s' % self.match
+        return super(events.Receive, self).__str__() + ': %s' % self.match
 
 
 def command(**kwargs):

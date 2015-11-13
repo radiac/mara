@@ -1,5 +1,6 @@
 from cletus import events
 from cletus import util
+from cletus.contrib.users.password import prompt_new_password
 
 from .core import service
 from .users import User
@@ -40,37 +41,29 @@ def connect(event):
                 continue
             
             # Set password
-            event.client.write(
-                'Please pick a password for your account.',
-                'Your password must be at least 6 characters long.',
-            )
-            
-            # Grab echo
-            event.client.supress_echo = True
+            event.client.write('Please pick a password for your account.')
+            # ++ python 3.3 has yield from
+            prompt = prompt_new_password(event.client)
+            prompt.send(None)
+            password = None
             while True:
-                event.client.write_raw('Enter a password: ')
-                pass_first = yield
-                event.client.write()
-                if not pass_first:
-                    event.client.write('Your password cannot be blank.')
-                    continue
-                elif len(pass_first) < 6:
-                    event.client.write('Your password must be at least 6 characters long.')
-                    continue
-                    
-                event.client.write_raw('Confirm password: ')
-                pass_second = yield
-                event.client.write()
-                if pass_first != pass_second:
-                    event.client.write('Passwords do not match. Try again.')
-                else:
+                try:
+                    try:
+                        raw = yield
+                    except Exception as e:
+                        prompt.throw(e)
+                    else:
+                        password = prompt.send(raw)
+                except StopIteration:
+                    pass
+                if password:
                     break
-            event.client.supress_echo = False
+            # ++ end python 2.7 support
             
             # Create new user and set password
             user = User(name)
             user.name = name
-            user.set_password(pass_first)
+            user.set_password(password)
             user.save()
             event.client.write('Account created!')
             

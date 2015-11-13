@@ -1,6 +1,7 @@
 """
 Cletus commands
 """
+import inspect
 import re
 
 from collections import defaultdict
@@ -123,7 +124,6 @@ class CommandRegistry(object):
             return
         
         # Run command
-        # ++ support generator
         self.commands[cmd].call(event, cmd, raw_args)
     
     def handle_command(self, event):
@@ -131,7 +131,24 @@ class CommandRegistry(object):
         Handle a CommandEvent
         """
         try:
-            event.command.fn(event, *event.args, **event.kwargs)
+            if inspect.isgeneratorfunction(event.command.fn):
+                # ++ python 3.3 has yield from
+                generator = event.command.fn(event, *event.args, **event.kwargs)
+                generator.send(None)
+                while True:
+                    try:
+                        try:
+                            raw = yield
+                        except Exception as e:
+                            generator.throw(e)
+                        else:
+                            generator.send(raw)
+                    except StopIteration:
+                        break
+                # ++ end python 2.7 support
+            else:
+                event.command.fn(event, *event.args, **event.kwargs)
+        
         except Exception as err:
             # Log and report back to the user
             report = ['Command failed: %s' % err]

@@ -38,3 +38,35 @@ class PasswordMixin(storage.Store):
     def check_password(self, password):
         return self.password == self.hash_password(password, self.password)
 
+
+
+def prompt_new_password(client):
+    """
+    Prompt the specified client for a password
+    """
+    # Set password
+    client.write('Your password must be at least 6 characters long.')
+    
+    # Grab echo
+    client.supress_echo = True
+    while True:
+        client.write_raw('Enter a password: ')
+        password = yield
+        client.write()
+        if not password:
+            client.write('Your password cannot be blank.')
+            continue
+        elif len(password) < 6:
+            client.write('Your password must be at least 6 characters long.')
+            continue
+            
+        client.write_raw('Confirm password: ')
+        confirm = yield
+        client.write()
+        if password != confirm:
+            client.write('Passwords do not match. Try again.')
+        else:
+            break
+    client.supress_echo = False
+    
+    yield password

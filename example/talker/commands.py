@@ -2,6 +2,7 @@
 Talker-style communication and commands
 """
 from cletus import util
+from cletus.contrib.users.password import prompt_new_password
 
 from .core import service
 from .users import User
@@ -85,7 +86,28 @@ def look(event):
 
 @commands.register
 def password(event):
-    pass
+    event.user.write('Please pick a new password for your account.')
+    # ++ python 3.3 has yield from
+    prompt = prompt_new_password(event.client)
+    prompt.send(None)
+    password = None
+    while True:
+        try:
+            try:
+                raw = yield
+            except Exception as e:
+                prompt.throw(e)
+            else:
+                password = prompt.send(raw)
+        except StopIteration:
+            break
+        if password:
+            break
+    # ++ end python 2.7 support
+    
+    event.user.set_password(password)
+    event.user.save()
+    event.user.write('Password changed.')
 
 @commands.register
 def quit(event):

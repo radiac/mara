@@ -55,6 +55,17 @@ class HR(object):
         
         return (" %s " % self.msg).center(width, '-')
 
+
+def pretty_list(data):
+    if not data:
+        return ''
+    last = data[-1]
+    rest = data[:-1]
+    if rest and last:
+        last = ' and ' + last
+    return ', '.join(rest) + last
+
+
 time_units = ['day', 'hour', 'minute', 'second']
 def pretty_age(seconds=None, now=None, then=None):
     if not seconds:

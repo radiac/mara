@@ -129,6 +129,7 @@ class Client(object):
         self.got_sb = False     # Are we inside a subnegotiation?
         self.options = {}       # Mapping for up to 256 TelnetOptions
         self.echo = False       # Echo input back to the client?
+        self._supress_echo = False   # Override echo option (control with supress_echo)
         self.sb_buffer = ''     # Buffer for sub-negotiations
         self.terminal_type = None
         self.columns = 80
@@ -199,7 +200,7 @@ class Client(object):
         # If not in raw mode, process it
         if not self.settings.socket_raw:
             data = self._process_read(data)
-        if not data:
+        if data is None:
             # Nothing to process
             return
         
@@ -211,7 +212,24 @@ class Client(object):
                 self.handler = None
         else:
             self.service.trigger(events.Receive(self, data))
-            
+    
+    @property
+    def supress_echo(self):
+        """
+        Disable echo on client and server.
+        
+        Use for collecting sensitive information, eg passwords
+        """
+        return self._supress_echo
+    
+    @supress_echo.setter
+    def supress_echo(self, value):
+        self._suppress_echo = value
+        if self._suppress_echo:
+            self.write_raw(IAC + WILL + ECHO)
+        else:
+            self.write_raw(IAC + WONT + ECHO)
+        
     def _process_read(self, data):
         """
         Process read data when not in raw mode
@@ -222,7 +240,7 @@ class Client(object):
             return
         
         # Echo back to client
-        if self.echo:
+        if self.echo and not self._suppress_echo:
             self._send_buffer += data
         
         # Add data to recv_buffer
@@ -237,7 +255,7 @@ class Client(object):
         
         # Test for a complete line
         if not "\n" in self._recv_buffer:
-            return
+            return None
         
         # Pull off first line
         (line, self._recv_buffer) = self._recv_buffer.split("\n")
@@ -254,9 +272,9 @@ class Client(object):
         # Resolve special lines
         out = []
         for line in lines:
-            if isinstance(line, util.HR):
+            if hasattr(line, 'render'):
                 line = line.render(self.columns)
-            out.append(line)
+            out.append(str(line))
         
         self._send_buffer += "\r\n".join(out) + "\r\n"
         

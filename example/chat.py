@@ -5,7 +5,7 @@ service = cletus.Service()
 
 # Set up a filter for write_all to filter to users who have logged in,
 # otherwise they'll see things on the login prompt
-def filter_to_users(service, clients):
+def filter_to_users(service, clients, **kwargs):
     return (c for c in clients if hasattr(c, 'username'))
 service.filter_all = filter_to_users
 

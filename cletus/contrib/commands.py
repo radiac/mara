@@ -4,8 +4,8 @@ Cletus commands
 import re
 
 from collections import defaultdict
-from ... import events
-from ... import util
+from .. import events
+from .. import util
 
 __all__ = [
     'CommandRegistry', 'Command', 'CommandEvent', 'cmd_commands',
@@ -26,6 +26,24 @@ RE_LIST = r'(.*?)(?:(?:\s*,\s*|\s+and\s+)(.*?))*'
 MATCH_LIST = r'^' + RE_LIST + '$'
 
 
+class CommandEvent(events.Receive):
+    """
+    Command event
+    """
+    def __init__(self, client, data, match, args, kwargs, command, registry, context):
+        super(CommandEvent, self).__init__(client, data)
+        self.match = match
+        self.args = args
+        self.kwargs = kwargs
+        self.command = command
+        self.registry = registry
+        self.context = context
+
+    def __str__(self):
+        # Only show the command used - skip Receive and call its parent
+        return super(events.Receive, self).__str__() + ': %s' % self.match
+
+
 class CommandRegistry(object):
     def __init__(self, service):
         self.service = service
@@ -33,7 +51,8 @@ class CommandRegistry(object):
         self.groups = defaultdict(list)
         
         # Bind event handlers
-        service.listen(events.Receive, self.receive)
+        service.listen(events.Receive, self.handle_receive)
+        service.listen(CommandEvent, self.handle_command)
         service.listen(events.PostStart, self.sort_groups)
         service.listen(events.PostRestart, self.sort_groups)
     
@@ -89,7 +108,7 @@ class CommandRegistry(object):
         self.commands[cmd.name] = cmd
         self.groups[cmd.group].append(cmd)
         
-    def receive(self, event):
+    def handle_receive(self, event):
         """
         Handle a Receive event
         """
@@ -107,6 +126,23 @@ class CommandRegistry(object):
         # ++ support generator
         self.commands[cmd].call(event, cmd, raw_args)
     
+    def handle_command(self, event):
+        """
+        Handle a CommandEvent
+        """
+        try:
+            event.command.fn(event, *event.args, **event.kwargs)
+        except Exception as err:
+            # Log and report back to the user
+            report = ['Command failed: %s' % err]
+            details = util.detail_error()
+            event.command.registry.service.log.write('command', *(report + details))
+            if event.command.registry.service.settings.commands_debug:
+                report.append(util.HR('Traceback'))
+                report.extend(details)
+                report.append(util.HR())
+            event.client.write(*report)
+
     def parse(self, event):
         """
         Parse the data from a Receive event into a command name and raw args,
@@ -165,7 +201,12 @@ class Command(object):
         self.fn = fn
         self.group = group
         self.syntax = syntax
-        self.help = help if help is not None else fn.__doc__.strip()
+        if help is not None:
+            self.help = help
+        elif fn.__doc__:
+            self.help = fn.__doc__.strip()
+        else:
+            self.help = ''
         self.context = context
         
         if args:
@@ -187,34 +228,23 @@ class Command(object):
             event.client.write(err)
             return
         
-        # Build CommandEvent
+        # Build and trigger CommandEvent using the normal event system
         cmd_event = CommandEvent(
-            event.client, event.data, cmd, self, self.registry, self.context
+            event.client, event.data, cmd, args, kwargs,
+            self, self.registry, self.context
         )
-        
-        try:
-            self.fn(cmd_event, *args, **kwargs)
-        except Exception as err:
-            # Log and report back to the user
-            report = ['Command failed: %s' % err]
-            details = util.detail_error()
-            self.registry.service.log.write('command', *(report + details))
-            if self.registry.service.settings.commands_debug:
-                report.append(util.HR('Traceback'))
-                report.extend(details)
-                report.append(util.HR())
-            event.client.write(*report)
+        self.registry.service.trigger(cmd_event)
     
     def parse(self, data):
         """
         Parse the arguments
         """
         # Test for no args
-        if not self.match:
+        if not self.args:
             if data:
                 raise ValueError("Syntax: %s" % self.name)
             else:
-                return None
+                return ([], {})
         
         # Try to match
         matches = self.args.search(data)
@@ -223,22 +253,6 @@ class Command(object):
         
         # Parse arguments types
         return matches.groups(), matches.groupdict()
-
-
-class CommandEvent(events.Receive):
-    """
-    Command event
-    """
-    def __init__(self, client, data, match, command, registry, context):
-        super(CommandEvent, self).__init__(client, data)
-        self.match = match
-        self.command = command
-        self.registry = registry
-        self.context = context
-
-    def __str__(self):
-        # Only show the command used - skip Receive and call its parent
-        return super(events.Receive, self).__str__() + ': %s' % self.match
 
 
 def command(**kwargs):

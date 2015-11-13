@@ -32,7 +32,7 @@ class Service(object):
         self.time = time.time()
         
         # Store of stores
-        self._stores = defaultdict(dict)
+        self.stores = defaultdict(dict)
         
         # An empty log
         self.log = None
@@ -59,18 +59,6 @@ class Service(object):
         
         # Start the server
         self._start()
-    
-    def store(self, cls, key):
-        """
-        Get or create the specified store instance
-        
-        Arguments:
-            cls     The store class
-            key     The unique key for the store instance
-        """
-        if key not in self.stores[cls]:
-            self.stores[cls] = cls(self, key)
-        return self.stores[cls]
         
 
     #
@@ -121,13 +109,18 @@ class Service(object):
             client.write(*data)
     
     def write_all(self, *data, **kwargs):
-        # Filter the client list using global filter and exclude list
+        # Capture kwargs
         filter_fn = kwargs.pop('filter', None)
         exclude = kwargs.pop('exclude', [])
+        if kwargs:
+            raise ValueError('Unexpected keyword arguments: %s' % kwargs)
         if not hasattr(exclude, '__iter__'):
             exclude = [exclude]
+            
+        # Filter the client list using global filter and exclude list
         clients = self.filter_all(
-            client for client in self.clients if client not in exclude,
+            self,
+            (client for client in self.clients if client not in exclude),
             **kwargs
         )
         
@@ -136,7 +129,7 @@ class Service(object):
             clients = filter_fn(service, clients, **kwargs)
         
         # Write data to the clients
-        for client in self.clients:
+        for client in clients:
             client.write(*data)
     
     @staticmethod
@@ -222,12 +215,12 @@ class Service(object):
         
         # Freeze the store of stores (with session data)
         frozen_stores = defaultdict(dict)
-        for cls, stores in self._stores:
+        for cls, stores in self.stores:
             frozen_stores[cls._store_name] = {
                 key: store.to_dict(session=True)
                 for key, store in stores.items()
             }
-        self._stores = defaultdict(dict)
+        self.stores = defaultdict(dict)
         
         # Reset the store registry, so it's clean for code to register stores
         storage.registry.clear()
@@ -242,7 +235,7 @@ class Service(object):
                     'Could not thaw store "%s" - no longer defined' % cls_name
                 )
                 continue
-            self._stores[cls] = {
+            self.stores[cls] = {
                 key: cls(self, key).from_dict(store, session=True)
                 for key, store in stores.items()
             }

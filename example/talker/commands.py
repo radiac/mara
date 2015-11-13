@@ -1,51 +1,64 @@
 """
 Talker-style communication and commands
 """
-from .service import service, commands
+from cletus import util
+
+from .core import service, commands
+from .users import User
 
 # Register the ``commands`` command, to list registered commands
-from cletus.contrib.commands import cmd_commands, cmd_help, MATCH_STR
+from cletus.contrib.commands import cmd_commands, cmd_help, MATCH_STR, RE_LIST
 commands.register('commands', cmd_commands)
 commands.register('help', cmd_help, extra={'cmd_commands': 'commands'})
 
 
-
-from cletus.user import User
-
-@commands.register('say', args=MATCH_STR, syntax='[message]')
+@commands.register('say', args=MATCH_STR, syntax='<message>')
 def say(event, message):
     event.client.write("You say: %s" % message)
-    service.write(e.user, "%s says: %s" % (e.user.name, e.args.message))
+    service.write_all(
+        "%s says: %s" % (event.user.name, message),
+        exclude=event.client,
+    )
 
-@command('emote', args=[('action', str)])
-def emote(e):
-    action = e.args.action
+@commands.register('emote', args=MATCH_STR, syntax='<action>')
+def emote(event, action):
     if not action.startswith("'"):
         action = ' ' + action
-    write_all("%s%s" % (e.user.name, action))
-    e.stop()
+    service.write_all("%s%s" % (event.user.name, action))
 
-@command('tell', args=[Arg('target', User, many=True), ('message', str)])
-def tell(e):
-    # ++ A lot of this can probably be made re-usable; add to socials
+@commands.register(
+    'tell',
+    args=r'^' + RE_LIST + '\s+(?P<msg>.*?)$',
+    syntax='<user>[, <user>] <message>',
+)
+def tell(event, *args, **kwargs):
+    usernames = [a for a in args[:-1] if a]
+    print "matches", args, kwargs
+    msg = kwargs['msg']
+    users = User.manager.get_active_by_name(usernames)
+    
     # Validate target user
-    for target in e.args.target:
-        if target == e.user:
-            write(e.user, 'Why would you want to tell yourself that?')
-            return
+    if event.user.name.lower() in users:
+        event.client.write('Why would you want to tell yourself that?')
+        return
         
     # Send
-    for target in e.args.target:
-        # ++ Need to tell them who else we're talking to
-        # ++ Create write_group(list)
-        write(target, '%s tells you: %s' % (e.user.name, e.args.message))
-    write(e.user, 'You tell %s: %s' % (', '.join([t.name for t in e.args.target]), e.args.message))
+    user_objs = users.values()
+    for target in user_objs:
+        service.write(
+            [user.client for user in user_objs],
+            '%s tells you: %s' % (event.user.name, msg),
+        )
+    event.client.write('You tell %s: %s' % (
+        util.pretty_list([u.name for u in user_objs]),
+        msg,
+    ))
 
-@command
-def who(e):
+
+@commands.register
+def who(event):
     # Find users
-    users = find_others(e.user)
-    users.append(e.user)
+    users = User.manager.active().values()
     users.sort(key=lambda user: user.name)
     
     # Build lines of output
@@ -56,14 +69,17 @@ def who(e):
         )
     lines.append(util.HR())
     
-    write(e.user, *lines)
+    event.client.write(*lines)
 
-@command
-def look(e):
-    list_users(e.user)
-    write_except(e.user, '%s looks around' % e.user.name)
+@commands.register
+def look(event):
+    service.write_all(
+        '%s looks around' % event.user.name,
+        exclude=event.client,
+    )
+    who(event)
 
-@command
-def quit(e):
-    write(e.user, util.HR('Goodbye!'))
-    e.user.disconnect()
+@commands.register
+def quit(event):
+    event.user.write(util.HR('Goodbye!'))
+    event.user.disconnect()

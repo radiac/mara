@@ -55,7 +55,7 @@ socket_timeout = None
 
 # Store folder
 # By default, Store objects will save their data to json files in this folder
-store = 'store'
+store_path = 'store'
 
 
 #

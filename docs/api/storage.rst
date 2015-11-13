@@ -4,39 +4,65 @@
 Storage
 =======
 
-Cletus provides a storage system which can be used to store data permanently,
-or just for the current session. Data is stored in instances of
-:ref:`class_store` subclasses, in field attributes defined using
-:ref:`class_field` or its subclasses.
+Cletus provides a simple storage system which can be used to store data
+permanently, or just for the current session. Data is stored in instances of
+:ref:`class_storage_store` subclasses, in field attributes defined using
+:ref:`class_storage_field` or its subclasses. Each store is managed by a
+:ref:`class_storage_manager`.
 
-Field names cannot start with an underscore, and cannot be one of the store
-method names.
+Store keys will be converted to lowercase, and can only contain alphabetic
+characters, digits and underscore or dash.
 
-Stores should only be accessed using the ``session`` instance, using the
-:ref:`method_session_store` method. This ensures data persists across reloads
-and restarts.
+Field names cannot start with an underscore, and cannot be one of the reserved
+store names (the attributes and methods listed below).
 
-The ``session`` will instantiated each store with a ``key`` for its associated
-data; permanent data for the store is saved in the :ref:`setting_store`
-directory, under subfolders for each store class, as json files named by key.
+A store class must be defined with the ``session`` instance it is tied to.
+This allows the the store to determine its path from settings, and ensures data
+persists across reloads and restarts.
 
-Once you have a ``store`` instance, you can read and write data by accessing
+Permanent data for the store is saved in the :ref:`setting_store`
+directory; each store class has its own subfolders, and each key has its own
+file, with data stored in json format.
+
+Once you have a ``store`` instance, you can get and set data by accessing
 the field attributes.
 
-You can either initialise a ``Field`` with ``save=False`` to make it a
-temporary session variable, or set ``_can_save=False`` on your store to make
-all of its fields temporary session variables (the ``save`` field argument will
-have no power here).
+You can initialise a ``Field`` with ``session=True`` to make it a temporary
+session variable. If you don't want to be able to save a store at all,
+use the :ref:`class_tempstoremixin` mixin when defining the class.
+
+Managers are intentionally simple, and do not provide functionality for
+querying or filtering; data is stored in JSON files, not a proper database. For
+anything complicated you would be better off just using cletus stores for
+session data with fields holding references to ORM objects, which can store
+permanent data in a more sensible structure than separate JSON files, and far
+more appropriate for being queried.
 
 
-.. _class_store:
+.. _class_storage_store:
 
-``cletus.Store``
-================
+``cletus.storage.Store``
+========================
 
 This is the abstract base class for storage models.
 
 Methods and attributes:
+
+``service``
+-----------
+This must be set to the service responsible for this storage class.
+
+Abstract classes do not need a ``service``.
+
+``abstract``
+------------
+If true, this class will not be registered for use.
+
+``manager``
+-----------
+The :ref:`class_store_manager` for this store, to provide a way to access
+all stored objects.
+
 
 ``to_dict()``, ``to_json()``
 ----------------------------
@@ -65,10 +91,10 @@ Save permanent data to disk
 Load permanent data from disk
 
 
-.. _class_field:
+.. _class_store_field:
 
-``cletus.Field``
-================
+``cletus.storage.Field``
+========================
 
 Storage variable
 
@@ -87,16 +113,95 @@ Arguments:
                     
                     Default: ``None``
                     
-    ``save``:       Optional boolean to state whether or not the field should
-                    be saved to disk.
-                    
-                    This is ignored if ``Store._can_save == False``.
+    ``session``:    Optional boolean to state whether the field is a session
+                    value (``True``), or if it should be saved to disk
+                    (``False``).
                     
                     Default: ``False``
 
 
-``init_store(store, name)``
----------------------------
+``contribute_to_class(store_cls, name)``
+----------------------------------------
 
-Called by the store when it is initialised. By default this is used to set
-the field instance attribute ``name`` on the ``store`` to the default value.
+Initialise the field on a new store class.
+
+This is called by the store when the class is first created. Normally this
+does nothing, but it can be used by a subclass to implement more complex
+behaviours, such as replacing the attribute for the field with a descriptor to
+manage getting and setting the field value.
+
+
+``contribute_to_instance(store, name)``
+---------------------------------------
+
+Initialise the field value on a new store instance.
+
+This is called by the store when a new instance is initialised. This is
+normally used to set the default value for the field, by setting the instance
+attribute with the field's ``name`` on the ``store``.
+
+This can be overridden by subclasses to implement more complex behaviours, such
+as replacing the attribute with a per-instance descriptor, to hold data
+internally for that store instance.
+
+
+.. _class_storage_manager:
+
+``cletus.storage.Manager``
+==========================
+
+Manager for stored objects.
+
+If will often be useful to subclass this when writing a custom store; for
+example::
+
+    class UserManager(cletus.store.Manager):
+        def get_by_username(self, name):
+            ...
+    
+    class User(cletus.storage.Store):
+        ...
+        registry = UserManager()
+
+Note that when assigning the manager to the store, you must assign an instance
+of the manager class, not the class itself.
+
+
+``active()``
+------------
+Return a dict of all active objects in the store (including unsaved), keyed
+using the object's key.
+
+``saved()``
+-----------
+Return a dict of all objects saved in the store, using the object's key as the
+dict key.
+
+``all()``
+---------
+Return a dict containing of all active and saved objects, keyed using the
+object's key. If an object exists in both saved and live, the live object will
+be used.
+
+``add_active(obj)``
+-------------------
+Make the registry aware of an active object. This is called internally whenever
+an object is instantiated.
+
+``remove_active(obj)``
+----------------------
+Remove an object from the active list when it is no longer needed in memory.
+For example, when a user logs out you can call ``User.manager.remove(user)``
+to remove them from the user manager's cache.
+
+By default objects are not garbage collected from a store's live cache.
+
+``contribute_to_class(store_cls, name)``
+----------------------------------------
+
+Initialise the manager on a new store class.
+
+This is called by the store when the class is first created. It normally
+creates and assigns a new instance of the manager. If your custom manager's
+constructor takes additional arguments, you should override
+``__copy__`` to pass these to the new instance.

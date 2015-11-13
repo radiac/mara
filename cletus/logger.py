@@ -14,6 +14,7 @@ SERVICE     = 'service'
 SERVER      = 'server'
 CLIENT      = 'client'
 EVENT       = 'event'
+STORE       = 'store'
 DEBUG       = 'debug'
 DEFAULT_LEVELS = ['server']
 
@@ -141,5 +142,7 @@ class Logger(object):
         self.write(CLIENT, *lines)
     def event(self, *lines):
         self.write(EVENT, *lines)
+    def store(self, *lines):
+        self.write(STORE, *lines)
     def debug(self, *lines):
         self.write(DEBUG, *lines)

@@ -3,8 +3,12 @@ Talker-style communication and commands
 """
 from cletus import util
 
-from .core import service, commands
+from .core import service
 from .users import User
+
+# Add command handler
+from cletus.contrib.commands import CommandRegistry
+commands = CommandRegistry(service)
 
 # Register the ``commands`` command, to list registered commands
 from cletus.contrib.commands import cmd_commands, cmd_help, MATCH_STR, RE_LIST
@@ -78,6 +82,10 @@ def look(event):
         exclude=event.client,
     )
     who(event)
+
+@commands.register
+def password(event):
+    pass
 
 @commands.register
 def quit(event):

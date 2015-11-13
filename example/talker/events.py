@@ -1,15 +1,26 @@
 from cletus import events
-from cletus.connection.client import IAC, WILL, WONT, ECHO
+from cletus import util
 
 from .core import service
 from .users import User
 
 
+@service.listen(events.Receive)
+def command_alias(event):
+    """
+    De-alias command aliases
+    """
+    # This will be attached to Receive event before standard CommandHandler
+    if event.data.startswith("'"):
+        event.data = 'say ' + event.data[1:]
+    elif event.data.startswith(';'):
+        event.data = 'emote ' + event.data[1:]
+
 @service.listen(events.Connect)
 def connect(event):
     """Deal with connection"""
     event.client.write('Welcome to the cletus example talker!')
-    while 1:
+    while True:
         event.client.write('')
         event.client.write_raw('What is your name? ')
         name = yield
@@ -19,25 +30,26 @@ def connect(event):
         if not user:
             # New user. Confirm they got it right.
             event.client.write(
-                'There is nobody with that name - do you want to create an account?',
+                'There is nobody with that name.',
             )
-            event.client.write_raw('Create account, yes or no? ')
+            event.client.write_raw(
+                'Do you want to create account? (Enter yes or no) ',
+            )
             answer = yield
             if not answer.lower().startswith('y'):
                 continue
             
             # Set password
             event.client.write(
-                'Please provide a password for your account.',
-                'It must be at least 6 characters long.',
+                'Please pick a password for your account.',
+                'Your password must be at least 6 characters long.',
             )
             
             # Grab echo
-            while 1:
+            event.client.supress_echo = True
+            while True:
                 event.client.write_raw('Enter a password: ')
-                event.client.supress_echo = True
                 pass_first = yield
-                event.client.supress_echo = False
                 event.client.write()
                 if not pass_first:
                     event.client.write('Your password cannot be blank.')
@@ -47,14 +59,13 @@ def connect(event):
                     continue
                     
                 event.client.write_raw('Confirm password: ')
-                event.client.supress_echo = True
                 pass_second = yield
-                event.client.supress_echo = False
                 event.client.write()
                 if pass_first != pass_second:
                     event.client.write('Passwords do not match. Try again.')
                 else:
                     break
+            event.client.supress_echo = False
             
             # Create new user and set password
             user = User(name)
@@ -97,7 +108,13 @@ def connect(event):
     user.client = event.client
     
     # Announce
-    event.client.write('Welcome, %s' % user.name)
+    others = [client.user.name for client in service.get_all(exclude=event.client)]
+    if not others:
+        others = ['Nobody else']
+    event.client.write('Welcome, %s! %s %s here' % (
+        user.name, util.pretty_list(others),
+        'is' if len(others) == 1 else 'are'
+    ))
     service.write_all(
         '%s has %s' % (user.name, connect_msg),
         exclude=event.client,

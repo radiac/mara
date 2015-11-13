@@ -37,3 +37,4 @@ class PasswordMixin(storage.Store):
     
     def check_password(self, password):
         return self.password == self.hash_password(password, self.password)
+

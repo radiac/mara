@@ -109,6 +109,18 @@ class Service(object):
             client.write(*data)
     
     def write_all(self, *data, **kwargs):
+        # Get client list
+        clients = self.get_all(**kwargs)
+        
+        # Write data to the clients
+        for client in clients:
+            client.write(*data)
+    
+    def get_all(self, **kwargs):
+        """
+        Get a list of clients, filtered by the global filter, a local filter
+        and an exclude list
+        """
         # Capture kwargs
         filter_fn = kwargs.pop('filter', None)
         exclude = kwargs.pop('exclude', [])
@@ -128,9 +140,8 @@ class Service(object):
         if filter_fn:
             clients = filter_fn(service, clients, **kwargs)
         
-        # Write data to the clients
-        for client in clients:
-            client.write(*data)
+        return clients
+        
     
     @staticmethod
     def _filter_all_default(service, clients, **kwargs):

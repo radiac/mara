@@ -1,3 +1,5 @@
+import re
+
 from cletus import events
 from cletus import util
 from cletus.contrib.users.password import prompt_new_password
@@ -25,6 +27,11 @@ def connect(event):
         event.client.write('')
         event.client.write_raw('What is your name? ')
         name = yield
+        
+        # Validate name
+        if re.search(r'[^a-zA-Z]', name):
+            event.client.write('Your name can only contain the letters a-z')
+            continue
         
         # Get user
         user = User.manager.load(name)
@@ -109,7 +116,7 @@ def connect(event):
         'is' if len(others) == 1 else 'are'
     ))
     service.write_all(
-        '%s has %s' % (user.name, connect_msg),
+        '-- %s has %s --' % (user.name, connect_msg),
         exclude=event.client,
     )
 
@@ -123,4 +130,4 @@ def disconnect(event):
     
     # Disconnect the user
     event.user.disconnected()
-    service.write_all('%s has disconnected' % event.user.name)
+    service.write_all('-- %s has disconnected --' % event.user.name)

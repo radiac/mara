@@ -1,5 +1,5 @@
 """
-Password mixin for UserBase
+Password mixin for BaseUser
 """
 try:
     import bcrypt

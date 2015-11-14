@@ -5,11 +5,12 @@ import inspect
 import re
 
 from collections import defaultdict
-from .. import events
-from .. import util
+from ... import events
+from ... import util
 
 __all__ = [
-    'CommandRegistry', 'Command', 'CommandEvent', 'cmd_commands',
+    'CommandRegistry', 'Command', 'CommandEvent', 'define_command',
+    'cmd_commands', 'cmd_help',
     'RE_WORD', 'MATCH_WORD', 'RE_STR', 'MATCH_STR', 'RE_LIST', 'MATCH_LIST',
 ]
 
@@ -76,7 +77,7 @@ class CommandRegistry(object):
             name = name.__name__
         
         # Called with pre-defined fn
-        #   @command(..)
+        #   @define_command(..)
         #   def mycmd(..): pass
         #   cmd.register('name', mycmd)
         if hasattr(fn, 'command_kwargs'):
@@ -272,7 +273,7 @@ class Command(object):
         return matches.groups(), matches.groupdict()
 
 
-def command(**kwargs):
+def define_command(**kwargs):
     """
     A wrapper to define a command's arguments before the registry command name
     are known
@@ -282,7 +283,7 @@ def command(**kwargs):
     return closure
 
 
-@command(args=r'^(?P<group>\w+)?$', syntax="(groups|<group>)")
+@define_command(args=r'^(?P<group>\w+)?$', syntax="(groups|<group>)")
 def cmd_commands(event, group=''):
     """
     List commands
@@ -306,7 +307,7 @@ def cmd_commands(event, group=''):
     lines.append(util.HR())
     event.client.write(*lines)
 
-@command(
+@define_command(
     args=r'^(?P<cmd>\w+)?$', syntax="<command>",
     help="Show help for a command",
 )

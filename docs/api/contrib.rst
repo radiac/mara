@@ -48,11 +48,11 @@ Register a command with the ``CommandRegistry.register`` method:
         'Triggered when user sends "look" with matching arguments'
 
 Commands written outside the scope of the command registry (and before their
-name is known) can have their parameters pre-defined with the ``@command``
-decorator:
+name is known) can have their parameters pre-defined with the
+``@define_command`` decorator:
 
-    from cletus.contrib.commands import command
-    @command(args=r'(.*)')
+    from cletus.contrib.commands import define_command
+    @define_command(args=r'(.*)')
     def dance(event, desc):
         ...
     

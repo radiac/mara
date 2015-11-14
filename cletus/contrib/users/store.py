@@ -1,7 +1,6 @@
 """
 Cletus users
 """
-from ..commands import command
 from ... import events
 from ... import storage
 from ... import util
@@ -25,7 +24,7 @@ class UserManager(storage.Manager):
         return found
 
 
-class UserBase(storage.Store):
+class BaseUser(storage.Store):
     abstract = True
     manager = UserManager()
     

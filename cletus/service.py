@@ -236,7 +236,17 @@ class Service(object):
         # Reset the store registry, so it's clean for code to register stores
         storage.registry.clear()
         
-        # ++ Reload modules
+        # Reload project modules
+        # ++ declare modules to reload when creating the service
+        # ++ (eg reload=['x', 'y'])
+        # ++ default to previous module
+        '''
+        import inspect
+        caller = inspect.currentframe().f_back
+        print "Called from module", caller.f_globals['__name__']
+        '''
+        # ++ find them in sys.modules
+        # ++ call reload() on them (and their children)
         
         # Thaw store of stores (with session data)
         for cls_name, stores in frozen_stores:

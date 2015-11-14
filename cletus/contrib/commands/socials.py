@@ -8,8 +8,187 @@ import re
 
 __all__ = ['gen_social_cmds']
 
-# Known verbs
-SOCIALS = [
+# Social verbs with default prepositions
+
+PREPOSITIONS = {
+    'agree': 'with',
+    'apologise': 'to',
+    'argue': 'with',
+    'bark': 'at',
+    'beam': 'at',
+    'beckon': 'to',
+    'beep': 'at',
+    'bing': 'at',
+    'bingle': 'at',
+    'bleep': 'at',
+    'blink': 'at',
+    'blush': 'at',
+    'bow': 'to',
+    'bouce': 'around',
+    'cackle': 'at',
+    'caper': 'around',
+    'chuckle': 'at',
+    'chortle': 'at',
+    'complain': 'to',
+    'confess': 'to',
+    'cough': 'at',
+    'cower': 'behind',
+    'crash': 'into',
+    'cringe': 'at',
+    'croak': 'at',
+    'croon': 'at',
+    'cuddle': 'up with',
+    'curl': 'up with',
+    'curse': 'at',
+    'curtsey': 'to',
+    'dance': 'with',
+    'disagree': 'with',
+    'discriminate': 'against',
+    'dribble': 'on',
+    'drool': 'on',
+    'eek': 'at',
+    'eep': 'at',
+    'fart': 'on',
+    'fib': 'to',
+    'fiddle': 'with',
+    'flirt': 'with',
+    'flutter': 'around',
+    'frolic': 'around',
+    'frown': 'at',
+    'gape': 'at',
+    'gasp': 'at',
+    'gawk': 'at',
+    'gaze': 'at',
+    'gesticulate': 'to',
+    'gesture': 'to',
+    'giggle': 'at',
+    'glare': 'at',
+    'gloat': 'at',
+    'glower': 'at',
+    'grin': 'at',
+    'grimace': 'at',
+    'grind': 'with',
+    'groan': 'at',
+    'grovel': 'before',
+    'growl': 'at',
+    'grumble': 'at',
+    'grunt': 'at',
+    'guffaw': 'at',
+    'gulp': 'at',
+    'hiccup': 'at',
+    'hiss': 'at',
+    'hoot': 'at',
+    'hop': 'around',
+    'howl': 'at',
+    'hrmph': 'at',
+    'hmm': 'at',
+    'hrm': 'at',
+    'hum': 'to',
+    'jump': 'on',
+    'laugh': 'at',
+    'lecture': 'to',
+    'leer': 'at',
+    'listen': 'to',
+    'loom': 'over',
+    'meep': 'at',
+    'meow': 'at',
+    'mime': 'to',
+    'moan': 'at',
+    'moo': 'at',
+    'moose': 'at',
+    'mope': 'at',
+    'mumble': 'at',
+    'mutter': 'at',
+    'neigh': 'at',
+    'nestle': 'up to',
+    'nod': 'at',
+    'ook': 'at',
+    'ping': 'at',
+    'plead': 'to',
+    'point': 'at',
+    'pose': 'for',
+    'pounce': 'on',
+    'pout': 'at',
+    'prance': 'around',
+    'propose': 'to',
+    'puke': 'all over',
+    'purr': 'at',
+    'quack': 'at',
+    'rant': 'at',
+    'roar': 'at',
+    'scamper': 'around',
+    'scoff': 'at',
+    'scowl': 'at',
+    'scream': 'at',
+    'screech': 'at',
+    'shrug': 'at',
+    'shiver': 'at',
+    'shriek': 'at',
+    'shudder': 'at',
+    'sigh': 'at',
+    'sing': 'to',
+    'sit': 'on',
+    'slobber': 'on',
+    'smile': 'at',
+    'smirk': 'at',
+    'snap': 'at',
+    'snarl': 'at',
+    'sneer': 'at',
+    'sneeze': 'at',
+    'snicker': 'at',
+    'sniff': 'at',
+    'sniffle': 'at',
+    'snigger': 'at',
+    'snore': 'at',
+    'snort': 'at',
+    'snortle': 'at',
+    'snore': 'at',
+    'sob': 'at',
+    'somersault': 'at',
+    'sparkle': 'at',
+    'spit': 'at',
+    'spy': 'on',
+    'squeak': 'at',
+    'squeal': 'at',
+    'squint': 'at',
+    'stare': 'at',
+    'sulk': 'at',
+    'swagger': 'at',
+    'swear': 'at',
+    'sympathise': 'with',
+    'tango': 'with',
+    'tattle': 'on',
+    'think': 'about',
+    'tremble': 'at',
+    'tut': 'at',
+    'twinkle': 'at',
+    'twirl': 'at',
+    'twitch': 'at',
+    'vomit': 'at',
+    'wail': 'at',
+    'wait': 'for',
+    'waltz': 'with',
+    'wave': 'at',
+    'weep': 'at',
+    'whimper': 'at',
+    'whine': 'at',
+    'whinge': 'at',
+    'whinny': 'at',
+    'whistle': 'to',
+    'wibble': 'at',
+    'wince': 'at',
+    'wiggle': 'at',
+    'wink': 'at',
+    'wobble': 'at',
+    'worry': 'about',
+    'yawn': 'at',
+    'yodel': 'at',
+    'yelp': 'at',
+}
+
+
+# All social verbs
+SOCIALS = PREPOSITIONS.keys() + [
     # Simple socials
     'accuse', 'annoy', 'bite', 'blame', 'bribe', 'caress', 'chase', 'chastise',
     'comfort', 'compliment', 'condemn', 'congratulate', 'defenestrate',
@@ -26,31 +205,6 @@ SOCIALS = [
     'strangle', 'stroke', 'sue', 'surprise', 'tackle', 'taunt', 'tease',
     'tempt', 'thank', 'threaten', 'tickle', 'toast', 'tongue', 'touch',
     'trust', 'warn', 'welcome',
-    
-    # These will often have prepositions (with, at etc)
-    'agree', 'apologise', 'argue', 'bark', 'beam', 'beckon', 'beep', 'bing',
-    'bingle', 'bleep', 'blink', 'blush', 'bow', 'bounce', 'cackle', 'caper',
-    'chuckle', 'chortle', 'complain', 'confess', 'cough', 'cower', 'crash',
-    'cringe', 'croak', 'croon', 'cuddle', 'curl', 'curse', 'curtsey', 'dance',
-    'disagree', 'discriminate', 'dribble', 'drool', 'eek', 'eep', 'fart',
-    'fib', 'fiddle', 'flirt', 'flutter', 'frolic', 'frown', 'gape', 'gasp',
-    'gawk', 'gaze', 'gesticulate', 'gesture', 'giggle', 'glare', 'gloat',
-    'glower', 'grin', 'grimace', 'grind', 'groan', 'grovel', 'growl',
-    'grumble', 'grunt', 'guffaw', 'gulp', 'hiccup', 'hiss', 'hoot', 'hop',
-    'howl', 'hrmph', 'hmm', 'hrm', 'hum', 'jump', 'laugh', 'lecture', 'leer',
-    'listen', 'loom', 'meep', 'meow', 'mime', 'moan', 'moo', 'moose', 'mope',
-    'mumble', 'mutter', 'neigh', 'nestle', 'nod', 'ook', 'ping', 'plead',
-    'point', 'pose', 'pounce', 'pout', 'prance', 'propose', 'puke', 'purr',
-    'quack', 'rant', 'roar', 'scamper', 'scoff', 'scowl', 'scream', 'screech',
-    'shrug', 'shiver', 'shriek', 'shudder', 'sigh', 'sing', 'sit', 'slobber',
-    'smile', 'smirk', 'snap', 'snarl', 'sneer', 'sneeze', 'snicker', 'sniff',
-    'sniffle', 'snigger', 'snore', 'snort', 'snortle', 'snore', 'sob',
-    'somersault', 'sparkle', 'spit', 'spy', 'squeak', 'squeal', 'squint',
-    'stare', 'sulk', 'swagger', 'swear', 'sympathise', 'tango', 'tattle',
-    'think', 'tremble', 'tut', 'twinkle', 'twirl', 'twitch', 'vomit', 'wail',
-    'wait', 'waltz', 'wave', 'weep', 'whimper', 'whine', 'whinge', 'whinny',
-    'whistle', 'wibble', 'wince', 'wiggle', 'wink', 'wobble', 'worry', 'yawn',
-    'yodel', 'yelp',
     
     # These will often have adjectives
     'applaud', 'boo', 'bleat', 'bleed', 'breakdance', 'breathe', 'burp',
@@ -93,6 +247,7 @@ class DirectedAction(object):
         """
         self.tokens = []
         self.users = []
+        last_word_token = None
         raw = self.raw.strip()
         while raw:
             # Pop next word and non-word
@@ -108,13 +263,28 @@ class DirectedAction(object):
                 else:
                     user = self.to_user(word)
                     if user:
+                        # Check if we need to add a preposition
+                        if (
+                            last_word_token
+                            and isinstance(last_word_token, VerbToken)
+                            and last_word_token.value in PREPOSITIONS
+                        ):
+                            self.tokens.append(
+                                OtherToken(PREPOSITIONS[token.value] + ' ')
+                            )
+                        
+                        # Add the user
                         token = UserToken(user)
                         self.users.append(user)
                     else:
                         # Unknown/irrelevant word
                         token = OtherToken(word)
-                        
+                
+                token.last_word_token = last_word_token
+                last_word_token = token
                 self.tokens.append(token)
+            
+            # Add nonword as OtherToken
             if nonword:
                 self.tokens.append(OtherToken(nonword))
         
@@ -136,11 +306,24 @@ class DirectedAction(object):
         """
         return self.known_users.get(value.lower())
         
-    def verb_to_third_person(self, word):
+    def verb_to_third_person(self, token):
         """
         Naieve method to change a first person present tense verb to third
         person.
         """
+        word = token.value
+        last_word_token = getattr(token, 'last_word_token', None)
+        
+        # Catch conjucations that use first person present conjugations;
+        # pretty crude, but should cover most situations
+        if last_word_token and last_word_token.value in [
+            # Present, not first person
+            'you', 'we', 'they',
+            # infinitive, future, conditional
+            'to', 'will', 'would',
+        ]:
+            return word
+        
         # Last 2 chars
         if word[-2:] in ('sh', 'ch'):
             word = word + 'es'
@@ -186,7 +369,7 @@ class DirectedAction(object):
         for token in self.tokens:
             # Change verb tense
             if isinstance(token, VerbToken):
-                words.append(self.verb_to_third_person(token.value))
+                words.append(self.verb_to_third_person(token))
             
             # Change username to "you"
             elif isinstance(token, UserToken):
@@ -232,7 +415,7 @@ def gen_social_cmd(service, commands, user_store, verb, parser=DirectedAction):
         for user in set(parsed.users):
             if user == event.user:
                 continue
-            event.client.write(
+            user.write(
                 event.user.name + ' ' + parsed.third_person(user)
             )
         

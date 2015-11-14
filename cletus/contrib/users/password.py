@@ -4,8 +4,8 @@ Password mixin for BaseUser
 try:
     import bcrypt
     import hashlib
-except ImportError:
-    raise ImportError('%s - it is required for PasswordMixin')
+except ImportError as e:
+    raise ImportError('%s - it is required for PasswordMixin' % e)
 
 from ... import storage
 

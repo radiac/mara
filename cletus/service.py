@@ -21,7 +21,7 @@ class Service(object):
     """
     Service management
     """
-    def __init__(self):
+    def __init__(self, modules=None):
         # Store settings
         self.settings = None
         
@@ -39,7 +39,22 @@ class Service(object):
         
         # Initialise events
         self.events = defaultdict(list)
-        
+
+        # If we haven't been told which modules to manage, find the root of the
+        # module which is creating the service
+        if not modules:
+            import inspect
+            caller = inspect.currentframe().f_back
+            module_name = caller.f_globals['__name__']
+            if '.' in module_name:
+                module_name = module_name.split('.', 1)[0]
+            if module_name == 'cletus':
+                raise ValueError('Cannot define service under cletus package')
+            modules = [module_name]
+        if 'cletus' in modules:
+            raise ValueError('Cannot reload cletus modules')
+        self.modules = modules
+
     datetime = property(
         fget = lambda self: datetime.datetime.fromtimestamp(self.time),
         doc = "Get the current time as a datetime object"
@@ -237,14 +252,9 @@ class Service(object):
         storage.registry.clear()
         
         # Reload project modules
-        # ++ declare modules to reload when creating the service
-        # ++ (eg reload=['x', 'y'])
-        # ++ default to previous module
-        '''
-        import inspect
-        caller = inspect.currentframe().f_back
-        print "Called from module", caller.f_globals['__name__']
-        '''
+        for reload_module in self.modules:
+            pass
+            #for module in 
         # ++ find them in sys.modules
         # ++ call reload() on them (and their children)
         

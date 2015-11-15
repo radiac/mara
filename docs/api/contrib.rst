@@ -79,11 +79,19 @@ keyword arguments:
 Command functions
 -----------------
 
-Command functions are passed a ``CommandEvent`` with the data from the
-``Receive`` event, plus:
+Command functions are passed the following arguments:
 
-``event.cmd``:          The command name which was matched for this command
-``event.registry``:     The command registry this command is registered with
+:   event:      A ``CommandEvent`` based on the ``Receive`` event, (ie
+                containing its ``service``, ``client`` etc), plus:
+                
+                ``event.cmd``:          The command name which was matched for
+                                        this command
+                ``event.registry``:     The command registry this command is
+                                        registered with
+    *args:      A list of values of unnamed groups in the ``args`` regex
+    **kwargs    A dict of values of named groups in the ``args`` regex
+
+If a keyword argument's value is None, it will not be passed to the function.
 
 
 Subclassing the ``CommandRegistry``

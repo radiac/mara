@@ -6,6 +6,7 @@ Controls settings, server, and loaded modules
 from collections import defaultdict
 import datetime
 import inspect
+from modulefinder import ModuleFinder
 import sys
 import time
 
@@ -234,42 +235,116 @@ class Service(object):
         """
         Reset events and reload plugins
         """
-        raise NotImplemented('Service cannot reload yet')
-
+        frozen = self._reload_prepare()
+        
+        # Try to reload
+        e = None
+        try:
+            self._reload_modules()
+        except ImportError, e:
+            pass
+        
+        self._reload_restore(frozen)
+        
+        # If reload failed, re-raise its error
+        if e:
+            raise e
+        
+    def _reload_prepare(self):
+        """
+        Prepare for reload by freezing stores and sending events
+        """
         # Send reset warning
         self.trigger(events.PreRestart())
         
-        # Freeze the store of stores (with session data)
-        frozen_stores = defaultdict(dict)
-        for cls, stores in self.stores:
-            frozen_stores[cls._store_name] = {
-                key: store.to_dict(session=True)
-                for key, store in stores.items()
-            }
+        # Serialise the store of stores (with session data)
+        store_data = defaultdict(dict)
+        for store_name, store in self.stores.items():
+            store_data[store_name] = store.manager.serialise(session=True)
+        
+        # Clear out the service storage registry
         self.stores = defaultdict(dict)
         
-        # Reset the store registry, so it's clean for code to register stores
-        storage.registry.clear()
+        return store_data
         
-        # Reload project modules
-        for reload_module in self.modules:
-            pass
-            #for module in 
-        # ++ find them in sys.modules
-        # ++ call reload() on them (and their children)
+    
+    def _reload_modules(self):
+        """
+        Reload managed modules
         
+        These are the modules named in the Service(modules=[]) list, or if that
+        is not set, the base package 
+        """
+        # Generate list of module references that we're going to reload
+        modules = []
+        for module_name in self.modules:
+            for module in sys.modules.values():
+                if module.__name__.startswith(module_name):
+                    modules.append(module)
+        modules = set(modules)
+        
+        # Now find their dependencies
+        dependencies = defaultdict([])
+        for module in modules:
+            # Find filename
+            filename = module.__file__
+            if filename.endswith('.pyc'):
+                filename = filename[:-1]
+            
+            # Find modules it imports which we're going to reload
+            finder = ModuleFinder()
+            finder.run_script(filename)
+            for imported_name in finder.modules.keys():
+                if imported_name not in sys.modules:
+                    continue
+                imported_module = sys.modules[imported_name]
+                if imported_module in modules:
+                    dependencies[module].append(imported_module)
+        
+        # Reload modules
+        while dependencies:
+            # Find everything without a dependency
+            reloadable = [
+                module for module, deps in dependencies.items() if not deps
+            ]
+            
+            # If nothing is reloadable, there must be circular dependencies
+            if not reloadable:
+                raise ImportError(
+                    'Cannot reload - circular dependencies detected in %s' % 
+                    sorted([d.__name__ for d in dependencies.keys()])
+                )
+            
+            # Reload the reloadable
+            for module in reloadable:
+                reload(module)
+            
+            # Clean up dependencies
+            reloaded = set(reloadable)
+            cleaned = defaultdict([])
+            for module, deps in dependencies.items():
+                # Empty deps already processed
+                if not deps:
+                    continue
+                
+                # Remove processed from deps
+                cleaned[module] = set(deps).difference(reloaded)
+            dependencies = cleaned
+        
+    def _reload_restore(self, store_data):
+        """
+        Restore after reload
+        """
         # Thaw store of stores (with session data)
-        for cls_name, stores in frozen_stores:
-            cls = storage.registry.get(cls_name)
-            if cls is None:
+        for store_name, data in store_data:
+            store_cls = self.stores.get(store_name)
+            if store_cls is None:
                 self.log.store(
-                    'Could not thaw store "%s" - no longer defined' % cls_name
+                    'Could not thaw store "%s" - no longer defined' % store_name
                 )
                 continue
-            self.stores[cls] = {
-                key: cls(self, key).from_dict(store, session=True)
-                for key, store in stores.items()
-            }
+            store_cls.manager.deserialise(data)
+        
         self.trigger(events.PostRestart())
 
     def stop(self):

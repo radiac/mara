@@ -13,6 +13,17 @@ def event_add_user(event):
     event.user = getattr(event.client, 'user', None)
 
 
+class ClientField(storage.Field):
+    def freeze(self, obj, name):
+        client = super(ClientField, self).freeze(obj, name)
+        client.user = None
+        return client
+    
+    def thaw(self, obj, name, client):
+        super(ClientField, self).thaw(obj, name, client)
+        client.user = self
+
+
 class UserManager(storage.Manager):
     def get_active_by_name(self, names):
         active = self.active()
@@ -20,7 +31,7 @@ class UserManager(storage.Manager):
         found = { k: v for k, v in active.items() if k in lower_names }
         missing = set(lower_names).difference(set(found.keys()))
         if missing:
-            raise ValueError('Unknown users %s' % util.pretty_list(missing))
+            raise ValueError('Unknown users %s' % util.pretty_list(list(missing)))
         return found
 
 
@@ -28,7 +39,7 @@ class BaseUser(storage.Store):
     abstract = True
     manager = UserManager()
     
-    client = storage.Field(session=True)
+    client = ClientField(session=True)
     name = storage.Field('')
     
     def write(self, *lines):

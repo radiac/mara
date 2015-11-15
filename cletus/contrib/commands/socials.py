@@ -405,13 +405,11 @@ def gen_social_cmd(service, commands, user_store, verb, parser=DirectedAction):
         parsed = parser(action, user_store)
         
         # Tell the originating user
-        service.write_all('-- FIRST --')
         event.client.write(
             'You ' + parsed.first_person(event.user)
         )
         
         # Tell the other targetted users
-        service.write_all('-- THIRD TARGET --')
         for user in set(parsed.users):
             if user == event.user:
                 continue
@@ -420,7 +418,6 @@ def gen_social_cmd(service, commands, user_store, verb, parser=DirectedAction):
             )
         
         # Tell remaining users
-        service.write_all('-- OTHERS --')
         others = [
             user.client for user in 
             set(user_store.manager.active().values()).difference(
@@ -430,7 +427,7 @@ def gen_social_cmd(service, commands, user_store, verb, parser=DirectedAction):
         if others:
             service.write(others, event.user.name + ' ' + parsed.third_person())
         
-    commands.register(verb, command, args=r'^(.*)$')
+    commands.register(verb, command, args=r'^(.*)$', group='social')
         
 def gen_social_cmds(service, commands, user_store, verbs=SOCIALS, parser=DirectedAction):
     """

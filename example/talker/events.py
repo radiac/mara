@@ -33,7 +33,7 @@ def connect(event):
             event.client.write('Your name can only contain the letters a-z')
             continue
         
-        # Get user
+        # Get user and auth, or prompt to create account
         user = User.manager.load(name)
         if not user:
             # New user. Confirm they got it right.
@@ -75,6 +75,13 @@ def connect(event):
             event.client.write('Account created!')
             
         else:
+            # Catch corrupted profile, rather than dying in bcrypt
+            if not user.password:
+                event.client.write('That profile is corrupt. Contact the administrator for details.')
+                User.manager.remove_active(user)
+                event.client.close()
+                return
+            
             # Authenticate existing user
             event.client.write('A user with that name already exists.')
             event.client.write_raw('Enter your password, or press enter to pick a new name: ')

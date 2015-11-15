@@ -91,7 +91,8 @@ flash_policy = """<?xml version="1.0" encoding="UTF-8"?>
 
 # Log levels to listen to
 # Set to a list of log levels, or a comma separated list of log levels
-# Set to True to log 
+# Set to 'all' to log everything
+# Set to True to log default levels
 # Set to None or falsey value to log nothing
 log = True
 

@@ -5,6 +5,7 @@ Data storage
 import json
 import os
 
+from ..connection.client import Client
 from .manager import Manager
 from .fields import Field
 
@@ -12,7 +13,7 @@ __all__ = ['Store']
 
 # List of reserved words for Store objects
 RESERVED = [
-    'service', 'abstract', 'manager',
+    'service', 'key', 'abstract', 'manager',
     'to_dict', 'to_json', 'from_dict', 'from_json', 'save', 'load',
 ]
 
@@ -114,6 +115,9 @@ class Store(object):
     """
     __metaclass__ = StoreType
     
+    # Key for the store instance
+    key = None
+    
     # Service this store class is linked to
     # Must be set by subclass
     service = None
@@ -155,27 +159,28 @@ class Store(object):
         """
         Create data dict from instance data, suitable for json.dumps
         
-        To override how a field is frozen, define a method freeze_<fieldname>
-        
         If session=True, include temporary session data
         """
-        # Iterate through self.saved and put into data object
         data = {}
-        for name in self._permanent_fields if not session else self.fields.keys():
-            data[name] = getattr(self, name)
+        for name, field in self._fields.items():
+            if session and name not in self._permanent_fields:
+                continue
+            data[name] = field.serialise(self, name)
         return data
     
     def from_dict(self, data, session=False):
         """
-        Create new instance with data dict from to_dict()
+        Update this instance data with data from to_dict()
         
         To override how a field is thawed, define a method thaw_<fieldname>
         """
-        for name in self._permanent_fields if not session else self.fields.keys():
+        for name, field in self._fields.items():
+            if session and name not in self._permanent_fields:
+                continue
             # Check if Field has been added since it was saved - leave default
             if name not in data:
                 continue
-            setattr(self, name, data[name])
+            field.deserialise(self, name, data[name])
         return self
     
     def to_json(self, session=False):
@@ -184,7 +189,8 @@ class Store(object):
         """
         try:
             data = self.to_dict()
-            return json.dumps(data, cls=JSONEncoderFactory(self.service, session))
+            print "DATA", data
+            return json.dumps(data)
         except Exception, e:
             self.service.log.store('Cannot save to string: %s' % e)
             return ''
@@ -194,7 +200,7 @@ class Store(object):
         Load data from a JSON string
         """
         try:
-            data = json.loads(raw, cls=JSONDecoderFactory(self.service, session))
+            data = json.loads(raw)
             self.from_dict(data)
         except Exception, e:
             self.service.log.store('Cannot load from string: %s' % e)
@@ -238,29 +244,6 @@ class Store(object):
         self.from_json(raw)
         return True
 
-
-def JSONDecoderFactory(service, session=False):
-    class StorageJSONDecoder(json.JSONDecoder):
-        def decode(self, raw):
-            decoded = super(StorageJSONDecoder, self).decode(raw)
-            if '__store__' in decoded:
-                cls = service.stores.get(decoded['__store__'])
-                del decoded['__store__']
-                if cls is not None:
-                    store = cls()
-                    store.from_dict(decoded, session)
-                return None
-            return decoded
-        
-        
-def JSONEncoderFactory(service, session=False):
-    class StorageJSONEncoder(json.JSONEncoder):
-        def default(self, obj):
-            if isinstance(obj, Store):
-                obj = obj.to_dict(session)
-                obj['__store__'] = obj._name
-            
-            return super(StorageJSONEncoder, self).default(obj)
 
 
 class TempStoreMixin(object):

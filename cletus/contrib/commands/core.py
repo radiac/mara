@@ -10,7 +10,7 @@ from ... import util
 
 __all__ = [
     'CommandRegistry', 'Command', 'CommandEvent', 'define_command',
-    'cmd_commands', 'cmd_help',
+    'cmd_commands', 'cmd_help', 'cmd_reload',
     'RE_WORD', 'MATCH_WORD', 'RE_STR', 'MATCH_STR', 'RE_LIST', 'MATCH_LIST',
 ]
 
@@ -23,9 +23,13 @@ MATCH_WORD = r'^' + RE_WORD + '$'
 RE_STR = r'(.*?)'
 MATCH_STR = r'^' + RE_STR + '$'
 
-# Match a list of strings, separated by commas or "and"
-RE_LIST = r'(.*?)(?:(?:\s*,\s*|\s+and\s+)(.*?))*'
+# Match a list of strings, separated by commas
+RE_LIST = r'(.*?)(?:\s*,\s*(.*?))*'
 MATCH_LIST = r'^' + RE_LIST + '$'
+
+# Match a list of strings, separated by commas or "and"
+RE_LIST_AND = r'(.*?)(?:(?:\s*,\s*|\s+and\s+)(.*?))*'
+MATCH_LIST_AND = r'^' + RE_LIST_AND + '$'
 
 
 class CommandEvent(events.Receive):
@@ -85,7 +89,6 @@ class CommandRegistry(object):
             new_kwargs.update(fn.command_kwargs)
             new_kwargs.update(kwargs)
             kwargs = new_kwargs
-        
         
         # Closure to register with args and kwargs
         def closure(fn):
@@ -269,8 +272,27 @@ class Command(object):
         if not matches:
             raise ValueError("Syntax: %s %s" % (self.name, self.syntax))
         
+        # Collect all keyword arguments for now
+        kwargs = matches.groupdict()
+        
+        # Non-keyword arguments must be unnamed groups only
+        # Thanks to http://stackoverflow.com/a/30293349/3301958
+        named = {}
+        unnamed = {}
+        for key, val in kwargs.items():
+            named[matches.span(key)] = val
+        for i, val in enumerate(matches.groups()):
+            span = matches.span(i + 1)
+            if span not in named:
+                unnamed[span] = val
+        args = [unnamed[key] for key in sorted(unnamed.keys())]
+        
+        # Limit keyword arguments to just those with values
+        # This will allow functions to specify defaults as normal
+        kwargs = {key: val for key, val in kwargs.items() if val is not None}
+        
         # Parse arguments types
-        return matches.groups(), matches.groupdict()
+        return args, kwargs
 
 
 def define_command(**kwargs):
@@ -280,33 +302,33 @@ def define_command(**kwargs):
     """
     def closure(fn):
         fn.command_kwargs = kwargs
+        return fn
     return closure
 
 
 @define_command(args=r'^(?P<group>\w+)?$', syntax="(groups|<group>)")
-def cmd_commands(event, group=''):
+def cmd_commands(event, group=None):
     """
     List commands
     """
     groups = event.registry.groups
-    if group == 'groups' or group not in groups:
-        event.client.write('Valid groups are: %s' % ', '.join(
-            [name or '(None)' for name in groups.keys()]
-        ))
-        return
+    if group:
+        if (group == 'groups' or group not in groups):
+            event.client.write('Valid groups are: %s' % ', '.join(
+                [name or '(None)' for name in groups.keys()]
+            ))
+            return
     
     groupname = ''
     if group:
         groupname = group.title() + ' '
     
-    lines = [util.HR('%sCommands' % groupname)]
-    lines.extend([
-        '%s\t%s%s' % (cmd.name, cmd.syntax)
-        for cmd in groups[group]
-    ])
-    lines.append(util.HR())
-    event.client.write(*lines)
-
+    event.client.write(
+        util.HR('%sCommands' % groupname),
+        ' '.join((cmd.name for cmd in groups[group])),
+        util.HR(),
+    )
+    
 @define_command(
     args=r'^(?P<cmd>\w+)?$', syntax="<command>",
     help="Show help for a command",
@@ -340,3 +362,13 @@ def cmd_help(event, cmd=None):
         command.help,
         util.HR()
     )
+
+
+@define_command(help="Reload the project code")
+def cmd_reload(event):
+    """
+    Reload the project code
+    """
+    event.client.write('Reloading...')
+    event.service.reload()
+    event.client.write('Reload successful')

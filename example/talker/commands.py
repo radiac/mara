@@ -12,9 +12,12 @@ from cletus.contrib.commands import CommandRegistry, gen_social_cmds
 commands = CommandRegistry(service)
 
 # Register the ``commands`` command, to list registered commands
-from cletus.contrib.commands import cmd_commands, cmd_help, MATCH_STR, RE_LIST
+from cletus.contrib.commands import (
+    cmd_commands, cmd_help, cmd_reload, MATCH_STR, RE_LIST,
+)
 commands.register('commands', cmd_commands)
-commands.register('help', cmd_help, extra={'cmd_commands': 'commands'})
+commands.register('help', cmd_help, context={'cmd_commands': 'commands'})
+commands.register('reload', cmd_reload)
 
 # Add social commands
 gen_social_cmds(service, commands, User)
@@ -39,7 +42,7 @@ def emote(event, action):
     syntax='<user>[, <user>] <message>',
 )
 def tell(event, *args, **kwargs):
-    usernames = [a for a in args[:-1] if a]
+    usernames = args
     msg = kwargs['msg']
     users = User.manager.get_active_by_name(usernames)
     

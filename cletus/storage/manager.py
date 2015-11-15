@@ -130,3 +130,23 @@ class Manager(object):
         objs = self.saved()
         objs.update(self.active())
         return objs
+
+    def serialise(self, session=True):
+        """
+        Serialise all active objects to dict
+        
+        Empties active objects
+        """
+        frozen = {}
+        for key, obj in self.cache.items():
+            frozen[key] = obj.to_dict(session)
+        self.cache.clear()
+        return frozen
+    
+    def deserialise(self, frozen, session=True):
+        """
+        Deserialise dict of json dicts into active objects
+        """
+        for key, json in frozen:
+            obj = self.store_cls(key, active=True)
+            obj.from_json(json)

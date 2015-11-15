@@ -187,23 +187,18 @@ class Store(object):
         """
         Save data to a JSON string
         """
-        try:
-            data = self.to_dict()
-            print "DATA", data
-            return json.dumps(data)
-        except Exception, e:
-            self.service.log.store('Cannot save to string: %s' % e)
-            return ''
+        # Purposely don't catch exception - failure to serialise is fatal
+        data = self.to_dict()
+        print "DATA", data
+        return json.dumps(data)
         
     def from_json(self, raw, session=False):
         """
         Load data from a JSON string
         """
-        try:
-            data = json.loads(raw)
-            self.from_dict(data)
-        except Exception, e:
-            self.service.log.store('Cannot load from string: %s' % e)
+        # Purposely don't catch exception - failure to serialise is fatal
+        data = json.loads(raw)
+        self.from_dict(data)
         
     def save(self):
         """

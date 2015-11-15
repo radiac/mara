@@ -248,7 +248,7 @@ class Service(object):
         
         # If reload failed, re-raise its error
         if e:
-            raise e
+            raise
         
     def _reload_prepare(self):
         """
@@ -267,7 +267,6 @@ class Service(object):
         
         return store_data
         
-    
     def _reload_modules(self):
         """
         Reload managed modules
@@ -279,12 +278,14 @@ class Service(object):
         modules = []
         for module_name in self.modules:
             for module in sys.modules.values():
+                if not module:
+                    continue
                 if module.__name__.startswith(module_name):
                     modules.append(module)
         modules = set(modules)
-        
+
         # Now find their dependencies
-        dependencies = defaultdict([])
+        dependencies = defaultdict(dict)
         for module in modules:
             # Find filename
             filename = module.__file__
@@ -293,6 +294,7 @@ class Service(object):
             
             # Find modules it imports which we're going to reload
             finder = ModuleFinder()
+            # ++ this fails on related import in __init__.py
             finder.run_script(filename)
             for imported_name in finder.modules.keys():
                 if imported_name not in sys.modules:
@@ -336,7 +338,7 @@ class Service(object):
         Restore after reload
         """
         # Thaw store of stores (with session data)
-        for store_name, data in store_data:
+        for store_name, data in store_data.items():
             store_cls = self.stores.get(store_name)
             if store_cls is None:
                 self.log.store(

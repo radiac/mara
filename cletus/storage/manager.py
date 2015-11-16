@@ -145,8 +145,8 @@ class Manager(object):
     
     def deserialise(self, frozen, session=True):
         """
-        Deserialise dict of json dicts into active objects
+        Deserialise a serialsed dict into active objects
         """
-        for key, json in frozen:
+        for key, json in frozen.items():
             obj = self.store_cls(key, active=True)
-            obj.from_json(json)
+            obj.from_dict(json)

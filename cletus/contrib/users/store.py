@@ -14,14 +14,16 @@ def event_add_user(event):
 
 
 class ClientField(storage.Field):
-    def freeze(self, obj, name):
-        client = super(ClientField, self).freeze(obj, name)
-        client.user = None
+    def serialise(self, obj, name):
+        client = super(ClientField, self).serialise(obj, name)
+        if client:
+            client.user = None
         return client
     
-    def thaw(self, obj, name, client):
-        super(ClientField, self).thaw(obj, name, client)
-        client.user = self
+    def deserialise(self, obj, name, client):
+        super(ClientField, self).deserialise(obj, name, client)
+        if client:
+            client.user = self
 
 
 class UserManager(storage.Manager):

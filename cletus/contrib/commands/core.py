@@ -370,5 +370,6 @@ def cmd_reload(event):
     Reload the project code
     """
     event.client.write('Reloading...')
+    event.client.flush()
     event.service.reload()
     event.client.write('Reload successful')

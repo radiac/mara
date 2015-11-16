@@ -317,6 +317,15 @@ class Client(object):
         # Close the socket - it will still be able to send, just not read
         self.close()
     
+    def flush(self):
+        """
+        Force the buffer to the socket immediately
+        
+        Doesn't check that the socket is ready to read, so should only be
+        called when you really can't wait for the standard loop
+        """
+        self.service.server._send_client(self.socket)
+    
     def close(self):
         """
         Close gracefully

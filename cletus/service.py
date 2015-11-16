@@ -32,15 +32,12 @@ class Service(object):
         # Consistent time for events
         self.time = time.time()
         
-        # Store of stores
-        self.stores = defaultdict(dict)
+        # Prepare internal registries
+        self.clear()
         
         # An empty log
         self.log = None
         
-        # Initialise events
-        self.events = defaultdict(list)
-
         # If we haven't been told which modules to manage, find the root of the
         # module which is creating the service
         if not modules:
@@ -55,7 +52,18 @@ class Service(object):
         if 'cletus' in modules:
             raise ValueError('Cannot reload cletus modules')
         self.modules = modules
-
+    
+    def clear(self):
+        """
+        Clean internal registries
+        """
+        # Store of stores
+        self.stores = defaultdict(dict)
+        
+        # Initialise events
+        self.events = defaultdict(list)
+        
+    
     datetime = property(
         fget = lambda self: datetime.datetime.fromtimestamp(self.time),
         doc = "Get the current time as a datetime object"
@@ -154,7 +162,7 @@ class Service(object):
         
         # Further filtering for this call
         if filter_fn:
-            clients = filter_fn(service, clients, **kwargs)
+            clients = filter_fn(self, clients, **kwargs)
         
         return clients
         
@@ -233,7 +241,9 @@ class Service(object):
     
     def reload(self):
         """
-        Reset events and reload plugins
+        Reload user code while persisting connections
+        
+        Does not reload cletus modules
         """
         frozen = self._reload_prepare()
         
@@ -262,8 +272,8 @@ class Service(object):
         for store_name, store in self.stores.items():
             store_data[store_name] = store.manager.serialise(session=True)
         
-        # Clear out the service storage registry
-        self.stores = defaultdict(dict)
+        # Clear out registries
+        self.clear()
         
         return store_data
         
@@ -285,8 +295,11 @@ class Service(object):
         modules = set(modules)
 
         # Now find their dependencies
-        dependencies = defaultdict(dict)
+        dependencies = {}
         for module in modules:
+            # This is a module we need to reload - start with no dependencies
+            dependencies[module] = []
+            
             # Find filename
             filename = module.__file__
             if filename.endswith('.pyc'):
@@ -294,13 +307,27 @@ class Service(object):
             
             # Find modules it imports which we're going to reload
             finder = ModuleFinder()
-            # ++ this fails on related import in __init__.py
-            finder.run_script(filename)
+            
+            # Modulefinder fails on "from . import x" in __init__
+            if filename.endswith('__init__.py'):
+                finder.load_package(
+                    module.__name__,
+                    filename[:-len('/__init__.py')],
+                )
+            else:
+                finder.load_file(filename)
+            
             for imported_name in finder.modules.keys():
+                # Ignore ones that aren't loaded - don't need to reload those
                 if imported_name not in sys.modules:
                     continue
+                    
+                # Get the module
                 imported_module = sys.modules[imported_name]
-                if imported_module in modules:
+                
+                # If it's one we're managing, note the dependency
+                # Ignore it if it's itself - can happen with __init__.py
+                if imported_module in modules and imported_module != module:
                     dependencies[module].append(imported_module)
         
         # Reload modules
@@ -323,13 +350,13 @@ class Service(object):
             
             # Clean up dependencies
             reloaded = set(reloadable)
-            cleaned = defaultdict([])
+            cleaned = {}
             for module, deps in dependencies.items():
-                # Empty deps already processed
+                # Remove empty deps - already processed
                 if not deps:
                     continue
                 
-                # Remove processed from deps
+                # Remove processed from deps - some should now be empty
                 cleaned[module] = set(deps).difference(reloaded)
             dependencies = cleaned
         

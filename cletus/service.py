@@ -16,6 +16,7 @@ from .connection import Server
 from .logger import Logger
 from . import events
 from . import storage
+from . import timers
 
 
 class Service(object):
@@ -29,14 +30,17 @@ class Service(object):
         # No server yet
         self.server = None
         
-        # Consistent time for events
-        self.time = time.time()
-        
         # Store of stores
         self.stores = defaultdict(dict)
         
+        # Consistent time for events and timers
+        self.time = time.time()
+        
         # Initialise events
         self.events = defaultdict(list)
+        
+        # Initialise timers
+        self.timers = timers.Registry(self)
         
         # An empty log
         self.log = None

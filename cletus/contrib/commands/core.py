@@ -12,6 +12,7 @@ __all__ = [
     'CommandRegistry', 'Command', 'CommandEvent', 'define_command',
     'cmd_commands', 'cmd_help',
     'RE_WORD', 'MATCH_WORD', 'RE_STR', 'MATCH_STR', 'RE_LIST', 'MATCH_LIST',
+    'RE_LIST_AND', 'MATCH_LIST_AND',
 ]
 
 

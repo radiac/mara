@@ -6,6 +6,7 @@ NodeBox's Linguistics.
 """
 import re
 
+
 __all__ = ['gen_social_cmds']
 
 # Social verbs with default prepositions
@@ -401,6 +402,7 @@ def gen_social_cmd(service, commands, user_store, verb, parser=DirectedAction):
         if not action:
             action = ''
         action = verb + ' ' + action
+        do_social_cmd(service, parser, event, action)
         
         parsed = parser(action, user_store)
         

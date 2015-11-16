@@ -18,7 +18,7 @@ store names (the attributes and methods listed below).
 
 A store class must be defined with the ``session`` instance it is tied to.
 This allows the the store to determine its path from settings, and ensures data
-persists across reloads and restarts.
+persists across restarts.
 
 Permanent data for the store is saved in the :ref:`setting_store`
 directory; each store class has its own subfolders, and each key has its own
@@ -79,8 +79,8 @@ Deserialise store fields from dict
 
 Arguments:
 :   ``dict`` or ``raw``:    Data to deserialise
-    ``session``:    Optional; if ``True``, include session data, otherwise
-                    ignore it. Default: ``False``
+    ``session``:            Optional; if ``True``, include session data,
+                            otherwise ignore it. Default: ``False``
 
 ``save()``
 ----------
@@ -143,6 +143,45 @@ attribute with the field's ``name`` on the ``store``.
 This can be overridden by subclasses to implement more complex behaviours, such
 as replacing the attribute with a per-instance descriptor, to hold data
 internally for that store instance.
+
+
+.. _method_store_field_serialise:
+
+``serialise(obj, name)``
+------------------------
+
+Serialise the field value from the specified field name on the object provided.
+
+This is used for service reloads, and preparing data to be encoded to JSON to
+be saved to disk.
+
+When reloading, remember that core cletus object instances will persist
+(``Service``, ``Client`` etc), and any objects in your code must be destroyed.
+This means that if you set an attribute on a ``service`` or ``client`` instance
+which references one of your objects, your code must update these attributes
+so that the objects use your new reloaded code, and the old code can be garbage
+collected.
+
+for an example, take a look at ``cletus.contrib.users.ClientField``:
+* Because the ``User`` store will be destroyed and recreated, but the
+  ``Client`` instance will persist, it clears and sets the ``client.user``
+  attribute
+* Because the ``Client`` instance will persist, it intentionally allows the
+  ``client`` value to be serialised as a reference. The ``ClientField`` is
+  a session-only field, so this will not cause problems for JSON encoding.
+
+
+
+.. _method_store_field_deserialise:
+
+``deserialise(obj, name, data)``
+--------------------------------
+
+Deserialise the specified serialised data onto the specified object under the
+field name provided.
+
+This is used for service reloads, and restoring data from decoded from JSON
+when being loaded from disk.
 
 
 .. _class_storage_manager:

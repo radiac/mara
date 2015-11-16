@@ -25,8 +25,17 @@ Methods
 Service events
 ==============
 
+When the service starts running:
+
 ``cletus.events.PreStart``:     The service is about to start (``service``)
-``cletus.events.PostStart``:    The service has started (``service``)
+``cletus.events.PostStart``:    The service has started (``service``) and is
+                                about to enter its main listen loop
+
+When the service stops:
+
+``cletus.events.PreStop``:  The service is about to stop
+``cletus.events.PostStop``: The service has stopped, and main program execution
+                            is about to resume after ``service.run()``
 
 
 Server events

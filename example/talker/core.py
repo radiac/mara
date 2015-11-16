@@ -2,7 +2,7 @@
 Talker service
 """
 import cletus
-service = cletus.Service()
+service = cletus.Service('talker')
 
 # Add user to client events
 from cletus import events

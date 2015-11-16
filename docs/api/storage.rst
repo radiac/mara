@@ -152,24 +152,7 @@ internally for that store instance.
 
 Serialise the field value from the specified field name on the object provided.
 
-This is used for service reloads, and preparing data to be encoded to JSON to
-be saved to disk.
-
-When reloading, remember that core cletus object instances will persist
-(``Service``, ``Client`` etc), and any objects in your code must be destroyed.
-This means that if you set an attribute on a ``service`` or ``client`` instance
-which references one of your objects, your code must update these attributes
-so that the objects use your new reloaded code, and the old code can be garbage
-collected.
-
-for an example, take a look at ``cletus.contrib.users.ClientField``:
-* Because the ``User`` store will be destroyed and recreated, but the
-  ``Client`` instance will persist, it clears and sets the ``client.user``
-  attribute
-* Because the ``Client`` instance will persist, it intentionally allows the
-  ``client`` value to be serialised as a reference. The ``ClientField`` is
-  a session-only field, so this will not cause problems for JSON encoding.
-
+This is used to prepare data to be encoded to JSON to be saved to disk.
 
 
 .. _method_store_field_deserialise:
@@ -180,8 +163,8 @@ for an example, take a look at ``cletus.contrib.users.ClientField``:
 Deserialise the specified serialised data onto the specified object under the
 field name provided.
 
-This is used for service reloads, and restoring data from decoded from JSON
-when being loaded from disk.
+This is used for restoring data from decoded from JSON when being loaded from
+disk.
 
 
 .. _class_storage_manager:

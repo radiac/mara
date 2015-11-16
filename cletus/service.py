@@ -22,7 +22,7 @@ class Service(object):
     """
     Service management
     """
-    def __init__(self, modules=None):
+    def __init__(self):
         # Store settings
         self.settings = None
         
@@ -32,37 +32,14 @@ class Service(object):
         # Consistent time for events
         self.time = time.time()
         
-        # Prepare internal registries
-        self.clear()
-        
-        # An empty log
-        self.log = None
-        
-        # If we haven't been told which modules to manage, find the root of the
-        # module which is creating the service
-        if not modules:
-            import inspect
-            caller = inspect.currentframe().f_back
-            module_name = caller.f_globals['__name__']
-            if '.' in module_name:
-                module_name = module_name.split('.', 1)[0]
-            if module_name == 'cletus':
-                raise ValueError('Cannot define service under cletus package')
-            modules = [module_name]
-        if 'cletus' in modules:
-            raise ValueError('Cannot reload cletus modules')
-        self.modules = modules
-    
-    def clear(self):
-        """
-        Clean internal registries
-        """
         # Store of stores
         self.stores = defaultdict(dict)
         
         # Initialise events
         self.events = defaultdict(list)
         
+        # An empty log
+        self.log = None
     
     datetime = property(
         fget = lambda self: datetime.datetime.fromtimestamp(self.time),
@@ -239,143 +216,6 @@ class Service(object):
         # Update time
         self.time = time.time()
     
-    def reload(self):
-        """
-        Reload user code while persisting connections
-        
-        Does not reload cletus modules
-        """
-        frozen = self._reload_prepare()
-        
-        # Try to reload
-        e = None
-        try:
-            self._reload_modules()
-        except ImportError, e:
-            pass
-        
-        self._reload_restore(frozen)
-        
-        # If reload failed, re-raise its error
-        if e:
-            raise
-        
-    def _reload_prepare(self):
-        """
-        Prepare for reload by freezing stores and sending events
-        """
-        # Send reset warning
-        self.trigger(events.PreRestart())
-        
-        # Serialise the store of stores (with session data)
-        store_data = defaultdict(dict)
-        for store_name, store in self.stores.items():
-            store_data[store_name] = store.manager.serialise(session=True)
-        
-        # Clear out registries
-        self.clear()
-        
-        return store_data
-        
-    def _reload_modules(self):
-        """
-        Reload managed modules
-        
-        These are the modules named in the Service(modules=[]) list, or if that
-        is not set, the base package 
-        """
-        # Generate list of module references that we're going to reload
-        modules = []
-        for module_name in self.modules:
-            for module in sys.modules.values():
-                if not module:
-                    continue
-                if module.__name__.startswith(module_name):
-                    modules.append(module)
-        modules = set(modules)
-
-        # Now find their dependencies
-        dependencies = {}
-        for module in modules:
-            # This is a module we need to reload - start with no dependencies
-            dependencies[module] = []
-            
-            # Find filename
-            filename = module.__file__
-            if filename.endswith('.pyc'):
-                filename = filename[:-1]
-            
-            # Find modules it imports which we're going to reload
-            finder = ModuleFinder()
-            
-            # Modulefinder fails on "from . import x" in __init__
-            if filename.endswith('__init__.py'):
-                finder.load_package(
-                    module.__name__,
-                    filename[:-len('/__init__.py')],
-                )
-            else:
-                finder.load_file(filename)
-            
-            for imported_name in finder.modules.keys():
-                # Ignore ones that aren't loaded - don't need to reload those
-                if imported_name not in sys.modules:
-                    continue
-                    
-                # Get the module
-                imported_module = sys.modules[imported_name]
-                
-                # If it's one we're managing, note the dependency
-                # Ignore it if it's itself - can happen with __init__.py
-                if imported_module in modules and imported_module != module:
-                    dependencies[module].append(imported_module)
-        
-        # Reload modules
-        while dependencies:
-            # Find everything without a dependency
-            reloadable = [
-                module for module, deps in dependencies.items() if not deps
-            ]
-            
-            # If nothing is reloadable, there must be circular dependencies
-            if not reloadable:
-                raise ImportError(
-                    'Cannot reload - circular dependencies detected in %s' % 
-                    sorted([d.__name__ for d in dependencies.keys()])
-                )
-            
-            # Reload the reloadable
-            for module in reloadable:
-                reload(module)
-            
-            # Clean up dependencies
-            reloaded = set(reloadable)
-            cleaned = {}
-            for module, deps in dependencies.items():
-                # Remove empty deps - already processed
-                if not deps:
-                    continue
-                
-                # Remove processed from deps - some should now be empty
-                cleaned[module] = set(deps).difference(reloaded)
-            dependencies = cleaned
-        
-    def _reload_restore(self, store_data):
-        """
-        Restore after reload
-        """
-        # Thaw store of stores (with session data)
-        for store_name, data in store_data.items():
-            store_cls = self.stores.get(store_name)
-            if store_cls is None:
-                self.log.store(
-                    'Could not thaw store "%s" - no longer defined' % store_name
-                )
-                continue
-            store_cls.manager.deserialise(data)
-        
-        self.trigger(events.PostRestart())
-
     def stop(self):
         """
         Stop the server

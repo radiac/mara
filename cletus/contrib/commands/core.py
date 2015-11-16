@@ -10,7 +10,7 @@ from ... import util
 
 __all__ = [
     'CommandRegistry', 'Command', 'CommandEvent', 'define_command',
-    'cmd_commands', 'cmd_help', 'cmd_reload',
+    'cmd_commands', 'cmd_help',
     'RE_WORD', 'MATCH_WORD', 'RE_STR', 'MATCH_STR', 'RE_LIST', 'MATCH_LIST',
 ]
 
@@ -60,7 +60,6 @@ class CommandRegistry(object):
         service.listen(events.Receive, self.handle_receive)
         service.listen(CommandEvent, self.handle_command)
         service.listen(events.PostStart, self.sort_groups)
-        service.listen(events.PostRestart, self.sort_groups)
     
     def register(self, name, fn=None, **kwargs):
         """
@@ -363,13 +362,3 @@ def cmd_help(event, cmd=None):
         util.HR()
     )
 
-
-@define_command(help="Reload the project code")
-def cmd_reload(event):
-    """
-    Reload the project code
-    """
-    event.client.write('Reloading...')
-    event.client.flush()
-    event.service.reload()
-    event.client.write('Reload successful')

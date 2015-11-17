@@ -1,19 +1,21 @@
 """
 Password mixin for BaseUser
+
+Requires bcrypt module: pip install bcrypt
 """
+import hashlib
+
 try:
     import bcrypt
-    import hashlib
 except ImportError as e:
     raise ImportError('%s - it is required for PasswordMixin' % e)
 
 from ... import storage
 
+
 class PasswordMixin(storage.Store):
     """
     Store password using salted bcrypt
-    
-    Requires bcrypt module: pip install bcrypt
     
     Only defined when bcrypt module is available.
     """

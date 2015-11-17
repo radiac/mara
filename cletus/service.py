@@ -102,7 +102,22 @@ class Service(object):
             else:
                 handler(event)
     
+    #
+    # Timers
+    #
     
+    def timer(self, cls=timers.PeriodTimer, **kwargs):
+        """
+        Function decorator to define a timer
+        """
+        def wrap(fn):
+            timer = cls(**kwargs)
+            timer.fn = fn
+            self.timers.add(timer)
+            return fn
+        return wrap
+
+
     #
     # Server operations
     #
@@ -219,6 +234,9 @@ class Service(object):
         """
         # Update time
         self.time = time.time()
+        
+        # Call due and overdue timers
+        self.timers.trigger()
     
     def stop(self):
         """

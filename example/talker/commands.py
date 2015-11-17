@@ -21,6 +21,10 @@ commands.register('help', cmd_help, context={'cmd_commands': 'commands'})
 # Add social commands
 gen_social_cmds(service, commands, User)
 
+# Add gender command
+from cletus.contrib.users import gender
+commands.register('gender', gender.cmd_gender)
+
 @commands.register('say', args=MATCH_STR, syntax='<message>')
 def say(event, message):
     event.client.write("You say: %s" % message)

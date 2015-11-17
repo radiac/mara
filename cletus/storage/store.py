@@ -163,7 +163,7 @@ class Store(object):
         """
         data = {}
         for name, field in self._fields.items():
-            if session and name not in self._permanent_fields:
+            if not session and name not in self._permanent_fields:
                 continue
             data[name] = field.serialise(self, name)
         return data
@@ -175,7 +175,7 @@ class Store(object):
         To override how a field is thawed, define a method thaw_<fieldname>
         """
         for name, field in self._fields.items():
-            if session and name not in self._permanent_fields:
+            if not session and name not in self._permanent_fields:
                 continue
             # Check if Field has been added since it was saved - leave default
             if name not in data:
@@ -188,8 +188,7 @@ class Store(object):
         Save data to a JSON string
         """
         # Purposely don't catch exception - failure to serialise is fatal
-        data = self.to_dict()
-        print "DATA", data
+        data = self.to_dict(session=session)
         return json.dumps(data)
         
     def from_json(self, raw, session=False):
@@ -198,7 +197,7 @@ class Store(object):
         """
         # Purposely don't catch exception - failure to serialise is fatal
         data = json.loads(raw)
-        self.from_dict(data)
+        self.from_dict(data, session=session)
         
     def save(self):
         """

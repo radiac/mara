@@ -57,6 +57,40 @@ Arguments:
 :   ``event``:      An instance of an :ref:`class_events_event` subclass 
 
 
+.. _method_service_timer:
+
+``timer(cls=PeriodTimer, **kwargs)``
+------------------------------------
+
+Function decorator to define a timer class instance. The default class is
+``PeriodTimer``; keyword arguments are passed to the timer class constructor,
+and the timer's ``fn`` attribute is set to the decorated function. When
+triggered, the decorated function is passed the timer class instance.
+
+For example::
+
+    @service.timer(period=60)
+    def every_minute(timer):
+        service.write_all('Another minute has passed')
+
+Here the decorator is shorthand for::
+
+    from cletus import timers
+    timer = timers.PeriodTimer(period=60)
+    timer.fn = every_minute
+    service.timers.add(timer)
+
+You can use a different timer class by passing it as the first argument,
+``cls``::
+
+    from cletus.timers import PeriodTimer
+    @service.timer(PeriodTimer, period=60)
+    def every_minute(timer):
+        service.write_all('Time passes')
+
+See :doc:`timers` for details of built-in timer classes, and writing your own.
+
+
 .. _method_service_write:
 
 ``write(clients, *data)``

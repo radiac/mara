@@ -358,11 +358,18 @@ class DirectedAction(object):
                     words.append('yourself')
                 else:
                     words.append(token.value.name)
+            
+            # Change "my" to "your"
+            elif isinstance(token, OtherToken) and token.value == 'my':
+                words.append('your')
+            elif isinstance(token, OtherToken) and token.value == 'myself':
+                words.append('yourself')
+                
             else:
                 words.append(token.value)
         return ''.join(words)
         
-    def third_person(self, user=None):
+    def third_person(self, user=None, source=None):
         """
         Render the string in third person for the optional specified user
         """
@@ -376,22 +383,31 @@ class DirectedAction(object):
             elif isinstance(token, UserToken):
                 if token.value == user:
                     words.append('you')
+                elif source and token.value == source:
+                    if source and hasattr(source, 'gender'):
+                        words.append(source.gender.self)
+                    else:
+                        words.append('themselves')
                 else:
                     words.append(token.value.name)
             
             # Change "my" to "their"
             elif isinstance(token, OtherToken) and token.value == 'my':
-                # ++ gender
-                words.append('their')
+                if source and hasattr(source, 'gender'):
+                    words.append(source.gender.possessive)
+                else:
+                    words.append('their')
             
+            elif isinstance(token, OtherToken) and token.value == 'myself':
+                if source and hasattr(source, 'gender'):
+                    words.append(source.gender.self)
+                else:
+                    words.append('themselves')
+                
             else:
                 words.append(token.value)
         return ''.join(words)
 
-
-## ++ refactor
-# needs to be a Command subclass
-# some verbs need default prepositions
 
 def gen_social_cmd(service, commands, user_store, verb, parser=DirectedAction):
     """
@@ -402,7 +418,6 @@ def gen_social_cmd(service, commands, user_store, verb, parser=DirectedAction):
         if not action:
             action = ''
         action = verb + ' ' + action
-        do_social_cmd(service, parser, event, action)
         
         parsed = parser(action, user_store)
         
@@ -416,7 +431,7 @@ def gen_social_cmd(service, commands, user_store, verb, parser=DirectedAction):
             if user == event.user:
                 continue
             user.write(
-                event.user.name + ' ' + parsed.third_person(user)
+                event.user.name + ' ' + parsed.third_person(user, event.user)
             )
         
         # Tell remaining users
@@ -427,7 +442,10 @@ def gen_social_cmd(service, commands, user_store, verb, parser=DirectedAction):
             )
         ]
         if others:
-            service.write(others, event.user.name + ' ' + parsed.third_person())
+            service.write(
+                others,
+                event.user.name + ' ' + parsed.third_person(source=event.user),
+            )
         
     commands.register(verb, command, args=r'^(.*)$', group='social')
         

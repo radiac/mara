@@ -3,6 +3,7 @@ Cletus storage fields
 """
 import copy
 
+
 class Field(object):
     """
     Field for a Store
@@ -38,7 +39,8 @@ class Field(object):
         
         Used by simple fields to set the value to the default value.
         """
-        setattr(store_cls, name, self.default)
+        if isinstance(getattr(store_cls, name), Field):
+            setattr(store_cls, name, self.default)
     
     def get_default(self):
         if callable(self._default):
@@ -95,7 +97,7 @@ class StoreFieldDescriptor(object):
         
 
 def StoreField(Field):
-    def contribute_to_instance(self, store_cls, name):
+    def contribute_to_class(self, store_cls, name):
         """
         Add a StoreFieldDescriptor to the object
         """

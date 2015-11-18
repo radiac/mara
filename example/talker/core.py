@@ -6,15 +6,6 @@ import datetime
 import cletus
 service = cletus.Service()
 
-# Add user to client events
-from cletus import events
-from cletus.contrib.commands import CommandEvent
-from cletus.contrib.users import event_add_user
-service.listen(events.Connect, event_add_user)
-service.listen(events.Disconnect, event_add_user)
-service.listen(events.Receive, event_add_user)
-service.listen(CommandEvent, event_add_user)
-
 
 @service.timer(period=60*60)
 def every_minute(timer):

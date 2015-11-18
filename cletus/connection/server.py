@@ -5,6 +5,7 @@ import socket
 import select
 
 from .client import Client
+from .util import serialise_socket, deserialise_socket
 from .. import events
 
 
@@ -12,14 +13,23 @@ class ServerSocket(object):
     """
     Manage a non-blocking server socket to accept connections
     """
-    def __init__(self, settings):
+    def __init__(self, settings, serialised=None):
         """
         Initialise and call open()
         """
         self.settings = settings
         self.socket = None
-        self.open()
-        
+        if serialised:
+            self.deserialise(serialised)
+        else:
+            self.open()
+    
+    def serialise(self):
+        return serialise_socket(self.socket)
+    
+    def deserialise(self, data):
+        self.socket = deserialise_socket(data)
+    
     def open(self):
         # Create and bind
         self.socket = socket.socket(
@@ -40,15 +50,7 @@ class ServerSocket(object):
         except socket.error:
             # No connection
             return None
-        
-        # Turn on keepalive
-        if self.settings.socket_keepalive:
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-        
-        # Ensure the socket is non-blocking
-        client_socket.setblocking(0)
-        
-        # Create new socket
+            
         return client_socket
         
     def close(self):
@@ -65,7 +67,7 @@ class Server(object):
     Arguments:
         service     A Service instance
     """
-    def __init__(self, service):
+    def __init__(self, service, serialised=None):
         # Store data
         self.service = service
         self.settings = service.settings
@@ -76,16 +78,49 @@ class Server(object):
         # Dict of all Client objects (socket->client)
         self._clients = {}
         
-        # Create a the server socket
-        self.serversocket = ServerSocket(self.settings)
-        
         # Not running (exit the main loop)
         self._running = False
+        
+        # Create the server socket, or restore a serialised one
+        if serialised:
+            self.deserialise(serialised)
+        else:
+            self.serversocket = ServerSocket(self.settings)
         
     running = property(
         fget = lambda self: self._running,
         doc = 'Whether or not the server is running'
     )
+    
+    def serialise(self):
+        """
+        Serialise to be passed to a new process
+        """
+        clients = []
+        for client in self._clients.values():
+            serialised = client.serialise()
+            if not serialised:
+                # Serialisation failed, skip
+                continue
+            clients.append(serialised)
+        
+        return {
+            'clients': clients,
+            'serversocket': self.serversocket.serialise(),
+        }
+    
+    def deserialise(self, data):
+        """
+        Deserialise a serialised Server into this instance
+        """
+        self.serversocket = ServerSocket(
+            self.settings, serialised=data['serversocket'],
+        )
+        
+        for client_data in data['clients']:
+            client = Client(self.service, socket=None, serialised=client_data)
+            self._client_sockets.append(client.socket)
+            self._clients[client.socket] = client
     
     def listen(self):
         """
@@ -174,9 +209,6 @@ class Server(object):
         
         if not client_socket:
             return
-            
-        # Mark as non-blocking
-        client_socket.setblocking(0)
         
         # Add to known client sockets
         self._client_sockets.append(client_socket)

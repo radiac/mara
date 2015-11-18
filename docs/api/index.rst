@@ -183,6 +183,52 @@ Retrieve the store instance of the given class and name.
 See :ref:`storage` for more details of how storage works.
 
 
+.. _method_service_restart:
+
+``restart()``
+-------------
+
+Restarts the process, persisting server and client sockets, and both permanent
+and session stores.
+
+When the service restarts, the current process runs itself in a new process,
+serialises its state and passes it to the new process, then terminates itself.
+
+The current process will do the following:
+
+#. ``service.restart()`` is called
+#. Check to see if a restart socket already exists - if it does, abandon restart
+#. Trigger :ref:`PreRestart <events_service>` event
+#. Flush all client output buffers (so they can see a restart notification)
+#. Open a restart socket (using ``multiprocessing`` to send serialised data)
+#. Suspend the server (do no further socket processing)
+#. Serialise the service state
+#. Close the logger
+#. Start a new process, using the same arguments that started this process
+#. Wait for the new process to connect to the restart socket
+#. Send serialised data to new process
+#. Terminate
+
+The new process does the following:
+#. ``service.run(...)`` is called
+#. Trigger :ref:`PreStart <events_service>` event
+#. Tries to connect to the restart socket
+   * If socket does not exist, or does not reply, it logs "No restart detected"
+     and creates a new server. This is what normally happens when you start the
+     process.
+#. Retrieves serialised data from the restart socket
+#. Deserialises
+#. Closes the socket, allowing the parent process to terminate
+#. Trigger :ref:`PostStart <events_service>` event
+#. Trigger :ref:`PostRestart <events_service>` event
+#. Enter server main listen loop
+
+
+Restarting
+----------
+When the ``service.restart
+Note that when restarting, the current process stops
+
 .. _class_settings:
 
 ``cletus.Settings``

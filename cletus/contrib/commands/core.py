@@ -10,7 +10,7 @@ from ... import util
 
 __all__ = [
     'CommandRegistry', 'Command', 'CommandEvent', 'define_command',
-    'cmd_commands', 'cmd_help',
+    'cmd_commands', 'cmd_help', 'cmd_restart',
     'RE_WORD', 'MATCH_WORD', 'RE_STR', 'MATCH_STR', 'RE_LIST', 'MATCH_LIST',
     'RE_LIST_AND', 'MATCH_LIST_AND',
 ]
@@ -45,6 +45,7 @@ class CommandEvent(events.Receive):
         self.command = command
         self.registry = registry
         self.context = context
+        self.exception_fatal = False
 
     def __str__(self):
         # Only show the command used - skip Receive and call its parent
@@ -163,6 +164,10 @@ class CommandRegistry(object):
                 report.extend(details)
                 report.append(util.HR())
             event.client.write(*report)
+            
+            # Re-raise if exceptions should be fatal
+            if event.exception_fatal:
+                raise
 
     def parse(self, event):
         """
@@ -363,3 +368,9 @@ def cmd_help(event, cmd=None):
         util.HR()
     )
 
+
+@define_command(help="Restart the server")
+def cmd_restart(event):
+    event.exception_fatal = True
+    event.service.write_all('-- Restarting server --')
+    event.service.restart()

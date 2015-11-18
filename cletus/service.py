@@ -6,7 +6,11 @@ Controls settings, server, and loaded modules
 from collections import defaultdict
 import datetime
 import inspect
-from modulefinder import ModuleFinder
+import multiprocessing
+from multiprocessing import connection as multiprocessing_connection
+import os
+import socket
+import subprocess
 import sys
 import time
 
@@ -123,12 +127,20 @@ class Service(object):
     #
     
     def write(self, clients, *data):
+        """
+        Send the provided lines to the given client, or list of clients
+        """
         if not hasattr(clients, '__iter__'):
             clients = [clients]
         for client in clients:
             client.write(*data)
     
     def write_all(self, *data, **kwargs):
+        """
+        Send the provided lines to all active clients, as returned by get_all()
+        
+        Takes the same arguments as get_all()
+        """
         # Get client list
         clients = self.get_all(**kwargs)
         
@@ -223,10 +235,35 @@ class Service(object):
         self.log.service('Service starting')
         self.trigger(events.PreStart())
         
-        # Start server
-        self.server = Server(self)
+        # Try to restart
+        try:
+            parent = multiprocessing_connection.Client(
+                self.settings.restart_socket, self.settings.restart_family,
+                authkey=self.settings.restart_authkey,
+            )
+            multiprocessing.current_process().authkey = self.settings.restart_authkey
+        except socket.error as e:
+            self.log.service('No restart detected: %s' % e)
+        else:
+            self.log.service('Restart detected, connecting to originator')
+            try:
+                serialised = parent.recv()
+            except IOError as e:
+                self.log.service('Failed to read from originator: %s' % e)
+            else:
+                self.deserialise(serialised)
+                parent.send('OK')
+                parent.close()
+                self.log.service('Service restarted')
+                self.trigger(events.PostStart())
+                self.trigger(events.PostRestart())
+        
+        # Otherwise start new server
+        if not self.server:
+            self.server = Server(self)
+            self.trigger(events.PostStart())
+        
         self.server.listen()
-        self.trigger(events.PostStart())
         
     def poll(self):
         """
@@ -246,3 +283,85 @@ class Service(object):
         self.server.shutdown()
         self.log.service('Service stopped')
         self.trigger(events.PostStop())
+
+    def restart(self):
+        """
+        Restart the process
+        """
+        if (self.settings.restart_family == 'AF_UNIX'
+            and os.path.exists(self.settings.restart_socket)
+        ):
+            raise ValueError(
+                'Restart socket already exists at %s' %
+                self.settings.restart_socket
+            )
+        
+        # Send reset warning
+        self.log.service('Service restarting')
+        self.trigger(events.PreRestart())
+        
+        # Flush all client output buffers
+        clients = self.get_all()
+        for client in clients:
+            client.flush()
+        
+        # Open socket
+        restart_socket = multiprocessing_connection.Listener(
+            self.settings.restart_socket, self.settings.restart_family,
+            authkey=self.settings.restart_authkey,
+        )
+        multiprocessing.current_process().authkey = self.settings.restart_authkey
+        
+        # Suspend server, so sockets will back up waiting for new process
+        self.server.suspend()
+        
+        # Serialise
+        serialised = self.serialise()
+        
+        # Close logger so new process can take over
+        self.log.service('Service spawning new process')
+        self.log.close()
+        
+        # Start new process using same arguments as this
+        subprocess.Popen([sys.executable] + sys.argv)
+        
+        # Hand over to new process
+        new_process = restart_socket.accept()
+        new_process.send(serialised)
+        
+        # Wait for confirmation everything received
+        response = new_process.recv()
+        new_process.close()
+        sys.exit()
+
+    def serialise(self):
+        """
+        Serialise to be passed to a new process
+        """
+        # Serialise the store of stores (with session data)
+        store_data = defaultdict(dict)
+        for store_name, store in self.stores.items():
+            store_data[store_name] = store.manager.serialise(session=True)
+        
+        return {
+            'server':    self.server.serialise(),
+            'store_data': store_data,
+        }
+
+    def deserialise(self, serialised):
+        """
+        Deserialise a serialised service into this instance
+        """
+        # Deserialise store of stores (with session data)
+        store_data = serialised['store_data']
+        for store_name, data in store_data.items():
+            store_cls = self.stores.get(store_name)
+            if store_cls is None:
+                self.log.store(
+                    'Could not thaw store "%s" - no longer defined' % store_name
+                )
+                continue
+            store_cls.manager.deserialise(data)
+        
+        # Restore server and clients
+        self.server = Server(self, serialised=serialised['server'])

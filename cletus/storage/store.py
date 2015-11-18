@@ -5,7 +5,6 @@ Data storage
 import json
 import os
 
-from ..connection.client import Client
 from .manager import Manager
 from .fields import Field
 
@@ -41,7 +40,10 @@ class StoreType(type):
         Create class
         """
         # Ensure name is safe for filesystem
-        dct['_name'] = str_to_filename(name.lower())
+        internal_name = name
+        if '_name' in dct:
+            internal_name = dct['_name']
+        dct['_name'] = str_to_filename(internal_name.lower())
         
         # Ensure abstract isn't inherited
         if not dct.get('abstract'):
@@ -240,10 +242,11 @@ class Store(object):
 
 
 
-class TempStoreMixin(object):
+class SessionStore(Store):
     """
-    A mixin to disable saving and loading for a store
+    A session-only store, where saving and loading is disabled
     """
+    abstract = True
     def save(self):
         return
     def load(self):

@@ -14,17 +14,13 @@ def event_add_user(event):
 
 
 class ClientField(storage.Field):
+    """
+    The client attribute is special - it will be assigned by the client's
+    UserSerialiser
+    """
     def serialise(self, obj, name):
-        client = super(ClientField, self).serialise(obj, name)
-        if client:
-            client.user = None
-        return client
+        return None
     
-    def deserialise(self, obj, name, client):
-        super(ClientField, self).deserialise(obj, name, client)
-        if client:
-            client.user = self
-
 
 class UserManager(storage.Manager):
     def get_active_by_name(self, names):

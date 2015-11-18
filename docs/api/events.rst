@@ -22,6 +22,8 @@ Methods
 ``stop()``:     Stop the event from being passed to any more handlers
 
 
+.. _events_service:
+
 Service events
 ==============
 
@@ -36,6 +38,13 @@ When the service stops:
 ``cletus.events.PreStop``:  The service is about to stop
 ``cletus.events.PostStop``: The service has stopped, and main program execution
                             is about to resume after ``service.run()``
+
+When the service restarts:
+``cletus.events.PreRestart``:   The service is about to restart (``service``).
+``cletus.events.PostRestart``:  The service has restarted (``service``)
+
+For more information about events when restarting, see
+:ref:`method_service_restart`.
 
 
 Server events

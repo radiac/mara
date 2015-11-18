@@ -4,13 +4,19 @@ Manage connections
 Based on miniboa's telnet.py
 http://miniboa.googlecode.com/svn/trunk/miniboa/telnet.py
 """
-
+from collections import defaultdict
 import socket
 import select
 
 from .. import events
+from .. import storage
 from .. import util
+from .util import serialise_socket, deserialise_socket
 
+
+###############################################################################
+########################################################### Telnet negotiation
+###############################################################################
 
 #
 # miniboa's useful notes
@@ -83,17 +89,88 @@ class TelnetOption(object):
     """
     Simple class used to track the status of a Telnet option
     """
-    def __init__(self):
+    def __init__(self, serialised=None):
         self.local = UNKNOWN    # Local state of an option
         self.remote = UNKNOWN   # Remote state of an option
         self.pending = False    # Are we expecting a reply?
+        if serialised:
+            self.deserialise(serialised)
+    
+    def serialise(self):
+        return (self.local, self.remote, self.pending)
+    
+    def deserialise(self, data):
+        self.local, self.remote, self.pending = data
+        
+
+###############################################################################
+################################################# Custom attribute serialisers
+###############################################################################
+
+client_serialisers = defaultdict(list)
+
+class ClientSerialiserType(type):
+    def __init__(self, name, bases, dct):
+        """
+        Register class
+        """
+        super(ClientSerialiserType, self).__init__(name, bases, dct)
+        
+        # If it's an abstract class, no further initialisation required
+        if dct.get('abstract', False):
+            return
+        
+        # A non-abstract serialiser needs a service
+        if not self.service:
+            raise ValueError('A client serialiser class must have a service')
+        
+        # Instantiate serialiser class and register
+        serialiser = self()
+        client_serialisers[self.service].append(serialiser)
+
+
+class ClientSerialiser(object):
+    """
+    Base class for custom client attribute serialisers
+    """
+    __metaclass__ = ClientSerialiserType
+    abstract = True
+    service = None
+    def serialise(self, client, serialised):
+        """
+        Serialise custom client attributes into the serialised dict
+        """
+        raise NotImplementedError
+    
+    def deserialise(self, client, data):
+        """
+        Deserialise custom client attributes from the serialised dict
+        """
+        raise NotImplementedError
+
+
+###############################################################################
+############################################################### Client
+###############################################################################
 
 class Client(object):
     """
     Telnet client socket manager
     """
+    # Default state variables
+    got_iac = False     # Are we inside an IAC sequence?
+    got_cmd = None      # Did we get a telnet command?
+    got_sb = False      # Are we inside a subnegotiation?
+    options = {}        # Mapping for up to 256 TelnetOptions
+    echo = False        # Echo input back to the client?
+    _supress_echo = False   # Override echo option (control with supress_echo)
+    sb_buffer = ''      # Buffer for sub-negotiations
+    terminal_type = None    # Negotiated telnet type
+    columns = 80        # Number of columns on terminal
+    rows = 50           # Number of rows on terminal
+    handler = None      # Handler for the next input buffer
     
-    def __init__(self, service, socket):
+    def __init__(self, service, socket, serialised=None):
         # Store vars
         self.service = service
         self.socket = socket
@@ -102,8 +179,14 @@ class Client(object):
         self.settings = service.settings
         self.timeout_time = self.settings.socket_timeout
         
-        # Find IP
-        (self.ip, port) = self.socket.getpeername()
+        # If socket is not defined, we are deserialising
+        if serialised:
+            self.deserialise(serialised)
+            return
+        
+        # Fix socket and find IP
+        self.prepare_socket()
+        (self.ip, self.port) = self.socket.getpeername()
     
         # Make a note of when the connection started
         self._connect_time = self.service.time
@@ -122,19 +205,7 @@ class Client(object):
         # Buffers
         self._recv_buffer = ''
         self._send_buffer = ''
-            
-        # State variables for interpreting incoming telnet commands
-        self.got_iac = False    # Are we inside an IAC sequence?
-        self.got_cmd = None     # Did we get a telnet command?
-        self.got_sb = False     # Are we inside a subnegotiation?
-        self.options = {}       # Mapping for up to 256 TelnetOptions
-        self.echo = False       # Echo input back to the client?
-        self._supress_echo = False   # Override echo option (control with supress_echo)
-        self.sb_buffer = ''     # Buffer for sub-negotiations
-        self.terminal_type = None
-        self.columns = 80
-        self.rows = 50
-        self.handler = None     # Handler for the next input buffer
+        
         # Start telnet negotiation
         self._tn_request(DO, TTYPE)   # Get terminal type
         self._tn_request(DO, NAWS)    # Do NAWS
@@ -142,6 +213,80 @@ class Client(object):
         # Log
         self.service.log.client('Client %s connected' % self.ip)
         self.service.trigger(events.Connect(self))
+    
+    # Attributes to be serialised that don't need special pickling
+    # Other attrs to be serialised: socket, options
+    # Can't pickle: handler
+    SERIALISE_ATTRS = [
+        'ip', 'port', '_connect_time', '_last_activity', '_is_connected',
+        '_is_closing', '_flash_waiting', '_recv_buffer', '_send_buffer',
+        'got_iac', 'got_cmd', 'got_sb', 'echo', '_supress_echo',
+        'sb_buffer', 'terminal_type', 'columns', 'rows',
+    ]
+    
+    def prepare_socket(self):
+        """
+        Call as soon as the socket handle is available to ensure it has the
+        correct settings
+        """
+        # Turn on keepalive
+        if self.settings.socket_keepalive:
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        
+        # Ensure the socket is non-blocking
+        self.socket.setblocking(0)
+
+    def serialise(self):
+        """
+        Serialise into object to be passed to a new process
+        """
+        # If they're in a handler, we can't pickle them - drop immediately
+        if self.handler:
+            self.service.log.client(
+                'Client %s has a handler, cannot serialise' % self.ip
+            )
+            self.write('-- Server restarting, please reconnect --')
+            self.flush()
+            self.shutdown()
+            return None
+        
+        # Serialise all standard attrs
+        data = {attr: getattr(self, attr) for attr in self.SERIALISE_ATTRS}
+        
+        # Add fields with special pickling
+        data['socket'] = serialise_socket(self.socket)
+        data['options'] = {key: val.serialise() for key, val in self.options.items()}
+        
+        # Use custom serialisers
+        for serialiser in client_serialisers[self.service]:
+            serialiser.serialise(self, data)
+        
+        self.service.log.client('Client %s serialised' % self.ip)
+        return data
+    
+    def deserialise(self, data):
+        """
+        Deserialise a serialised Client onto this instance
+        """
+        # Deserialise all standard attrs
+        for key in self.SERIALISE_ATTRS:
+            if key not in data:
+                self.service.log.client('Serialised client missing %s' % key)
+                continue
+            setattr(self, key, data[key])
+        
+        # Deserialise special fields
+        self.socket = deserialise_socket(data['socket'])
+        self.prepare_socket()
+        self.options = {
+            key: TelnetOption(serialised=val)
+            for key, val in data['options'].items()
+        }
+        
+        # Use custom serialisers
+        for serialiser in client_serialisers[self.service]:
+            serialiser.deserialise(self, data)
+        
     
     is_connected = property(
         fget = lambda self: self._is_connected,
@@ -182,8 +327,6 @@ class Client(object):
         """
         Data has arrived
         """
-        #print "RECV:%s:%s" % (data, ','.join(["%d" % ord(c) for c in data]))
-        
         # If we're closing, not interested
         if self._is_closing:
             return
@@ -324,7 +467,9 @@ class Client(object):
         Doesn't check that the socket is ready to read, so should only be
         called when you really can't wait for the standard loop
         """
-        self.service.server._send_client(self.socket)
+        # Force everything on the buffer out now
+        while self._is_connected and self._send_buffer:
+            self.service.server._send_client(self.socket)
     
     def close(self):
         """
@@ -421,9 +566,6 @@ class Client(object):
                 
                 # Otherwise must be a two-byte command
                 else:
-                    # ++ DEBUGGING
-                    if cmd == NOP:
-                        print "IAC NOP"
                     # Just going to ignore these
                     if cmd in [NOP, DATMK, IP, AO, AYT, EC, EL, GA]:
                         pass

@@ -3,7 +3,7 @@ Client events
 """
 from .base import Event
 
-__all__ = ['Connect', 'Receive', 'Disconnect']
+__all__ = ['Client', 'Connect', 'Receive', 'Disconnect']
 
 
 class Client(Event):

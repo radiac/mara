@@ -13,12 +13,8 @@ from .core import service
 
 # Add user to client events
 from cletus import events
-from cletus.contrib.commands import CommandEvent
 from cletus.contrib.users import event_add_user
-service.listen(events.Connect, event_add_user)
-service.listen(events.Disconnect, event_add_user)
-service.listen(events.Receive, event_add_user)
-service.listen(CommandEvent, event_add_user)
+service.listen(events.Client, event_add_user)
 
 # Create User class
 class User(PasswordMixin, AdminMixin, GenderMixin, BaseUser):

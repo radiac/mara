@@ -45,6 +45,7 @@ class Service(object):
         
         # Initialise events
         self.events = defaultdict(list)
+        self._known_events = {}
         
         # Initialise timers
         self.timers = timers.Registry(self)
@@ -65,17 +66,60 @@ class Service(object):
     #
     
     def listen(self, event_class, handler=None):
+        """
+        Bind a handler to the specified event class, and to its subclasses
+        """
         # Called directly
         if handler:
-            return self.events[event_class].append(handler)
+            self._listen(event_class, handler)
+            return
 
         # Called as a decorator
         def decorator(fn):
-            self.events[event_class].append(fn)
+            self._listen(event_class, fn)
             return fn
         return decorator
+        
+    def _listen(self, event_class, handler):
+        """
+        Internal method to recursively bind a handler to the specified event
+        class and its subclasses. Call listen() instead.
+        """
+        # Recurse subclasses. Do it before registering for this event in case
+        # they're not known yet, then they'll copy handlers for this event
+        for subclass in event_class.__subclasses__():
+            self._listen(subclass, handler)
+            
+        # Register class
+        self._ensure_known_event(event_class)
+        self.events[event_class].append(handler)
+    
+    def _ensure_known_event(self, event_class):
+        """
+        Ensure the event class is known to the service.
+        
+        If it is not, inherit handlers from its first base class
+        """
+        # If known, nothing to do
+        if event_class in self._known_events:
+            return
+        
+        # If base class isn't an event, nothing to do
+        base_cls = event_class.__bases__[0]
+        if not isinstance(base_cls, events.Event):
+            return
+        
+        # Ensure base class is known, and copy its handlers
+        self._ensure_known_event(base_cls)
+        self.events[event_class] = self.events[base_cls][:]
     
     def trigger(self, event):
+        """
+        Trigger the specified event
+        """
+        # Make sure we've seen this event class before
+        self._ensure_known_event(event.__class__)
+        
         # Make sure all listeners have access to the service, in case they're
         # defined out of scope
         event.service = self

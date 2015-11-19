@@ -33,12 +33,12 @@ RE_LIST_AND = r'(.*?)(?:(?:\s*,\s*|\s+and\s+)(.*?))*'
 MATCH_LIST_AND = r'^' + RE_LIST_AND + '$'
 
 
-class CommandEvent(events.Receive):
+class CommandEvent(events.Client):
     """
     Command event
     """
     def __init__(self, client, data, match, args, kwargs, command, registry, context):
-        super(CommandEvent, self).__init__(client, data)
+        super(CommandEvent, self).__init__(client)
         self.match = match
         self.args = args
         self.kwargs = kwargs
@@ -48,8 +48,8 @@ class CommandEvent(events.Receive):
         self.exception_fatal = False
 
     def __str__(self):
-        # Only show the command used - skip Receive and call its parent
-        return super(events.Receive, self).__str__() + ': %s' % self.match
+        # Just show the command used
+        return super(events.Client, self).__str__() + ': %s' % self.match
 
 
 class CommandRegistry(object):

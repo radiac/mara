@@ -3,9 +3,11 @@ Server events
 """
 from .base import Event
 
-__all__ = ['ListenStart', 'Suspend', 'ListenStop']
+__all__ = ['Server', 'ListenStart', 'Suspend', 'ListenStop']
 
-class ListenStart(Event):
+class Server(Event):        "Server event"
+
+class ListenStart(Server):
     "Server listening"
     def __init__(self, host, port):
         self.host = host
@@ -16,5 +18,5 @@ class ListenStart(Event):
             self.host, self.port
         )
     
-class Suspend(Event):       "Server has been suspended"
-class ListenStop(Event):    "Server is no longer listening"
+class Suspend(Server):      "Server has been suspended"
+class ListenStop(Server):   "Server is no longer listening"

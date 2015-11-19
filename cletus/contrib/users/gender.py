@@ -112,7 +112,8 @@ class GenderMixin(storage.Store):
 
 
 @define_command(
-    args=MATCH_WORD, syntax='<male|female|other>', help='Set your gender',
+    args=r'^(male|female|other|)$', syntax='[male|female|other]',
+    help='Check or set your gender',
 )
 def cmd_gender(event, gender):
     gender = gender.lower()

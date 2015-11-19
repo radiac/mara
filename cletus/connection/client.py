@@ -388,7 +388,10 @@ class Client(object):
         
         # Add data to recv_buffer
         self._recv_buffer += data
-        if self.settings.internal_buffer_size and len(self._recv_buffer) > self.settings.internal_buffer_size:
+        if (
+            self.settings.client_buffer_size
+            and len(self._recv_buffer) > self.settings.client_buffer_size
+        ):
             self._recv_buffer = ''
             self.write('Input too long')
         

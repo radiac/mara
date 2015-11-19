@@ -30,18 +30,13 @@ socket_activity_timeout = 0.1
 # Size of socket buffer
 socket_buffer_size = 1024
 
-# Internal buffer size
+# Internal buffer size for client
 # Maximum length of a single line of input
 # Set to 0 for no limit
-internal_buffer_size = 10240
+client_buffer_size = 10240
 
 # Keepalive
 socket_keepalive = True
-
-
-#
-# Timeouts
-#
 
 # Timeout for a client socket
 # After this many seconds of inactivity, the client will be disconnected
@@ -139,21 +134,6 @@ angel_socket = 'angel.sock'
 
 # Auth key for the angel socket
 angel_authkey = '1234567890'
-
-# Restart socket family - changes what type of socket to use
-# If set to 'AF_UNIX' it will use a unix socket
-# Set to 'AF_INET' for a TCP socket
-#restart_family = 'AF_INET'
-restart_family = 'AF_UNIX'
-
-# Path to restart socket, where active data is handed on to the new process
-# If family is AF_UNIX, this should be the path to the restart socket
-# If family is AF_INET, this should be a tuple of (ip, port)
-#restart_socket = ('127.0.0.1', '9001')
-restart_socket = 'restart.sock'
-
-# Optional auth key for the restart socket
-restart_authkey = '1234567890'
 
 
 #

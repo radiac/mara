@@ -6,6 +6,8 @@ The ``contrib`` module contains functionality which isn't used by the core of
 Cletus, but which can be useful when building your own services.
 
 
+.. _class_contrib_commands:
+
 ``cletus.contrib.commands``
 ===========================
 
@@ -32,6 +34,10 @@ Example usage:
         client = event.client
         client.write('You look around')
         service.write_all('%s looks around' % client.username, exclude=client)
+
+If a command suffers an exception, it will be logged to the ``command`` log
+level, and if ``settings.commands_debug`` is ``True``, it will also be sent
+to the client who entered the command.
 
 
 Registering commands
@@ -70,9 +76,13 @@ The exact arguments for the ``register`` method depend on which class of
 keyword arguments:
    
 :   args:       Optional regular expression to match arguments
+                (case insensitive)
     syntax:     Optional human-readable syntax
     group:      Optional command group
     help:       Optional help; if missing, will be taken from docstring
+    can         Optional callback to determine command availability.
+                It is passed the event, and if it returns True, the
+                command can be used. If not set, it can always be used.
     context:    Optional object to set as CommandEvent.context
 
 
@@ -105,6 +115,146 @@ own ``parse`` method. It receives the ``Receive`` event, and should return a
 tuple of ``(command_name, command_raw_args)``, or raise a ``ValueError`` if the
 command is not found or not available.
 
+
+.. _class_contrib_commands_socials:
+
+``cletus.contrib.commands.socials``
+===================================
+
+Social commands. These require a :ref:`user store <class_contrib_users>`, and
+work best if the user store has the :ref:`gender <class_contrib_users_gender>`
+extension.
+
+To add the default socials, call ``gen_social_cmds`` with the service,
+commands handler and user store::
+
+    gen_social_cmds(service, commands, User)
+
+This module contains a list of social verbs (in ``SOCIALS``), and a dict of
+verbs with default prepositions (eg dance with). Each of these is registered as
+a command, which uses a naive natural language parser to converts usernames and
+pronouns.
+
+
+.. _class_contrib_users:
+
+``cletus.contrib.users``
+========================
+
+User account management.
+
+Create a user store by subclassing ``BaseUser``::
+
+    from cletus.contrib.users import BaseUser
+    class User(BaseUser):
+        service = service
+
+Add the client's related ``user`` to ``Client`` events by binding
+``event_add_user``. This must be done before any other event handlers for
+``Client`` events::
+
+    from cletus import events
+    from cletus.contrib.users import event_add_user
+    service.listen(events.Client, event_add_user)
+
+Add a client serialiser so that the user object can be restored after a
+restart::
+
+    from cletus.contrib.users import BaseUserSerialiser
+    class UserSerialiser(BaseUserSerialiser):
+        service = service
+        store_name = 'user'
+        attr = 'user'
+
+Add a command to list all users:
+
+    from cletus.contrib.users import cmd_list_users
+    commands.register('users', cmd_list_users, context={'User': User})
+
+
+.. _class_contrib_users_password:
+
+``cletus.contrib.users.password``
+=================================
+
+Store passwords using salted bcrypt.
+
+Requires the ``bcrypt`` module::
+
+    pip install bcrypt
+
+Add the password mixin to your user store:
+
+    from cletus.contrib.users.password import PasswordMixin
+    class User(PasswordMixin, BaseUser):
+        service = service
+
+This adds a new encrypted ``password`` field to the user store, and two new
+methods:
+
+:   set_password(pass):     Encrypt the password and store it on the object
+    check_password(pass):   Check the password against the one stored
+
+
+.. _class_contrib_users_admin:
+
+``cletus.contrib.users.admin``
+==============================
+
+Mark users as admins. This will normally be used in conjunction with the
+:ref:`passwords <class_contrib_users_password>` user extension.
+
+Add the admin mixin to your user store::
+
+    from cletus.contrib.users.gender import AdminMixin
+    class User(AdminMixin, BaseUser):
+        service = service
+
+There is a command availability helper, ``if_admin``, which can be used with
+the ``can`` command definition attribute::
+
+    commands.register('restart', cmd_restart, can=if_admin)
+
+There are two commands available, one to list admin users, and another to set
+or unset admin users::
+
+    from cletus.contrib.users.admin import cmd_list_admin, cmd_set_admin
+    commands.register('admin', cmd_list_admin, context={'User': User})
+    commands.register(
+        'set_admin', cmd_set_admin, context={'User': User}, can=if_admin,
+    )
+
+.. _class_contrib_users_gender:
+
+``cletus.contrib.users.gender``
+===============================
+
+Store a user's gender, to generate accurate pronouns.
+
+Add the gender mixin to your user store::
+
+    from cletus.contrib.users.gender import GenderMixin
+    class User(GenderMixin, BaseUser):
+        service = service
+
+This adds a new ``gender`` field to the user store, which returns a ``Gender``
+object with the following attributes:
+
+:   type:       A string set to one of ``'male'``, ``'female'`` or ``'other'``.
+                These are available as constants on the class, as
+                ``MALE``, ``FEMALE`` and ``OTHER``. Default is ``OTHER``.
+    subject:    Pronoun for the subject (he, she or they)
+    object:     Pronoun for the object (him, her, they)
+    possessive: Possessive pronoun (his, her, their)
+    self:       Referring to oneself (himself, herself, themselves)
+
+There is also a command to check or set gender:
+
+    from cletus.contrib.users.gender import cmd_gender
+    commands.register('gender', cmd_gender)
+
+
+.. _class_contrib_rooms:
 
 ``cletus.contrib.rooms``
 ========================

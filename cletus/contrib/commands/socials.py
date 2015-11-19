@@ -309,7 +309,7 @@ class DirectedAction(object):
         
     def verb_to_third_person(self, token):
         """
-        Naieve method to change a first person present tense verb to third
+        Naive method to change a first person present tense verb to third
         person.
         """
         word = token.value

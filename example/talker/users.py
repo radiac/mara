@@ -26,22 +26,9 @@ class User(PasswordMixin, AdminMixin, GenderMixin, BaseUser):
 
 
 # Give client class a serialiser for the user attribute
-from cletus.connection.client import ClientSerialiser
+from cletus.contrib.users import BaseUserSerialiser
 
-class UserSerialiser(ClientSerialiser):
+class UserSerialiser(BaseUserSerialiser):
     service = service
-    
-    def serialise(self, client, data):
-        user = getattr(client, 'user', None)
-        if user is None:
-            return
-        data['user'] = user.key
-        
-    def deserialise(self, client, data):
-        user_key = data.get('user')
-        user_store = self.service.stores.get('user')
-        if user_key is None or user_store is None:
-            return
-        user = user_store.manager.load(user_key)
-        user.client = client
-        setattr(client, 'user', user)
+    store_name = 'user'
+    attr = 'user'

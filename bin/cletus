@@ -1,0 +1,10 @@
+#!/usr/bin/python
+"""
+Cletus angel
+"""
+
+from cletus.angel import Angel
+
+if __name__ == '__main__':
+    angel = Angel()
+    angel.run()

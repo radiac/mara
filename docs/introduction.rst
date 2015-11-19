@@ -24,10 +24,10 @@ A minimal Cletus service looks something like this::
     if __name__ == '__main__':
         service.run()
 
-Save it as ``echo.py`` and run it:
+Save it as ``echo.py`` and run it using ``python``:
 
-    python echo.py
-    * Running on 127.0.0.1:9000
+    $ python echo.py
+    * Server listening on 127.0.0.1:9000
 
 Now connect to telnet://127.0.0.1:9000 and anything you enter will be sent back
 to you - you have built a simple echo server.
@@ -55,11 +55,12 @@ Lets look at the code in more detail:
 5. Lastly we call the :ref:`method_service_run` method on the service to
    collect any settings from the command line and start the server.
 
-Client event handlers can also prompt the client for input by using ``yield`` -
-see :ref:`event_handlers` for more details.
-
 Event handlers (or sub-handlers, like ``command``) are the primary way you'll
-interact with your service.
+interact with your service. Client event handlers can also prompt the client
+for input by using ``yield`` - see :ref:`event_handlers` for more details.
+
+Although we ran it here with ``python``, you will normally want to run it using
+the angel - see :ref:`_angel` for details.
 
 
 More examples
@@ -113,11 +114,15 @@ values in ``settings.json``, then set the host and port as specified.
 
 Command line example to override default and coded settings::
 
-    python run_mymud.py module:mymud.dev dev.json --host=10.0.0.11 --port=8000
+    $ python run_mymud.py module:mymud.dv dev.json --host=10.0.0.11 --port=8000
 
 This will use the default settings and coded settings, then load them from
 ``mymud.dev`` module, then ``dev.json``, then set the host and port as
 specified.
+
+Bear in mind that there is no way to target command line settings at a specific
+service definition, so if your script defines multiple services, the command
+line settings will be used by all of them.
 
 
 .. _logging:
@@ -128,18 +133,58 @@ Logging
 Rather than using python's standard logging, Cletus provides its own logger
 for each service instance, with more customisability for what you want to log.
 
-The default logging levels are:
+The built-in logging levels are:
 
 * ``all``: select all logging levels
-* ``service``: when the process starts or stops
-* ``server``: when the server listens to a socket or disconnects
-* ``client``: when a client connects or disconnect
+* ``angel``: when the angel starts and stops processes, passes services etc
+* ``service``: when the service starts, stops, reloads etc
+* ``server``: when the server listens to a socket, suspends etc
+* ``client``: when a client connects or disconnects
 * ``event``: when events are triggered
-* ``debug``: all other events
+* ``store``: when stores are used
+* ``debug``: debug notes
 
 Your logging level will be controlled by the setting ``log_level``
 
-Your code can log to the default levels by calling the logging methods on
-``service.log`` (``service(*lines)`` etc), or it can specify its own logging
-levels by passing a different level string to :ref:`method_logger_write`.
+Your code can log to the default levels by calling the built-in logging methods
+for each level on ``service.log`` (eg ``service.log.event(*lines)``), or it can
+specify its own logging levels by passing a different level string to
+:ref:`method_logger_write`.
 
+By default only the levels ``angel`` and ``service`` are logged, although the
+``angel`` level is only available when you're using the angel.
+
+
+.. _angel:
+
+Using the cletus angel
+======================
+
+Cletus provides an angel to look after your process daemon - it starts your
+process, restarts it if it fails, and allows your process to restart itself
+without losing connections or state.
+
+To run your process through an angel, run it with ``cletus`` instead of
+``python``:
+
+    $ cletus echo.py
+    [7510] angel> Starting process 7511
+    [7510] angel> Established connection to process 7511
+    [7511] server> Server listening on 127.0.0.1:9000
+
+You can pass command line settings to your service in exactly the same way,
+eg::
+
+    $ cletus run_mymud.py module:mymud.dv dev.json --host=10.0.0.11 --port=8000
+
+Cletus starts your processes using the same python interpreter it uses, so
+it works from within a virtual environment.
+
+You can now make use of ``service.restart()`` in your code - this will
+serialise your sockets and stores, pass them to the angel, and start a
+new process which will deserialise them again, seamlessly moving clients to
+the new process without them knowing. For more information, see
+:ref:`method_service_restart`.
+
+If your process dies unexpectedly, the angel will keep trying to restart it.
+If the angel dies (or is terminated), the process will terminate itself.

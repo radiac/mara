@@ -188,46 +188,44 @@ See :ref:`storage` for more details of how storage works.
 ``restart()``
 -------------
 
-Restarts the process, persisting server and client sockets, and both permanent
-and session stores.
+Restarts the process while maintaining the service state and client sockets.
+Only available when the process is run using the :ref:`angel <angel>`.
 
-When the service restarts, the current process runs itself in a new process,
-serialises its state and passes it to the new process, then terminates itself.
-
-The current process will do the following:
+When called, the current service will do the following:
 
 #. ``service.restart()`` is called
-#. Check to see if a restart socket already exists - if it does, abandon restart
+#. If we don't have an angel, raise a ``ValueError``
 #. Trigger :ref:`PreRestart <events_service>` event
 #. Flush all client output buffers (so they can see a restart notification)
-#. Open a restart socket (using ``multiprocessing`` to send serialised data)
 #. Suspend the server (do no further socket processing)
-#. Serialise the service state
-#. Close the logger
-#. Start a new process, using the same arguments that started this process
-#. Wait for the new process to connect to the restart socket
-#. Send serialised data to new process
-#. Terminate
+#. Serialise the service state and client sockets
+#. Pass the serialised data to the angel
+#. Wait for a response from the angel
 
-The new process does the following:
-#. ``service.run(...)`` is called
+The angel will then:
+
+#. Receive serialised data from the current process
+#. Start a new process
+
+The new process will then:
+
+#. Connect to the angel
 #. Trigger :ref:`PreStart <events_service>` event
-#. Tries to connect to the restart socket
-   * If socket does not exist, or does not reply, it logs "No restart detected"
-     and creates a new server. This is what normally happens when you start the
-     process.
-#. Retrieves serialised data from the restart socket
-#. Deserialises
-#. Closes the socket, allowing the parent process to terminate
+#. Request serialised data
+#. Deserialise the data into the new service
+#. Notify the angel that it has started
 #. Trigger :ref:`PostStart <events_service>` event
 #. Trigger :ref:`PostRestart <events_service>` event
-#. Enter server main listen loop
 
+When the angel receives notification that the new process has started, it will
+tell the old process that everything is ok. The old process will then terminate
+immediately.
 
-Restarting
-----------
-When the ``service.restart
-Note that when restarting, the current process stops
+.. note::
+
+    There is currently no support for restarting multiple services in the same
+    process.
+
 
 .. _class_settings:
 

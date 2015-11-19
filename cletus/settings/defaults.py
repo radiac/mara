@@ -102,6 +102,7 @@ log_file = None
 
 # Show the pid on each log line?
 #   None    Show it in log files but not stdout
+#           Always show when run with angel
 #   True    Show it all the time
 #   False   Never show it
 log_pid = None
@@ -113,14 +114,31 @@ log_pid = None
 log_time = None
 
 # Show the log level on each log line?
+#   None    Show it if more than one level
+#           'angel' level only counts if it's run with angel
 #   True    Show it all the time
 #   False   Never show it
-log_level = True
+log_level = None
 
 
 #
-# Restart controls
+# Angel settings
 #
+
+# Angel socket family - changes what type of socket the angel uses
+# If set to 'AF_UNIX' it will use a unix socket
+# Set to 'AF_INET' for a TCP socket
+angel_family = 'AF_UNIX'
+#angel_family = 'AF_INET'
+
+# Socket for communication with the angel
+# If family is AF_UNIX, this should be the path to the unix socket
+# If family is AF_INET, this should be a tuple of (ip, port)
+angel_socket = 'angel.sock'
+#angel_socket = ('127.0.0.1', 9001)
+
+# Auth key for the angel socket
+angel_authkey = '1234567890'
 
 # Restart socket family - changes what type of socket to use
 # If set to 'AF_UNIX' it will use a unix socket

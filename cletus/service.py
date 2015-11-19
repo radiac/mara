@@ -14,10 +14,10 @@ import subprocess
 import sys
 import time
 
-from .settings import Settings
-from .settings import defaults as default_settings
+from .settings import collect as collect_settings
 from .connection import Server
-from .logger import Logger
+from .angel import Process
+from . import logger
 from . import events
 from . import storage
 from . import timers
@@ -30,6 +30,9 @@ class Service(object):
     def __init__(self):
         # Store settings
         self.settings = None
+        
+        # Angel currently unknown
+        self.angel = None
         
         # No server yet
         self.server = None
@@ -56,20 +59,7 @@ class Service(object):
     
     clients = property(lambda self: self.server._clients.values())
     
-    def run(self, *args, **kwargs):
-        """
-        Collect settings and start the service
-        """
-        # Collect settings
-        self._collect_settings(*args, **kwargs)
-        
-        # Initialise service tools
-        self.log = Logger(self.settings)
-        
-        # Start the server
-        self._start()
-        
-
+    
     #
     # Events
     #
@@ -123,7 +113,7 @@ class Service(object):
 
 
     #
-    # Server operations
+    # Service-wide client operations
     #
     
     def write(self, clients, *data):
@@ -197,68 +187,55 @@ class Service(object):
     # Internal operations
     #
     
-    def _collect_settings(self, *args, **kwargs):
+    def run(self, *args, **kwargs):
         """
-        Collect settings
+        Collect settings and start the server
         """
-        # Start with default settings
-        self.settings = Settings()
-        self.settings.load(default_settings)
+        # Collect settings
+        self.settings = collect_settings(*args, **kwargs)
         
-        # Load settings from fn arguments
-        self.settings.load(*args)
-        self.settings.update(kwargs)
+        # Try to connect to angel, and initialise appropriate logger
+        self.angel = Process(self)
+        if self.angel.connect():
+            self.log = logger.AngelLogger(self.settings, self.angel)
+            self.log.service('Connected to angel')
+        else:
+            self.log = logger.Logger(self.settings)
+            # Not running with angel - remove from log levels
+            self.log.levels = [l for l in self.log.levels if l != logger.ANGEL]
+            self.log.update_prefix()
+            self.log.service('No angel detected')
         
-        # Load settings from command line
-        argv = sys.argv[1:]
-        cmd_args = []
-        cmd_kwargs = {}
-        for arg in argv:
-            if arg.startswith('--'):
-                if '=' in arg:
-                    key, val = arg[2:].split('=', 1)
-                    cmd_kwargs[key] = val
-                elif arg.startswith('--no-'):
-                    cmd_kwargs[arg[5:]] = False
-                else:
-                    cmd_kwargs[args[2:]] = True
-            else:
-                cmd_args.append(arg)
-        self.settings.load(*cmd_args)
-        self.settings.update(cmd_kwargs)
-    
-    def _start(self):
-        """
-        Start the server
-        """
         # Inform that we're starting
         self.log.service('Service starting')
         self.trigger(events.PreStart())
         
-        # Try to restart
-        try:
-            parent = multiprocessing_connection.Client(
-                self.settings.restart_socket, self.settings.restart_family,
-                authkey=self.settings.restart_authkey,
-            )
-            multiprocessing.current_process().authkey = self.settings.restart_authkey
-        except socket.error as e:
-            self.log.service('No restart detected: %s' % e)
-        else:
-            self.log.service('Restart detected, connecting to originator')
-            try:
-                serialised = parent.recv()
-            except IOError as e:
-                self.log.service('Failed to read from originator: %s' % e)
-            else:
+        # Try to deserialise service from angel
+        if self.angel:
+            # Connected to angel
+            serialised = self.angel.get_service()
+            if serialised:
                 self.deserialise(serialised)
-                parent.send('OK')
-                parent.close()
-                self.log.service('Service restarted')
-                self.trigger(events.PostStart())
-                self.trigger(events.PostRestart())
-        
-        # Otherwise start new server
+                if self.angel:
+                    self.angel.started()
+                    self.log.service('Service restarted')
+                    self.trigger(events.PostStart())
+                    self.trigger(events.PostRestart())
+            
+            if not self.angel:
+                self.log.service('Angel lost - aborting startup')
+                return
+            
+            # Set up angel watcher - when the angel dies, we die too
+            @self.timer(period=1)
+            def angel_watcher(timer):
+                self.angel.poll()
+                if not self.angel:
+                    self.log.service('Angel lost - terminating')
+                    self.write_all('-- Angel lost --')
+                    self.stop()
+            
+        # Start new server if no angel, or angel didn't have serialised service
         if not self.server:
             self.server = Server(self)
             self.trigger(events.PostStart())
@@ -288,13 +265,8 @@ class Service(object):
         """
         Restart the process
         """
-        if (self.settings.restart_family == 'AF_UNIX'
-            and os.path.exists(self.settings.restart_socket)
-        ):
-            raise ValueError(
-                'Restart socket already exists at %s' %
-                self.settings.restart_socket
-            )
+        if not self.angel:
+            raise ValueError('Cannot restart, not connected to angel')
         
         # Send reset warning
         self.log.service('Service restarting')
@@ -305,33 +277,17 @@ class Service(object):
         for client in clients:
             client.flush()
         
-        # Open socket
-        restart_socket = multiprocessing_connection.Listener(
-            self.settings.restart_socket, self.settings.restart_family,
-            authkey=self.settings.restart_authkey,
-        )
-        multiprocessing.current_process().authkey = self.settings.restart_authkey
-        
         # Suspend server, so sockets will back up waiting for new process
         self.server.suspend()
         
         # Serialise
         serialised = self.serialise()
         
-        # Close logger so new process can take over
-        self.log.service('Service spawning new process')
-        self.log.close()
+        # Send serialised service to angel and tell it we're stopping
+        self.angel.set_service(serialised)
         
-        # Start new process using same arguments as this
-        subprocess.Popen([sys.executable] + sys.argv)
-        
-        # Hand over to new process
-        new_process = restart_socket.accept()
-        new_process.send(serialised)
-        
-        # Wait for confirmation everything received
-        response = new_process.recv()
-        new_process.close()
+        # Terminate immediately
+        self.log.service('Service terminating')
         sys.exit()
 
     def serialise(self):

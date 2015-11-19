@@ -380,10 +380,18 @@ def cmd_help(event, cmd=None):
     command = event.registry.commands.get(cmd)
     if command is None or not command.is_available(event):
         event.client.write('Unknown command')
+        return
+    
+    syntax = 'Syntax: %s %s' % (command.name, command.syntax or '')
+    
+    if not command.help:
+        event.client.write(syntax)
+        return
     
     event.client.write(
         util.HR('Help: %s' % command.name),
         command.help,
+        '', syntax,
         util.HR()
     )
 

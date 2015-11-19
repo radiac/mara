@@ -56,7 +56,7 @@ class Manager(object):
         new_manager.store_cls = store_cls
         setattr(store_cls, 'manager', new_manager)
     
-    def load(self, keys):
+    def load(self, keys, active=True):
         """
         Return one or more cached objects, or load one or more saved objects
         from disk.
@@ -66,6 +66,9 @@ class Manager(object):
         
         If a list of keys is passed, a dict keyed on object key will be
         returned; if an object does not exist, its value will be None.
+        
+        If active is True (by default), objects which are succesfully loaded
+        will be added to the cache.
         """
         # Single key passed
         if isinstance(keys, basestring):
@@ -78,7 +81,8 @@ class Manager(object):
             # Try to load from disk
             obj = self.store_cls(key, active=False)
             if obj.load():
-                self.add_active(obj)
+                if active:
+                    self.add_active(obj)
                 return obj
             return None
             
@@ -89,14 +93,15 @@ class Manager(object):
                 key = key.lower()
                 
                 # Check cache
-                if keys in self.cache:
+                if key in self.cache:
                     objs[key] = self.cache[key]
                     continue
                 
                 # Load from disk
                 obj = self.store_cls(key, active=False)
                 if obj.load():
-                    self.add_active(obj)
+                    if active:
+                        self.add_active(obj)
                 else:
                     obj = None
                 objs[key] = obj
@@ -115,15 +120,24 @@ class Manager(object):
         del self.cache[obj.key]
     
     def active(self):
+        """
+        Return objects which are active
+        """
         return copy.copy(self.cache)
     
     def saved(self):
-        # Get list of keys
+        """
+        Return objects which are saved and not active
+        """
+        # Get list of keys who aren't active
         keys = []
         for filename in os.listdir(self.store_path):
             if not filename.endswith('.json'):
                 continue
-            keys.append(filename[:len('.json')])
+            key = filename[:-len('.json')]
+            if key in self.cache:
+                continue
+            keys.append(key)
         return self.load(keys, active=False)
         
     def all(self):

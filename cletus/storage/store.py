@@ -140,6 +140,8 @@ class Store(object):
     def __init__(self, key, active=True):
         """
         Initialise a stored object
+        
+        If active is True, will be added to the manager's active list.
         """
         key = key.lower()
         if not is_filename_safe(key):

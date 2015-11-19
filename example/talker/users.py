@@ -6,6 +6,7 @@ Must be imported before any events are bound
 
 from cletus.contrib.users import BaseUser
 from cletus.contrib.users.password import PasswordMixin
+from cletus.contrib.users.admin import AdminMixin
 from cletus.contrib.users.gender import GenderMixin
 
 from .core import service
@@ -20,7 +21,7 @@ service.listen(events.Receive, event_add_user)
 service.listen(CommandEvent, event_add_user)
 
 # Create User class
-class User(PasswordMixin, GenderMixin, BaseUser):
+class User(PasswordMixin, AdminMixin, GenderMixin, BaseUser):
     service = service
 
 

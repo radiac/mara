@@ -172,7 +172,7 @@ class CommandRegistry(object):
     def parse(self, event):
         """
         Parse the data from a Receive event into a command name and raw args,
-        and check that it is a valid command.
+        and check that it is a valid available command.
         
         Raise ValueError if the command was not recognised or available; the
         error message will be sent back to the client.
@@ -184,8 +184,8 @@ class CommandRegistry(object):
         else:
             cmd, raw_args = data, ''
         
-        # Check command exists
-        if cmd not in self.commands:
+        # Check command exists and is available
+        if cmd not in self.commands or not self.commands[cmd].is_available(event):
             raise ValueError('That command was not recognised')
         
         return cmd, raw_args.strip()
@@ -209,7 +209,8 @@ class Command(object):
     """
     def __init__(
         self, registry, name, fn,
-        args=None, syntax=None, group=None, help=None, context=None,
+        args=None, syntax=None, group=None, help=None, can=None,
+        context=None,
     ):
         """
         Build a command
@@ -217,9 +218,13 @@ class Command(object):
             name        Name of command
             fn          Function to call to perform the command
             args        Optional regular expression to match arguments
+                        (case insensitive)
             syntax      Optional human-readable syntax
             group       Optional command group
             help        Optional help; if missing, will be taken from docstring
+            can         Optional callback to determine command availability.
+                        It is passed the event, and if it returns True, the
+                        command can be used. If not set, it can always be used.
             context     Optional object to set as CommandEvent.context
         """
         self.registry = registry
@@ -227,6 +232,7 @@ class Command(object):
         self.fn = fn
         self.group = group
         self.syntax = syntax
+        self.can = can
         if help is not None:
             self.help = help
         elif fn.__doc__:
@@ -236,8 +242,19 @@ class Command(object):
         self.context = context
         
         if args:
-            args = re.compile(args)
+            args = re.compile(args, re.IGNORECASE)
         self.args = args
+    
+    def is_available(self, event):
+        """
+        Given the event trying to access this command, determine if it is
+        available.
+        
+        Defaults to yes.
+        """
+        if self.can:
+            return self.can(event)
+        return True
         
     def call(self, event, cmd, raw_args):
         """
@@ -330,7 +347,9 @@ def cmd_commands(event, group=None):
     
     event.client.write(
         util.HR('%sCommands' % groupname),
-        ' '.join((cmd.name for cmd in groups[group])),
+        ' '.join(
+            (cmd.name for cmd in groups[group] if cmd.is_available(event))
+        ),
         util.HR(),
     )
     
@@ -359,7 +378,7 @@ def cmd_help(event, cmd=None):
     
     # Look up command
     command = event.registry.commands.get(cmd)
-    if command is None:
+    if command is None or not command.is_available(event):
         event.client.write('Unknown command')
     
     event.client.write(

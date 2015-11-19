@@ -5,8 +5,7 @@ Used to generate pronouns
 """
 
 from ... import storage
-
-from ..commands import define_command, MATCH_STR
+from ..commands import define_command, MATCH_WORD
 
 
 MALE = 'male'
@@ -113,7 +112,7 @@ class GenderMixin(storage.Store):
 
 
 @define_command(
-    args=MATCH_STR, syntax='<male|female|other>', help='Set your gender',
+    args=MATCH_WORD, syntax='<male|female|other>', help='Set your gender',
 )
 def cmd_gender(event, gender):
     gender = gender.lower()

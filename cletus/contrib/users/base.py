@@ -1,6 +1,7 @@
 """
 Cletus users
 """
+from ..commands import define_command
 from ... import events
 from ... import storage
 from ... import util
@@ -29,7 +30,9 @@ class UserManager(storage.Manager):
         found = { k: v for k, v in active.items() if k in lower_names }
         missing = set(lower_names).difference(set(found.keys()))
         if missing:
-            raise ValueError('Unknown users %s' % util.pretty_list(list(missing)))
+            raise ValueError(
+                'Unknown users %s' % util.pretty_list(list(missing))
+            )
         return found
 
 
@@ -60,3 +63,21 @@ class BaseUser(storage.Store):
         # Remove from active list
         self.manager.remove_active(self)
 
+
+@define_command(help='List all users')
+def cmd_list_users(event):
+    """
+    List admin users
+    
+    Needs the user class in context as: context={'User': User}
+    """
+    User = event.context['User']
+    
+    online = [user.name for user in sorted(User.manager.active().values())]
+    offline = [user.name for user in sorted(User.manager.saved().values())]
+    event.user.write(
+        util.HR('Users'),
+        'Online: ' + util.pretty_list(online),
+        'Offline: ' + util.pretty_list(offline),
+        util.HR(),
+    )

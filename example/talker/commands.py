@@ -63,9 +63,8 @@ def emote(event, action):
     args=r'^' + RE_LIST + '\s+(?P<msg>.*?)$',
     syntax='<user>[, <user>] <message>',
 )
-def tell(event, *args, **kwargs):
-    usernames = args
-    msg = kwargs['msg']
+def tell(event, usernames, msg):
+    usernames = [a.strip() for a in usernames.split(',')]
     users = User.manager.get_active_by_name(usernames)
     
     # Validate target user
@@ -76,12 +75,14 @@ def tell(event, *args, **kwargs):
     # Send
     user_objs = users.values()
     for target in user_objs:
+        targets = util.pretty_list(['you'] + sorted(
+            [user.name for user in user_objs if user != target]
+        ))
         service.write(
-            [user.client for user in user_objs],
-            '%s tells you: %s' % (event.user.name, msg),
+            target.client, '%s tells %s: %s' % (event.user.name, targets, msg),
         )
     event.client.write('You tell %s: %s' % (
-        util.pretty_list([u.name for u in user_objs]),
+        util.pretty_list(sorted([u.name for u in user_objs])),
         msg,
     ))
 

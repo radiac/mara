@@ -19,6 +19,10 @@ def collect(*args, **kwargs):
     settings.load(*args)
     settings.update(kwargs)
     
+    # We may have been told to not collect command line arguments
+    if not settings.settings_collect_args:
+        return settings
+    
     # Load settings from command line
     argv = sys.argv[1:]
     cmd_args = []

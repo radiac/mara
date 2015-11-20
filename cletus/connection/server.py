@@ -21,8 +21,6 @@ class ServerSocket(object):
         self.socket = None
         if serialised:
             self.deserialise(serialised)
-        else:
-            self.open()
     
     def serialise(self):
         return serialise_socket(self.socket)
@@ -31,12 +29,17 @@ class ServerSocket(object):
         self.socket = deserialise_socket(data)
     
     def open(self):
+        # Called from listen, so make sure it's safe to run when already open
+        # This can happen when we've deserialised an open socket
+        if self.socket:
+            return
+        
         # Create and bind
         self.socket = socket.socket(
             socket.AF_INET, socket.SOCK_STREAM
         )
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind((self.settings.host, self.settings.port))
+        self.socket.bind((self.settings.host, int(self.settings.port)))
         self.socket.setblocking(0)
         self.socket.listen(5)
     
@@ -59,6 +62,7 @@ class ServerSocket(object):
         """
         if self.socket:
             self.socket.close()
+        self.socket = None
 
 
 class Server(object):
@@ -67,6 +71,9 @@ class Server(object):
     Arguments:
         service     A Service instance
     """
+    # Not running (exit the main loop)
+    _running = False
+    
     def __init__(self, service, serialised=None):
         # Store data
         self.service = service
@@ -77,9 +84,6 @@ class Server(object):
         
         # Dict of all Client objects (socket->client)
         self._clients = {}
-        
-        # Not running (exit the main loop)
-        self._running = False
         
         # Create the server socket, or restore a serialised one
         if serialised:
@@ -126,6 +130,7 @@ class Server(object):
         """
         Loop while listening for connections and incoming data
         """
+        self.serversocket.open()
         self.service.log.server('Server listening on %s:%s' % (
             self.settings.host, self.settings.port
         ))
@@ -193,7 +198,7 @@ class Server(object):
                 elif read_socket in self._client_sockets:
                     # Read from the client and find session
                     self._read_client(read_socket)
-            
+                
             # Process all sockets ready to send
             for send_socket in send_sockets:
                 self._send_client(send_socket)
@@ -232,7 +237,7 @@ class Server(object):
             # Mark as disconnected, to be cleaned up next loop
             client.disconnected()
             return
-            
+        
         # Send it on to the client object
         if len(data) > 0:
             client.read(data)
@@ -279,9 +284,10 @@ class Server(object):
         self.service.log.server('Server shutting down')
         
         # Close all client sockets
-        for client_socket in self.client_sockets:
+        for client_socket in self._client_sockets:
             client_socket.close()
-        self.client_sockets = []
+        self._client_sockets = []
+        self._clients = {}
         
         # Close the server socket
         if self.serversocket:
@@ -292,4 +298,3 @@ class Server(object):
     
     def __del__(self):
         self.service.log.server('Server stopped')
-    

@@ -13,13 +13,14 @@ setup(
     license = "BSD",
     keywords = "socket proxy telnet http gateway",
     url = "http://richardterry.co.uk/projects/cletus/",
-    long_description=read('README'),
+    long_description=read('README.rst'),
     classifiers=[
         "Development Status :: 4 - Beta",
         "Topic :: Internet :: Proxy Servers",
         "License :: OSI Approved :: BSD License",
     ],
     
+    test_suite = 'nose.collector',
     zip_safe=True,
     packages=['cletus'],
     scripts=['bin/cletus']

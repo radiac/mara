@@ -20,4 +20,9 @@ class Event(object):
         """
         Return this event as a string
         """
-        return '[%s]: %s' % (self.__class__.__name__, self.__class__.__doc__)
+        return '[%s]: %s' % (
+            self.__class__.__name__,
+            getattr(
+                self.__class__, 'hint', self.__class__.__doc__ or ''
+            ).strip().splitlines()[0],
+        )

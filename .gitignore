@@ -1,3 +1,5 @@
-cletus.egg-info
 *.pyc
+cletus.egg-info
 example/store
+test_talker_store
+.coverage*

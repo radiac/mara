@@ -12,7 +12,6 @@ __all__ = [
     'CommandRegistry', 'Command', 'CommandEvent', 'define_command',
     'cmd_commands', 'cmd_help', 'cmd_restart',
     'RE_WORD', 'MATCH_WORD', 'RE_STR', 'MATCH_STR', 'RE_LIST', 'MATCH_LIST',
-    'RE_LIST_AND', 'MATCH_LIST_AND',
 ]
 
 
@@ -24,13 +23,9 @@ MATCH_WORD = r'^' + RE_WORD + '$'
 RE_STR = r'(.*?)'
 MATCH_STR = r'^' + RE_STR + '$'
 
-# Match a list of strings, separated by commas
-RE_LIST = r'(.*?)(?:\s*,\s*(.*?))*'
+# Match a list of words, separated by commas
+RE_LIST = r'(.*?(?:\s*,\s*\S*?)*)'
 MATCH_LIST = r'^' + RE_LIST + '$'
-
-# Match a list of strings, separated by commas or "and"
-RE_LIST_AND = r'(.*?)(?:(?:\s*,\s*|\s+and\s+)(.*?))*'
-MATCH_LIST_AND = r'^' + RE_LIST_AND + '$'
 
 
 class CommandEvent(events.Client):
@@ -49,7 +44,7 @@ class CommandEvent(events.Client):
 
     def __str__(self):
         # Just show the command used
-        return super(events.Client, self).__str__() + ': %s' % self.match
+        return super(events.Client, self).__str__().strip() + ': %s' % self.match
 
 
 class CommandRegistry(object):
@@ -300,14 +295,13 @@ class Command(object):
         # Non-keyword arguments must be unnamed groups only
         # Thanks to http://stackoverflow.com/a/30293349/3301958
         named = {}
-        unnamed = {}
+        args = []
         for key, val in kwargs.items():
             named[matches.span(key)] = val
         for i, val in enumerate(matches.groups()):
             span = matches.span(i + 1)
             if span not in named:
-                unnamed[span] = val
-        args = [unnamed[key] for key in sorted(unnamed.keys())]
+                args.append(val)
         
         # Limit keyword arguments to just those with values
         # This will allow functions to specify defaults as normal

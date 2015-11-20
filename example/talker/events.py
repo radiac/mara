@@ -119,7 +119,7 @@ def connect(event):
     if not others:
         others = ['Nobody else']
     event.client.write('Welcome, %s! %s %s here' % (
-        user.name, util.pretty_list(others),
+        user.name, util.pretty_list(sorted(others)),
         'is' if len(others) == 1 else 'are'
     ))
     service.write_all(

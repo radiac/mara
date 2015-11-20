@@ -123,17 +123,16 @@ command is not found or not available.
 
 Social commands. These require a :ref:`user store <class_contrib_users>`, and
 work best if the user store has the :ref:`gender <class_contrib_users_gender>`
-extension.
+extension on the ``.gender`` attribute.
 
 To add the default socials, call ``gen_social_cmds`` with the service,
 commands handler and user store::
 
     gen_social_cmds(service, commands, User)
 
-This module contains a list of social verbs (in ``SOCIALS``), and a dict of
-verbs with default prepositions (eg dance with). Each of these is registered as
-a command, which uses a naive natural language parser to converts usernames and
-pronouns.
+This module uses :ref:`class_contrib_language`` to get its list of social verbs
+and to perform basic natural language processing to conjugate verbs and convert
+usernames and pronouns.
 
 
 .. _class_contrib_users:
@@ -252,6 +251,23 @@ There is also a command to check or set gender:
 
     from cletus.contrib.users.gender import cmd_gender
     commands.register('gender', cmd_gender)
+
+
+.. _class_contrib_language:
+
+``cletus.contrib.language``
+===========================
+
+Provide natural language processing utils for processing and manipulating
+English sentences.
+
+This is an area which has room for improvement.
+Natural language processing is a complex topic, and this isn't a comprehensive
+solution - stupid things are almost certain to happen. When something does,
+please let me know (tweet `@radiac <https://twitter.com/radiac>`_ or add a bug
+to github), or better yet, :doc:`contribute a test or fix <../contributing>`.
+
+This is used by :ref:`class_contrib_commands_socials` to modify social actions.
 
 
 .. _class_contrib_rooms:

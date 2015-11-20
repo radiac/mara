@@ -5,58 +5,8 @@ Used to generate pronouns
 """
 
 from ... import storage
-from ..commands import define_command, MATCH_WORD
-
-
-MALE = 'male'
-FEMALE = 'female'
-OTHER = 'other'
-
-SUBJECT = {
-    MALE:   'he',
-    FEMALE: 'she',
-    OTHER:  'they',
-}
-
-OBJECT = {
-    MALE:   'him',
-    FEMALE: 'her',
-    OTHER:  'they',
-}
-
-POSSESSIVE = {
-    MALE:   'his',
-    FEMALE: 'her',
-    OTHER:  'their',
-}
-
-SELF = {
-    MALE:   'himself',
-    FEMALE: 'herself',
-    OTHER:  'themselves',
-}
-
-
-class Gender(object):
-    def __init__(self, type):
-        if type not in (MALE, FEMALE):
-            type = OTHER
-        self.type = type
-        self.subject = SUBJECT[self.type]
-        self.object = OBJECT[self.type]
-        self.possessive = POSSESSIVE[self.type]
-        self.self = SELF[self.type]
-    
-    def __str__(self):
-        return self.type
-    
-    def __unicode__(self):
-        return self.type
-    
-    def __eq__(self, other):
-        if isinstance(other, Gender):
-            other = other.type
-        return self.type == other
+from ..commands import define_command
+from ..language.pronouns import MALE, FEMALE, OTHER
 
 
 class GenderFieldDescriptor(object):
@@ -72,14 +22,16 @@ class GenderFieldDescriptor(object):
             
         value = getattr(obj, self.name, None)
         if value is None:
-            return Gender(OTHER)
+            return OTHER
         return value
         
     def __set__(self, obj, value):
         if obj is None:
             raise AttributeError('Cannot set gender on a class')
-        if not isinstance(value, Gender):
-            value = Gender(value)
+        
+        if value not in (MALE, FEMALE):
+            value = OTHER
+        
         setattr(obj, self.name, value)
     
     def __delete__(self, obj):
@@ -92,15 +44,6 @@ class GenderField(storage.Field):
         Add a GenderFieldDescriptor to the object to hold the value
         """
         setattr(store_cls, name, GenderFieldDescriptor('_gender_%s' % name))
-
-    def serialise(self, obj, name):
-        gender = getattr(obj, name, None)
-        if gender is None:
-            return None
-        return gender.type
-    
-    def deserialise(self, obj, name, data):
-        setattr(obj, name, Gender(data))
 
 
 class GenderMixin(storage.Store):

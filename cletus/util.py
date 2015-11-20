@@ -49,12 +49,11 @@ class HR(object):
     def __init__(self, msg=None):
         self.msg = msg
         
-    def render(self, width):
+    def render(self, width=80):
         if not self.msg:
             return '-' * width
         
         return (" %s " % self.msg).center(width, '-')
-
 
 def pretty_list(data):
     if not data:

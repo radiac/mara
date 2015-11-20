@@ -55,17 +55,28 @@ class Settings(object):
         
         Accepted sources:
             module                  Reference to imported module
+            settings                Reference to instance of this class
             "module:python.module"  Name of python module to import
             "/path/to/conf.json"    Path to JSON file
         """
         for source in sources:
+            # Reference to imported module
             if isinstance(source, ModuleType):
                 self.load_module(source)
+            
+            # Settings instance
+            elif isinstance(source, Settings):
+                self.update(source)
+            
+            # Path to module to import
             elif source.startswith(MODULE_PREFIX):
                 module = __import__(source[len(MODULE_PREFIX):])
                 self._load_module(module)
+            
+            # Path to json file
             elif source.endswith('.json'):
                 self._load_json(source)
+            
             else:
                 raise ValueError('Unknown settings source: %s' % source)
     

@@ -13,7 +13,7 @@ class Client(Event):
         self.client = client
         
     def __str__(self):
-        return super(Client, self).__str__() + ' (%s)' % self.client.ip
+        return super(Client, self).__str__().strip() + ' (%s)' % self.client.ip
 
 class Connect(Client):      "Client connected"
 class Disconnect(Client):   "Client disconnected"
@@ -25,4 +25,4 @@ class Receive(Client):
         self.data = data
 
     def __str__(self):
-        return super(Receive, self).__str__() + ': %s' % self.data
+        return super(Receive, self).__str__().strip() + ': %s' % self.data

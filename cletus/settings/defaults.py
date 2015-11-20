@@ -3,7 +3,7 @@ Default settings
 """
 
 #
-# Connection
+# Server
 #
 
 # IP to listen on
@@ -57,21 +57,18 @@ store_path = 'store'
 # Flash socket support
 #
 
-# Flash support
-# Will provide the cross-domain policy below on request
-# Note: Will cause a delay of flash_wait seconds for new non-Flash connections
-# To avoid a delay, set flash=False and serve policy requests on port 843
-flash = True
-
-# Flash wait
-# How long to wait for Flash to send the policy request, in seconds
+# How long to wait for a flash cross-domain policy request, in seconds
 # No data will be sent to the client before then
+# Set to 0, None or falsey value to disable Flash policy
 # Set this too low and Flash may not request in time, causing a security error
-# Set this too high and your clients will not get their prompt
-# Note: This will be tested each poll, so depends on socket_activity_timeout
-flash_wait = 0.5
+# Set this too high and your clients will have a noticeable delay before
+# getting their prompt.
+# When possible, set flash_wait=False and serve policy requests on port 843
+#flash_wait = 0.5
+flash_wait = None
 
 # Flash cross-doman policy
+# Note: You may need to change to-ports
 flash_policy = """<?xml version="1.0" encoding="UTF-8"?>
 <cross-domain-policy xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.adobe.com/xml/schemas/PolicyFileSocket.xsd">
     <allow-access-from domain="*" to-ports="9000" secure="false" />
@@ -135,6 +132,14 @@ angel_socket = 'angel.sock'
 # Auth key for the angel socket
 angel_authkey = '1234567890'
 
+
+#
+# Misc settings
+#
+
+# Collect settings from command line arguments
+# If False, do not collect from command line
+settings_collect_args = True
 
 #
 # contrib.comments

@@ -55,7 +55,7 @@ class Logger(object):
             self.levels = ALL
         if ALL in self.exclude:
             raise ValueError('Log level -all is not valid')
-        
+            
         # Now open logger
         self.disabled = False
         self.open()
@@ -87,6 +87,12 @@ class Logger(object):
         
         # Pre-calculate prefix
         self.update_prefix()
+    
+    def ignore_angel(self):
+        """
+        Ignore the angel level
+        """
+        self.exclude.append(ANGEL)
     
     def force_with_pid(self):
         """

@@ -246,7 +246,7 @@ class Service(object):
         else:
             self.log = logger.Logger(self.settings)
             # Not running with angel - remove from log levels
-            self.log.levels = [l for l in self.log.levels if l != logger.ANGEL]
+            self.log.ignore_angel()
             self.log.update_prefix()
             self.log.service('No angel detected')
         

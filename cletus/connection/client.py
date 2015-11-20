@@ -197,7 +197,7 @@ class Client(object):
         self._is_closing = False    # Will close once everything is sent
         
         # See if we should wait for a flash policy request
-        if self.settings.flash:
+        if self.settings.flash_wait:
             self._flash_waiting = self._connect_time + self.settings.flash_wait
         else:
             self._flash_waiting = None
@@ -526,9 +526,8 @@ class Client(object):
                 # Catch no IAC
                 if next_iac == -1:
                     # Return raw string unchanged
-                    safe = raw
+                    safe += raw
                     break
-                
                 # Have an IAC
                 self.got_iac = True
                 

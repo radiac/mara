@@ -16,7 +16,7 @@ def connect(event):
     username = yield
     event.client.username = username
     event.client.write('Welcome, %s' % username)
-    service.write_all('%s has connected' % username, exclude=event.client)
+    service.write_all('-- %s has connected --' % username, exclude=event.client)
 
 
 @service.listen(events.Disconnect)
@@ -25,7 +25,7 @@ def disconnect(event):
     # If the client doesn't have a username, it hasn't connected
     if not hasattr(event.client, 'username'):
         return
-    service.write_all('%s has disconnected' % event.client.username)
+    service.write_all('-- %s has disconnected --' % event.client.username)
 
 
 # This example uses a simple custom command parser
@@ -58,7 +58,7 @@ def receive(event):
     elif cmd == COMMAND_EMOTE:
         service.write_all('%s %s' % (event.client.username, data))
     elif cmd == COMMAND_WHO:
-        clients = ('  %s' % c.username for c in service.clients)
+        clients = ['  %s' % n for n in sorted(c.username for c in service.clients)]
         event.client.write('Users here at the moment:', *clients)
     elif cmd == COMMAND_QUIT:
         event.client.write('Goodbye!')

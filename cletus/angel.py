@@ -65,7 +65,6 @@ class Angel(object):
         # Main angel loop
         socket_to_process = {}
         process_to_socket = {}
-        store = None
         old_process = None
         start_delay = 0
         while True:
@@ -77,6 +76,11 @@ class Angel(object):
                 process_socket.close()
                 del process_to_socket[process]
                 del socket_to_process[process_socket]
+            
+            # There is nothing valid in the store
+            # Either this is the first time it's running,
+            # or it failed, so didn't get a chance to serialise anything
+            store = None
             
             # Start script, with increasing delay if it last start failed
             if start_delay:

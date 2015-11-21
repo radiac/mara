@@ -1,6 +1,7 @@
 """
 Test library
 """
+import os
 import select
 import socket
 import telnetlib
@@ -46,6 +47,7 @@ class TestService(object):
     Pass settings on the constructor, or set them on the settings attribute
     """
     settings = mara.settings.Settings(
+        root_path=os.getcwd(),
         log='all' if DEBUG else False,
         settings_collect_args=False,
     )

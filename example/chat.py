@@ -67,7 +67,7 @@ def receive(event):
         event.client.write('Unknown command "%s"' % cmd)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     service.run(
         host='0.0.0.0',
         post=9000,

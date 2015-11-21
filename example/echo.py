@@ -5,5 +5,5 @@ service = Service()
 def receive(event):
     event.client.write(event.data)
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     service.run()

@@ -3,3 +3,5 @@ mara.egg-info
 example/store
 test_talker_store
 .coverage*
+.tox
+htmlcov

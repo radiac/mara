@@ -27,7 +27,7 @@ setup(
     ],
     extras_require = {
         'dev':  ['nose'],
-        'full': ['bcrypt', 'dateutil'],
+        'full': ['bcrypt', 'python-dateutil'],
     },
     test_suite = 'nose.collector',
     zip_safe=True,

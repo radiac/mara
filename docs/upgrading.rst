@@ -16,8 +16,8 @@ No previous public releases
 Changelog
 =========
 
-1.0.0       In development
-            Feature: Initial public release
+0.6.0       In development
+            Internal: Add root_path setting for more reliable relative paths
 
 0.5.0       2015-11-21
             Feature: Rename project

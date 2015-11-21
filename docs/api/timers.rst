@@ -108,7 +108,7 @@ Example of a periodic announcement, every 1 to 3 minutes::
 
 .. _class_timers_time_datetimer:
 
-``mara.timers.time.DateTimer``
+``mara.timers.date.DateTimer``
 ------------------------------
 
 This timer repeats at a specified date or time.

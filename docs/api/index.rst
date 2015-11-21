@@ -330,12 +330,25 @@ suffix all lines of outbound data.
 Default: ``False``
 
 
+.. _setting_root_path:
+
+``root_path``
+-------------
+
+This is an optional root path for all non-absolute path settings. If it is
+set to None, the directory containing the service script will be used.
+Individual path settings will ignore this if they are absolute themselves.
+
+Default: ``None`` (use script directory)
+
 .. _setting_store:
 
 ``store_path``
 --------------
 
 Path to store directory. If it does not exist, it will be created.
+
+If it is not an absolute path, Mara will use the root_path setting.
 
 Default: ``store``
 

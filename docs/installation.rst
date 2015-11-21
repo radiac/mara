@@ -2,6 +2,9 @@
 Installation
 ============
 
+Installing Mara
+===============
+
 Requires Python 2.7 or later. There are no required dependencies.
 
 Installation is simple with pip:
@@ -14,7 +17,7 @@ or to install with optional dependencies::
 
 This will install the following additional modules:
 * ``bcrypt`` for provides encryption in :ref:`class_contrib_users_password`
-* ``dateutil`` for the date-based timer :ref:`class_timers_time_datetimer`
+* ``dateutil`` for the date-based timer :ref:`class_timers_date_datetimer`
 
 .. note::
     If you prefer, you can instead install the development version direct from
@@ -30,6 +33,22 @@ This will install the following additional modules:
     details.
 
 You can now build and run your service, as described in :doc:`introduction`.
+
+
+Running the examples
+--------------------
+
+The examples are not installed by pip; to try them out, grab them from github:
+
+    git checkout https://github.com/radiac/mara.git
+    cd mara/examples
+
+You can then run the examples using ``python``, or ``mara`` if you want to use
+the :ref:`angel`::
+
+    python echo.py
+    python chat.py
+    mara talker.py
 
 
 Keeping Mara running
@@ -85,11 +104,11 @@ You can then start and stop the process using upstart:
     sudo start myservice
     sudo stop myservice
 
-So, for a virtualenv install at ``/home/mud/mara``, with your service defined
-in ``/home/mud/code/mud.py``, using the angel, running as the ``mud`` user,
-using the settings file ``/home/mud/code/mud/settings.json`` but overriding the
-root path so all your Mara-created files (logs, store, angel socket etc) are
-in ``/home/mud/data``, put the following in your upstart file ``mara_mud``,
+So, say you want a virtualenv install at ``/home/mud/mara``, with your service
+defined in ``/home/mud/code/mud.py``, using the angel, running as the ``mud``
+user, using the settings in ``/home/mud/code/mud/settings.py``, but overriding
+the root path so all your Mara-created files (logs, store, angel socket etc)
+are in ``/home/mud/data``; put the following in your upstart file ``mara_mud``,
 which you can then run with ``sudo start mara_mud``::
 
     description "Mara angel for mud"
@@ -98,5 +117,5 @@ which you can then run with ``sudo start mara_mud``::
     respawn
     exec start-stop-daemon --start --chuid mud \
         --exec /home/mud/mara/bin/mara -- \
-        /home/mud/code/mud.py /home/mud/code/settings.json \
+        /home/mud/code/mud.py module:mud.settings \
         --root_path=/home/mud/data

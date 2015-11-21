@@ -39,7 +39,8 @@ class Manager(object):
         if not self.service:
             return None
         return os.path.join(
-            self.service.settings.store_path, self._store_cls._name,
+            self.service.settings.get_path('store_path'),
+            self._store_cls._name,
         )
     
     def __copy__(self):

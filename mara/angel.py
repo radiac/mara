@@ -5,6 +5,7 @@ Wrapper to start mara process, keep it running, and manage restarts
 """
 import multiprocessing
 from multiprocessing.connection import Listener, Client
+import os
 import select
 import socket
 import subprocess
@@ -44,6 +45,14 @@ class Angel(object):
         self.settings = settings.collect(*args, **kwargs)
         self.args = sys.argv
         
+        # Move root_path to script's path
+        if self.settings.root_path is None:
+            # Get the dir name of the script, and either ensure it's an
+            # absolute path, or join it to the cwd
+            self.settings.root_path = os.path.abspath(
+                os.path.dirname(self.args[0])
+            )
+        
         # Start logger
         self.log = logger.Logger(self.settings)
         self.log.force_with_pid()
@@ -54,7 +63,8 @@ class Angel(object):
         """
         # Open angel socket
         listener = Listener(
-            self.settings.angel_socket, self.settings.angel_family,
+            self.settings.get_path('angel_socket'),
+            self.settings.angel_family,
             authkey=self.settings.angel_authkey,
         )
         multiprocessing.current_process().authkey = self.settings.angel_authkey
@@ -273,7 +283,8 @@ class Process(object):
         # Cannot log - service.log is defined based on outcome of this
         try:
             self.client = Client(
-                self.settings.angel_socket, self.settings.angel_family,
+                self.settings.get_path('angel_socket'),
+                self.settings.angel_family,
                 authkey=self.settings.angel_authkey,
             )
             multiprocessing.current_process().authkey = self.settings.angel_authkey

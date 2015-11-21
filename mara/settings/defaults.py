@@ -3,6 +3,15 @@ Default settings
 """
 
 #
+# General
+#
+
+# Root path for all relative paths defined in settings
+# If None, paths will be relative to the service script
+root_path = None
+
+
+#
 # Server
 #
 
@@ -50,6 +59,7 @@ socket_timeout = None
 
 # Store folder
 # By default, Store objects will save their data to json files in this folder
+# If it is not an absolute path, Mara will use the root_path setting
 store_path = 'store'
 
 
@@ -90,6 +100,7 @@ log = True
 
 # Path to logfile
 # Set to None or falsey value to log to stdout (or pass --no-log_file)
+# If it is not an absolute path, Mara will use the root_path setting
 log_file = None
 
 # Show the pid on each log line?
@@ -124,8 +135,9 @@ angel_family = 'AF_UNIX'
 #angel_family = 'AF_INET'
 
 # Socket for communication with the angel
-# If family is AF_UNIX, this should be the path to the unix socket
-# If family is AF_INET, this should be a tuple of (ip, port)
+# * If family is AF_UNIX, this should be the path to the unix socket
+#   If it is not an absolute path, Mara will use the root_path setting
+# * If family is AF_INET, this should be a tuple of (ip, port)
 angel_socket = 'angel.sock'
 #angel_socket = ('127.0.0.1', 9001)
 

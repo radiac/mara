@@ -27,7 +27,7 @@ class Logger(object):
         # Get settings
         self.settings = settings
         levels = settings.log
-        self.filename = settings.log_file
+        self.filename = settings.get_path('log_file')
         self.with_pid = settings.log_pid
         self.with_time = settings.log_time
         self.with_level = settings.log_level

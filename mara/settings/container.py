@@ -1,7 +1,9 @@
 """
 Mara settings container
 """
+import os
 from types import ModuleType
+import sys
 
 MODULE_PREFIX = 'module:'
 
@@ -92,7 +94,7 @@ class Settings(object):
         }
         self.update(dct)
     
-    def load_json(cls, path):
+    def load_json(self, path):
         """
         Load settings from specified JSON file to override these settings
         """
@@ -101,3 +103,23 @@ class Settings(object):
             raw = f.read()
         dct = json.loads(raw)
         self.update(dct)
+
+    def get_path(self, setting):
+        """
+        Return a setting as an absolute path
+        """
+        setting_path = getattr(self, setting)
+        if not isinstance(setting_path, basestring):
+            return setting_path
+        
+        # Return it if it's already an absolute path
+        if setting_path == os.path.abspath(setting_path):
+            return setting_path
+        
+        # Get root path, or use script directory
+        root_path = getattr(self, 'root_path', None)
+        if root_path is None:
+            root_path = sys.path[0]
+        
+        # Add root path to our path
+        return os.path.normpath(os.path.join(root_path, setting_path))

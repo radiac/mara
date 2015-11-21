@@ -2,9 +2,9 @@
 Getting started
 ===============
 
-First, install cletus with
+First, install mara with
 
-    pip install cletus
+    pip install mara
 
 See :doc:`installation` for more details.
 
@@ -12,12 +12,12 @@ See :doc:`installation` for more details.
 A Minimal Service
 =================
 
-A minimal Cletus service looks something like this::
+A minimal Mara service looks something like this::
 
-    from cletus import Service
+    from mara import Service, events
     service = Service()
     
-    @service.listen(cletus.events.Receive)
+    @service.listen(events.Receive)
     def receive(event):
         event.client.write(event.data)
 
@@ -36,7 +36,7 @@ Lets look at the code in more detail:
 
 1. First we import :ref:`class_service` and create an instance of it.
 
-   This ``service`` will be at the core of everything we do with Cletus; it
+   This ``service`` will be at the core of everything we do with Mara; it
    manages settings, the server, keeps track of clients, and handles events.
 
 2. Next we listen to one of those events using the :ref:`method_service_listen`
@@ -66,8 +66,8 @@ the angel - see :ref:`_angel` for details.
 More examples
 -------------
 
-This echo server is in the ``examples`` directory of the Cletus source, along
-with several more examples which will help get a feel for what Cletus can do,
+This echo server is in the ``examples`` directory of the Mara source, along
+with several more examples which will help get a feel for what Mara can do,
 and how you can develop with it:
 
 echo.py:        The echo server shown above
@@ -130,7 +130,7 @@ line settings will be used by all of them.
 Logging
 =======
 
-Rather than using python's standard logging, Cletus provides its own logger
+Rather than using python's standard logging, Mara provides its own logger
 for each service instance, with more customisability for what you want to log.
 
 The built-in logging levels are:
@@ -157,17 +157,17 @@ By default only the levels ``angel`` and ``service`` are logged, although the
 
 .. _angel:
 
-Using the cletus angel
-======================
+Using the mara angel
+====================
 
-Cletus provides an angel to look after your process daemon - it starts your
+Mara provides an angel to look after your process daemon - it starts your
 process, restarts it if it fails, and allows your process to restart itself
 without losing connections or state.
 
-To run your process through an angel, run it with ``cletus`` instead of
+To run your process through an angel, run it with ``mara`` instead of
 ``python``:
 
-    $ cletus echo.py
+    $ mara echo.py
     [7510] angel> Starting process 7511
     [7510] angel> Established connection to process 7511
     [7511] server> Server listening on 127.0.0.1:9000
@@ -175,9 +175,9 @@ To run your process through an angel, run it with ``cletus`` instead of
 You can pass command line settings to your service in exactly the same way,
 eg::
 
-    $ cletus run_mymud.py module:mymud.dv dev.json --host=10.0.0.11 --port=8000
+    $ mara run_mymud.py module:mymud.dv dev.json --host=10.0.0.11 --port=8000
 
-Cletus starts your processes using the same python interpreter it uses, so
+Mara starts your processes using the same python interpreter it uses, so
 it works from within a virtual environment.
 
 You can now make use of ``service.restart()`` in your code - this will

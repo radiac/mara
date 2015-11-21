@@ -29,7 +29,7 @@ class DirectedAction(object):
                 .name attribute with the capitalised username in it.
                 To enable gender-aware pronouns, make sure the user objects
                 also have a .gender attribute, set to one of MALE, FEMALE or
-                OTHER from cletus.contrib.language.pronouns.
+                OTHER from mara.contrib.language.pronouns.
     """
     def __init__(self, raw, users):
         self.raw = raw

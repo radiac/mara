@@ -1,37 +1,43 @@
-======================
-Cletus the Chat Server
-======================
+=========================================================
+Mara - A framework for network services, talkers and MUDs
+=========================================================
 
-A framework for building telnet-based services such as IRC-like chatrooms,
-talkers or muds.
+An event-based python framework designed for building TCP/IP services, such as
+echo servers, flash policy servers, chatrooms, talkers and MUDs. Batteries
+included.
 
-* Project site: http://radiac.net/projects/cletus/
-* Source code: https://github.com/radiac/cletus
+* Project site: http://radiac.net/projects/mara/
+* Source code: https://github.com/radiac/mara
 
-See the `Documentation <http://radiac.net/projects/cletus/documentation/>`_
-for details of how Cletus works.
+See the `Documentation <http://radiac.net/projects/mara/documentation/>`_
+for details of how Mara works.
 
 
 Features
 ========
 
-* Event-based framework
+* Event-based framework with support for timers
 * Supports raw sockets or telnet with negotiation
-* Common extras included, such as a command manager and storage system
+* Supports seamless restarts while maintaining connections
+* Common extras included, such as:
+  * command manager
+  * storage system
+  * accounts and login helpers
+  * natural language processing tools
 
 
 Quickstart
 ==========
 
-Install Cletus with ``pip install cletus``, then write your service using
+Install Mara with ``pip install mara``, then write your service using
 event handlers.
 
-A minimal Cletus service looks something like this::
+A minimal Mara service looks something like this::
 
-    from cletus import Service
+    from mara import Service
     service = Service()
     
-    @service.listen(cletus.events.Receive)
+    @service.listen(mara.events.Receive)
     def receive(event):
         event.client.write(event.data)
 
@@ -42,3 +48,9 @@ Save it as ``echo.py`` and run it:
 
     python echo.py
     * Server listening on 127.0.0.1:9000
+
+Take a look at the
+`examples <https://github.com/radiac/mara/tree/master/examples>`_ to see how to
+start writing more complex services, or read the
+`documentation <http://radiac.net/projects/mara/documentation/>`_ for
+details of how Mara works.

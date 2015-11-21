@@ -34,8 +34,8 @@ future by calling ``timer.stop()`` (or changing ``timer.active`` to ``False``).
 
 .. _class_timers_timer:
 
-``cletus.timers.Timer``
------------------------
+``mara.timers.Timer``
+---------------------
 
 Base class for timer classes. It is more likely that the other timer classes
 will be more useful in your code.
@@ -48,8 +48,8 @@ Arguments:
 
 .. _class_timers_periodtimer:
 
-``cletus.timers.PeriodTimer``
------------------------------
+``mara.timers.PeriodTimer``
+---------------------------
 
 This repeats after the specified period (in seconds).
 
@@ -62,7 +62,7 @@ Arguments:
 
 Example of a periodic announcement::
 
-    from cletus import timers
+    from mara import timers
     @service.timer(timers.PeriodTimer, period=60)
     def every_minute(timer):
         service.write_all('You have wasted another minute of your life.')
@@ -77,7 +77,7 @@ Example of a delay::
         # Only fire once
         timer.stop()
     
-    from cletus import timers
+    from mara import timers
     @service.listen(events.Receive)
     def delayed_echo(event):
         timer = timers.PeriodTimer(period=3, context=event)
@@ -87,8 +87,8 @@ Example of a delay::
 
 .. _class_timers_randomtimer:
 
-``cletus.timers.RandomTimer``
------------------------------
+``mara.timers.RandomTimer``
+---------------------------
 
 This repeats after a random amount of time, between a specified minimum and
 maximum period (in seconds)
@@ -100,7 +100,7 @@ Arguments:
 
 Example of a periodic announcement, every 1 to 3 minutes::
 
-    from cletus import timers
+    from mara import timers
     @service.timer(timers.RandomTimer, min_period=1*60, max_period=3*60)
     def every_so_often(timer):
         service.write_all('You are wasting your life.')
@@ -108,13 +108,13 @@ Example of a periodic announcement, every 1 to 3 minutes::
 
 .. _class_timers_time_datetimer:
 
-``cletus.timers.time.DateTimer``
---------------------------------
+``mara.timers.time.DateTimer``
+------------------------------
 
 This timer repeats at a specified date or time.
 
 It is defined in a separate module to the others because it depends on the
-module ``dateutil`` - if not installed, it will raise an ImportError. to
+module ``dateutil`` - if not installed, it will raise an ImportError. To
 install ``dateutil``, use ``pip install python-dateutil``.
 
 It takes keyword arguments describing the date and time; if a value is None,
@@ -146,7 +146,7 @@ other timers, you should probably think carefully before setting
 
 Example of an announcement at a specific date and time::
 
-    from cletus.timers.time import DateTimer
+    from mara.timers.time import DateTimer
     @service.timer(DateTimer, month=3, day=1, hour=12)
     def happy_birthday(timer):
         service.write_all("Happy Birthday to Radiac! He is wasting his life.")

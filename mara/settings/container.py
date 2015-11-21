@@ -1,5 +1,5 @@
 """
-Cletus settings container
+Mara settings container
 """
 from types import ModuleType
 

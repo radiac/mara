@@ -2,7 +2,7 @@
 Test the example talker
 """
 from .lib import *
-import cletus
+import mara
 from example import talker
 import os
 import shutil
@@ -11,7 +11,7 @@ import shutil
 TALKER_STORE = 'test_talker_store'
 
 class TalkerTestService(TestService):
-    settings = TestService.settings + cletus.settings.Settings(
+    settings = TestService.settings + mara.settings.Settings(
         store_path=TALKER_STORE,
     )
     def define(self):
@@ -70,7 +70,7 @@ class ChatTest(TestCase):
     def test_account_create(self):
         "Test manual account creation in talker"
         client = TalkerClient(self)
-        client.assertLine('Welcome to the cletus example talker!', '')
+        client.assertLine('Welcome to the mara example talker!', '')
         client.assertRead('What is your name? ')
         client.assertResponse('ann', 'There is nobody with that name.')
         client.assertRead('Do you want to create account? (Enter yes or no) ')

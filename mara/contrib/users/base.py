@@ -1,5 +1,5 @@
 """
-Cletus users
+Mara users
 """
 
 from ..commands import define_command

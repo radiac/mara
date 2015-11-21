@@ -1,15 +1,15 @@
 ======================
-Cletus the Chat Server
+Mara the Chat Server
 ======================
 
-Cletus is a framework for building telnet-based services such as IRC-like
+Mara is a framework for building telnet-based services such as IRC-like
 chatrooms, talkers or muds.
 
 Version 0.3.0, in development
 
 .. seealso::
 
-    Read this online at http://radiac.net/projects/cletus/
+    Read this online at http://radiac.net/projects/mara/
 
 
 Contents

@@ -1,5 +1,5 @@
 """
-Cletus commands
+Mara commands
 """
 import inspect
 import re

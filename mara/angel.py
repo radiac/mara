@@ -1,7 +1,7 @@
 """
 Angel
 
-Wrapper to start cletus process, keep it running, and manage restarts
+Wrapper to start mara process, keep it running, and manage restarts
 """
 import multiprocessing
 from multiprocessing.connection import Listener, Client
@@ -11,9 +11,9 @@ import subprocess
 import sys
 import time
 
-from cletus import settings
-from cletus import timers
-from cletus import logger
+from mara import settings
+from mara import timers
+from mara import logger
 
 
 # Commands sent by process to angel
@@ -31,7 +31,7 @@ START_DELAY_MAX = 30
 
 class Angel(object):
     """
-    The angel which manages cletus script processes
+    The angel which manages mara script processes
     """
     args = None
     settings = None
@@ -39,7 +39,7 @@ class Angel(object):
     def __init__(self, *args, **kwargs):
         sys.argv.pop(0)
         if len(sys.argv) < 1:
-            raise ValueError('Cletus script must be the first argument')
+            raise ValueError('Mara script must be the first argument')
         
         self.settings = settings.collect(*args, **kwargs)
         self.args = sys.argv

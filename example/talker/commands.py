@@ -1,14 +1,14 @@
 """
 Talker-style communication and commands
 """
-from cletus import util
-from cletus.contrib.users.password import prompt_new_password
+from mara import util
+from mara.contrib.users.password import prompt_new_password
 
 from .core import service
 from .users import User
 
 # Add command handler
-from cletus.contrib.commands import CommandRegistry, gen_social_cmds
+from mara.contrib.commands import CommandRegistry, gen_social_cmds
 commands = CommandRegistry(service)
 
 #
@@ -16,14 +16,14 @@ commands = CommandRegistry(service)
 #
 
 # Register admin commands
-from cletus.contrib.users.admin import if_admin, cmd_list_admin, cmd_set_admin
+from mara.contrib.users.admin import if_admin, cmd_list_admin, cmd_set_admin
 commands.register('admin', cmd_list_admin, context={'User': User})
 commands.register(
     'set_admin', cmd_set_admin, context={'User': User}, can=if_admin,
 )
 
 # Register standard built-in commands
-from cletus.contrib.commands import (
+from mara.contrib.commands import (
     cmd_commands, cmd_help, cmd_restart, MATCH_STR, RE_LIST,
 )
 commands.register('commands', cmd_commands)
@@ -34,8 +34,8 @@ commands.register('restart', cmd_restart, can=if_admin)
 gen_social_cmds(service, commands, User)
 
 # Add user commands
-from cletus.contrib.users import cmd_list_users
-from cletus.contrib.users.gender import cmd_gender
+from mara.contrib.users import cmd_list_users
+from mara.contrib.users.gender import cmd_gender
 commands.register('users', cmd_list_users, context={'User': User})
 commands.register('gender', cmd_gender)
 

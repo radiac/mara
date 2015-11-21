@@ -1,7 +1,7 @@
 #!/usr/bin/python
-import cletus
-from cletus import events
-service = cletus.Service()
+import mara
+from mara import events
+service = mara.Service()
 
 # Set up a filter for write_all to filter to users who have logged in,
 # otherwise they'll see things on the login prompt

@@ -8,10 +8,10 @@ API
 
 .. _class_service:
 
-``cletus.Service``
-==================
+``mara.Service``
+================
 
-Central control of the Cletus service.
+Central control of the Mara service.
 
 .. _method_service_run:
 
@@ -75,7 +75,7 @@ For example::
 
 Here the decorator is shorthand for::
 
-    from cletus import timers
+    from mara import timers
     timer = timers.PeriodTimer(period=60)
     timer.fn = every_minute
     service.timers.add(timer)
@@ -83,7 +83,7 @@ Here the decorator is shorthand for::
 You can use a different timer class by passing it as the first argument,
 ``cls``::
 
-    from cletus.timers import PeriodTimer
+    from mara.timers import PeriodTimer
     @service.timer(PeriodTimer, period=60)
     def every_minute(timer):
         service.write_all('Time passes')
@@ -161,7 +161,7 @@ or slightly more complex:
     #   service.filter_all = room_filter
     # But this would stop us from broadcasting global events
     
-    @service.listen(cletus.events.Receieve):
+    @service.listen(mara.events.Receieve):
     def chat(event):
         client.write('You say %s' % event.data)
         service.write_all(
@@ -229,8 +229,8 @@ immediately.
 
 .. _class_settings:
 
-``cletus.Settings``
-===================
+``mara.Settings``
+=================
 
 A container for service settings.
 
@@ -258,8 +258,8 @@ to an imported module::
 
 .. _class_client:
 
-``cletus.Client``
-=================
+``mara.Client``
+===============
 
 The client object is the telnet socket manager.
 
@@ -277,7 +277,7 @@ Arguments:
 
 .. _module_events:
 
-``cletus.events``
+``mara.events``
 =================
 
 See :doc:`events` for details
@@ -286,10 +286,11 @@ See :doc:`events` for details
 
 .. _module_settings:
 
-``cletus.settings``
-===================
+``mara.settings.defaults``
+==========================
 
-These are the default settings for any Cletus service.
+These are the default settings for any Mara service. Look at this file for
+details of all settings; the important ones are:
 
 
 ``host``
@@ -312,7 +313,7 @@ Default: ``9000``
 --------------
 Raw socket mode
 
-Cletus is primarily designed to be a telnet server for talkers and MUDs, so it
+Mara is primarily designed to be a telnet server for talkers and MUDs, so it
 normally treats inbound and outbound data as telnet content - performing
 telnet negotiation, breaking and joining raw socket data with newlines.
 However, this can be disabled using this setting, so you can read and write the
@@ -331,8 +332,8 @@ Default: ``False``
 
 .. _setting_store:
 
-``store``
----------
+``store_path``
+--------------
 
 Path to store directory. If it does not exist, it will be created.
 
@@ -341,8 +342,8 @@ Default: ``store``
 
 .. _class_logger:
 
-``cletus.Logger``
-=================
+``mara.Logger``
+===============
 
 To replace the 
 

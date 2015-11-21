@@ -1,5 +1,5 @@
 *.pyc
-cletus.egg-info
+mara.egg-info
 example/store
 test_talker_store
 .coverage*

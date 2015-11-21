@@ -1,8 +1,8 @@
 import re
 
-from cletus import events
-from cletus import util
-from cletus.contrib.users.password import prompt_new_password
+from mara import events
+from mara import util
+from mara.contrib.users.password import prompt_new_password
 
 from .core import service
 from .users import User
@@ -22,7 +22,7 @@ def command_alias(event):
 @service.listen(events.Connect)
 def connect(event):
     """Deal with connection"""
-    event.client.write('Welcome to the cletus example talker!')
+    event.client.write('Welcome to the mara example talker!')
     while True:
         event.client.write('')
         event.client.write_raw('What is your name? ')

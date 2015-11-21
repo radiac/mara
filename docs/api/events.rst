@@ -4,19 +4,18 @@ Events
 
 .. _class_events_event:
 
-``cletus.events.Event``
-=======================
+``mara.events.Event``
+=====================
 
 Base class for event classes.
 
 Events are containers for event data; event attributes are passed as keyword
 arguments to the constructor. For example::
 
-    event = cletus.events.Receive(client=client_obj, data=raw_input)
+    event = mara.events.Receive(client=client_obj, data=raw_input)
 
 Events can render to strings; this is used for logging.
 
-Remember that 
 
 Methods
 -------
@@ -29,23 +28,23 @@ Methods
 Service events
 ==============
 
-These are subclasses of the ``cletus.events.Service`` event.
+These are subclasses of the ``mara.events.Service`` event.
 
 When the service starts running:
 
-``cletus.events.PreStart``:     The service is about to start (``service``)
-``cletus.events.PostStart``:    The service has started (``service``) and is
+``mara.events.PreStart``:     The service is about to start (``service``)
+``mara.events.PostStart``:    The service has started (``service``) and is
                                 about to enter its main listen loop
 
 When the service stops:
 
-``cletus.events.PreStop``:  The service is about to stop
-``cletus.events.PostStop``: The service has stopped, and main program execution
+``mara.events.PreStop``:  The service is about to stop
+``mara.events.PostStop``: The service has stopped, and main program execution
                             is about to resume after ``service.run()``
 
 When the service restarts:
-``cletus.events.PreRestart``:   The service is about to restart (``service``).
-``cletus.events.PostRestart``:  The service has restarted (``service``)
+``mara.events.PreRestart``:   The service is about to restart (``service``).
+``mara.events.PostRestart``:  The service has restarted (``service``)
 
 For more information about events when restarting, see
 :ref:`method_service_restart`.
@@ -54,22 +53,22 @@ For more information about events when restarting, see
 Server events
 =============
 
-These are subclasses of the ``cletus.events.Server`` event.
+These are subclasses of the ``mara.events.Server`` event.
 
-``cletus.events.ListenStart``:      The server is listening.
+``mara.events.ListenStart``:      The server is listening.
                                     Called between the ``service`` events
                                     ``PreStart`` and ``PostStart``, once
                                     the server has opened its socket and
                                     started listening.
-``cletus.events.ListenStop``:       The server is no longer listening
+``mara.events.ListenStop``:       The server is no longer listening
 
 
 Client events
 =============
 
-These are subclasses of the ``cletus.events.Client`` event.
+These are subclasses of the ``mara.events.Client`` event.
 
-``cletus.events.Connect``
+``mara.events.Connect``
 -------------------------
 
 Client has connected (``client``)
@@ -80,15 +79,15 @@ Attributes:
 
 .. _class_events_receive:
 
-``cletus.events.Receive``
--------------------------
+``mara.events.Receive``
+-----------------------
 :   Client has sent data (``client``)
     
     Attributes:
     :   ``client``:     Instance of :ref:`class_client`
         ``data``:       Input data (a line, or 
 
-``cletus.events.Disconnect``
+``mara.events.Disconnect``
 :   Client has disconnected (``client``)
 
     Attributes:
@@ -120,7 +119,7 @@ handler can ``yield`` to capture the next line of input from the client (or in
 :ref:`raw socket mode <setting_socket_raw>` the next chunk of data). It can
 continue to ``yield`` to capture further lines. For example::
 
-    @service.listen(cletus.events.Connect)
+    @service.listen(mara.events.Connect)
     def connect(event):
         event.client.write_raw('Welcome. Please enter your name: ')
         username = yield
@@ -129,7 +128,7 @@ continue to ``yield`` to capture further lines. For example::
         service.write_all('%s has connected' % username, exclude=event.client)
 
 This handler is from the ``chat.py`` example. Note the use of ``write_raw``
-instead of ``write``; this stops Cletus from adding a newline when it's sent to
+instead of ``write``; this stops Mara from adding a newline when it's sent to
 the client, so they will type their name on the same line.
 
 
@@ -140,7 +139,7 @@ It is often desirable to bind a handler to listen to a category of events; for
 example, when you want to extend all client events by adding a user attribute
 to them, as is done with :ref:`class_contrib_users`.
 
-To make this easy, Cletus lets you bind a handler to an event base class. For
+To make this easy, Mara lets you bind a handler to an event base class. For
 example, a handler bound to ``events.Client`` will also be called for
 ``Receive``, ``Connect`` and ``Disconnect`` events.
 
@@ -149,11 +148,11 @@ example, a handler bound to ``events.Client`` will also be called for
     careful to avoid infinite loops; for example, you could check the event
     class before triggering it, eg::
     
-        class Subevent(cletus.events.Receive): pass
+        class Subevent(mara.events.Receive): pass
         
-        @service.listen(cletus.events.Receive)
+        @service.listen(mara.events.Receive)
         def receiver(event):
-            if type(event) == cletus.events.Receive:
+            if type(event) == mara.events.Receive:
                 # Safe to trigger subevent
                 service.trigger(Subevent(...))
             else:

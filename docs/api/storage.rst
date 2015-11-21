@@ -4,45 +4,53 @@
 Storage
 =======
 
-Cletus provides a simple storage system which can be used to store data
+Mara provides a simple storage system which can be used to store data
 permanently, or just for the current session. Data is stored in instances of
 :ref:`class_storage_store` subclasses, in field attributes defined using
 :ref:`class_storage_field` or its subclasses. Each store is managed by a
 :ref:`class_storage_manager`.
 
-Store keys will be converted to lowercase, and can only contain alphabetic
-characters, digits and underscore or dash.
+Its primary aim is to persist data across restarts; although it can be used for
+permanent storage, managers are intentionally simple, and do not provide
+functionality for querying or filtering. Data is stored in JSON files, not a
+proper database, so for complicated services you should consider using your
+Mara stores for session data, with fields holding references to objects from an
+ORM such as `SQLAlchemy <http://www.sqlalchemy.org/>`_ or
+`Django <https://www.djangoproject.com/>`_.
 
-Field names cannot start with an underscore, and cannot be one of the reserved
-store names (the attributes and methods listed below).
 
-A store class must be defined with the ``session`` instance it is tied to.
-This allows the the store to determine its path from settings, and ensures data
-persists across restarts.
+Overview
+--------
+
+A store class is defined with the ``session`` instance it is tied to. This
+allows the the store to determine its path from settings, and ensures data
+persists across restarts. The session identifies it by its class name, which
+is also used to contain the store's permanent data in the storage folder.
+
+Each stored object has a unique key - for example, a store for users may use
+the username as the key. This is used to load saved data. Store keys will be
+converted to lowercase, and can only contain alphabetic characters, digits and
+underscore or dash.
 
 Permanent data for the store is saved in the :ref:`setting_store`
 directory; each store class has its own subfolders, and each key has its own
-file, with data stored in json format.
+file, with data stored in json format.  If you don't want to be able to save a
+store, use the :ref:`class_sessionstore` base class when defining it.
 
-Once you have a ``store`` instance, you can get and set data by accessing
-the field attributes.
-
-You can initialise a ``Field`` with ``session=True`` to make it a temporary
-session variable. If you don't want to be able to save a store at all,
-use the :ref:`class_tempstoremixin` mixin when defining the class.
-
-Managers are intentionally simple, and do not provide functionality for
-querying or filtering; data is stored in JSON files, not a proper database. For
-anything complicated you would be better off just using cletus stores for
-session data with fields holding references to ORM objects, which can store
-permanent data in a more sensible structure than separate JSON files, and far
-more appropriate for being queried.
+Each store has one or more fields to hold data; once you have a ``store``
+instance, you can get and set data by accessing the field attributes. You can
+define a field with ``session=True`` to make it a temporary session variable.
+A plain :ref:`class_store_field`` stores any variable and does not attempt to
+do any type coercion - just make sure it can be serialised to JSON if it's a
+permanent field. Custom fields can be written to serialise and deserialise more
+complex data. Field names cannot start with an underscore, and cannot be one of
+the reserved store names (the attributes and methods listed below).
 
 
 .. _class_storage_store:
 
-``cletus.storage.Store``
-========================
+``mara.storage.Store``
+======================
 
 This is the abstract base class for storage models.
 
@@ -91,10 +99,19 @@ Save permanent data to disk
 Load permanent data from disk
 
 
+.. _class_sessionstore:
+
+``mara.storage.SessionStore``
+=============================
+
+This can be used as a base class for session-only stores, where saving and
+loading is disabled.
+
+
 .. _class_store_field:
 
-``cletus.storage.Field``
-========================
+``mara.storage.Field``
+======================
 
 Storage variable
 
@@ -169,19 +186,19 @@ disk.
 
 .. _class_storage_manager:
 
-``cletus.storage.Manager``
-==========================
+``mara.storage.Manager``
+========================
 
 Manager for stored objects.
 
 If will often be useful to subclass this when writing a custom store; for
 example::
 
-    class UserManager(cletus.store.Manager):
+    class UserManager(mara.store.Manager):
         def get_by_username(self, name):
             ...
     
-    class User(cletus.storage.Store):
+    class User(mara.storage.Store):
         ...
         registry = UserManager()
 

@@ -3,15 +3,15 @@ Talker service
 """
 import datetime
 
-import cletus
-service = cletus.Service()
+import mara
+service = mara.Service()
 
 
 @service.timer(period=60*60)
 def every_minute(timer):
     service.write_all('Another hour has passed')
 
-from cletus.timers.date import DateTimer
+from mara.timers.date import DateTimer
 @service.timer(DateTimer, minute=0, second=0) # Defaults (explicit for clarity)
 def church_bell(timer):
     hour = datetime.datetime.fromtimestamp(service.time).hour % 12

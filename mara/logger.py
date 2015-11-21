@@ -1,5 +1,5 @@
 """
-Logging class for Cletus
+Logging class for Mara
 """
 
 import os

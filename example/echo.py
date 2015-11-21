@@ -1,7 +1,7 @@
-import cletus
-service = cletus.Service()
+from mara import Service, events
+service = Service()
 
-@service.listen(cletus.events.Receive)
+@service.listen(events.Receive)
 def receive(event):
     event.client.write(event.data)
 

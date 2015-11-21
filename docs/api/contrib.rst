@@ -1,15 +1,15 @@
-==============
-cletus.contrib
-==============
+============
+mara.contrib
+============
 
 The ``contrib`` module contains functionality which isn't used by the core of
-Cletus, but which can be useful when building your own services.
+Mara, but which can be useful when building your own services.
 
 
 .. _class_contrib_commands:
 
-``cletus.contrib.commands``
-===========================
+``mara.contrib.commands``
+=========================
 
 This provides a ``Receive`` handler for parsing commands, a command registry,
 and a decorator to register command functions.
@@ -18,7 +18,7 @@ Example usage:
 
     # Create a command registry
     # This will add its own Receive handler
-    from cletus.contrib.commands import CommandRegistry, cmd_commands, cmd_help
+    from mara.contrib.commands import CommandRegistry, cmd_commands, cmd_help
     commands = CommandRegistry(service)
     
     # Register the ``commands`` command, to list registered commands
@@ -57,7 +57,7 @@ Commands written outside the scope of the command registry (and before their
 name is known) can have their parameters pre-defined with the
 ``@define_command`` decorator:
 
-    from cletus.contrib.commands import define_command
+    from mara.contrib.commands import define_command
     @define_command(args=r'(.*)')
     def dance(event, desc):
         ...
@@ -118,8 +118,8 @@ command is not found or not available.
 
 .. _class_contrib_commands_socials:
 
-``cletus.contrib.commands.socials``
-===================================
+``mara.contrib.commands.socials``
+=================================
 
 Social commands. These require a :ref:`user store <class_contrib_users>`, and
 work best if the user store has the :ref:`gender <class_contrib_users_gender>`
@@ -137,14 +137,14 @@ usernames and pronouns.
 
 .. _class_contrib_users:
 
-``cletus.contrib.users``
-========================
+``mara.contrib.users``
+======================
 
 User account management.
 
 Create a user store by subclassing ``BaseUser``::
 
-    from cletus.contrib.users import BaseUser
+    from mara.contrib.users import BaseUser
     class User(BaseUser):
         service = service
 
@@ -152,14 +152,14 @@ Add the client's related ``user`` to ``Client`` events by binding
 ``event_add_user``. This must be done before any other event handlers for
 ``Client`` events::
 
-    from cletus import events
-    from cletus.contrib.users import event_add_user
+    from mara import events
+    from mara.contrib.users import event_add_user
     service.listen(events.Client, event_add_user)
 
 Add a client serialiser so that the user object can be restored after a
 restart::
 
-    from cletus.contrib.users import BaseUserSerialiser
+    from mara.contrib.users import BaseUserSerialiser
     class UserSerialiser(BaseUserSerialiser):
         service = service
         store_name = 'user'
@@ -167,14 +167,14 @@ restart::
 
 Add a command to list all users:
 
-    from cletus.contrib.users import cmd_list_users
+    from mara.contrib.users import cmd_list_users
     commands.register('users', cmd_list_users, context={'User': User})
 
 
 .. _class_contrib_users_password:
 
-``cletus.contrib.users.password``
-=================================
+``mara.contrib.users.password``
+===============================
 
 Store passwords using salted bcrypt.
 
@@ -184,7 +184,7 @@ Requires the ``bcrypt`` module::
 
 Add the password mixin to your user store:
 
-    from cletus.contrib.users.password import PasswordMixin
+    from mara.contrib.users.password import PasswordMixin
     class User(PasswordMixin, BaseUser):
         service = service
 
@@ -197,15 +197,15 @@ methods:
 
 .. _class_contrib_users_admin:
 
-``cletus.contrib.users.admin``
-==============================
+``mara.contrib.users.admin``
+============================
 
 Mark users as admins. This will normally be used in conjunction with the
 :ref:`passwords <class_contrib_users_password>` user extension.
 
 Add the admin mixin to your user store::
 
-    from cletus.contrib.users.gender import AdminMixin
+    from mara.contrib.users.gender import AdminMixin
     class User(AdminMixin, BaseUser):
         service = service
 
@@ -217,7 +217,7 @@ the ``can`` command definition attribute::
 There are two commands available, one to list admin users, and another to set
 or unset admin users::
 
-    from cletus.contrib.users.admin import cmd_list_admin, cmd_set_admin
+    from mara.contrib.users.admin import cmd_list_admin, cmd_set_admin
     commands.register('admin', cmd_list_admin, context={'User': User})
     commands.register(
         'set_admin', cmd_set_admin, context={'User': User}, can=if_admin,
@@ -225,14 +225,14 @@ or unset admin users::
 
 .. _class_contrib_users_gender:
 
-``cletus.contrib.users.gender``
-===============================
+``mara.contrib.users.gender``
+=============================
 
 Store a user's gender, to generate accurate pronouns.
 
 Add the gender mixin to your user store::
 
-    from cletus.contrib.users.gender import GenderMixin
+    from mara.contrib.users.gender import GenderMixin
     class User(GenderMixin, BaseUser):
         service = service
 
@@ -249,14 +249,14 @@ object with the following attributes:
 
 There is also a command to check or set gender:
 
-    from cletus.contrib.users.gender import cmd_gender
+    from mara.contrib.users.gender import cmd_gender
     commands.register('gender', cmd_gender)
 
 
 .. _class_contrib_language:
 
-``cletus.contrib.language``
-===========================
+``mara.contrib.language``
+=========================
 
 Provide natural language processing utils for processing and manipulating
 English sentences.
@@ -272,8 +272,8 @@ This is used by :ref:`class_contrib_commands_socials` to modify social actions.
 
 .. _class_contrib_rooms:
 
-``cletus.contrib.rooms``
-========================
+``mara.contrib.rooms``
+======================
 
 This provides a ``Room`` store for keeping track of ``User`` objects.
 

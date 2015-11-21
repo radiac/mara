@@ -1,5 +1,5 @@
 """
-Cletus process manager
+Mara process manager
 
 Controls settings, server, and loaded modules
 """

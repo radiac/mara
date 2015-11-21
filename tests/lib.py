@@ -8,8 +8,8 @@ import time
 import threading
 import unittest
 
-import cletus
-from cletus.settings import defaults
+import mara
+from mara.settings import defaults
 
 
 __all__ = ['unittest', 'TestCase', 'TestService', 'Client', 'hr']
@@ -26,7 +26,7 @@ NEWLINE = '\r\n'
 
 
 def hr(msg=None):
-    return cletus.util.HR(msg).render()
+    return mara.util.HR(msg).render()
 
 class TestCase(unittest.TestCase):
     def assertLine(self, response, expected):
@@ -45,7 +45,7 @@ class TestService(object):
     
     Pass settings on the constructor, or set them on the settings attribute
     """
-    settings = cletus.settings.Settings(
+    settings = mara.settings.Settings(
         log='all' if DEBUG else False,
         settings_collect_args=False,
     )
@@ -63,7 +63,7 @@ class TestService(object):
         self.service = self.define()
         
         # Collect settings
-        new_settings = cletus.settings.Settings(*args, **kwargs)
+        new_settings = mara.settings.Settings(*args, **kwargs)
         if self.settings:
             self.settings.update(new_settings)
         else:

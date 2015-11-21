@@ -1,9 +1,9 @@
 #!/usr/bin/python
 """
-Cletus angel
+Mara angel
 """
 
-from cletus.angel import Angel
+from mara.angel import Angel
 
 if __name__ == '__main__':
     angel = Angel()

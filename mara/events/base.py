@@ -1,5 +1,5 @@
 """
-Cletus events
+Mara events
 """
 
 class Event(object):

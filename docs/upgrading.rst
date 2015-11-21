@@ -16,8 +16,15 @@ No previous public releases
 Changelog
 =========
 
-0.3.0       In development
-            Feature: Restructured from plugin-based command to framework
+1.0.0       In development
+            Feature: Initial public release
+
+0.5.0       2015-11-21
+            Feature: Rename project
+            Feature: Add angel to support seamless restarts
+
+0.3.0       2015-02-16
+            Feature: Restructure from plugin-based command to framework
 
 0.2.1       2012-01-20
             Feature: Extra commands in plugins

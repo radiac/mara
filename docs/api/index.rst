@@ -3,7 +3,15 @@ API
 ===
 
 
-* Also in this section: :doc:`events`, :doc:`storage` and :doc:`contrib`.
+Also in this section:
+
+.. toctree::
+    :maxdepth: 2
+
+    events
+    timers
+    storage
+    contrib
 
 
 .. _class_service:
@@ -21,6 +29,7 @@ Central control of the Mara service.
 Build settings and run the service.
 
 Arguments:
+
 :   ``*args``:      List of settings sources - see :ref:`settings` for options
     ``**kwargs``:   Settings
 
@@ -41,6 +50,7 @@ Can be used as a direct call, or as a decorator::
         pass
 
 Arguments:
+
 :   ``Event``:      An :ref:`class_events_event` subclass (not an instance)
     ``handler``:    A reference to a handler. Omit this argument if you are
                     using ``listen`` as a decorator. See :ref:`event_handlers`
@@ -54,6 +64,7 @@ Arguments:
 Trigger an event.
 
 Arguments:
+
 :   ``event``:      An instance of an :ref:`class_events_event` subclass 
 
 
@@ -99,6 +110,7 @@ See :doc:`timers` for details of built-in timer classes, and writing your own.
 Send the data to the specified clients.
 
 Arguments:
+
 :   ``clients``:    A :ref:`class_client` instance, or list of ``Client``
                     instances.
     ``*data``:      One or more lines of data to send to the client.
@@ -113,11 +125,13 @@ Arguments:
 Send the data to all connected clients.
 
 Arguments:
+
 :   ``*data``:      One or more lines of data to send to the client.
                     Should not contain newline sequences.
 
 Optional keyword arguments:
-    ``filter``:     A callable which will be used to filter the clients - it
+
+:   ``filter``:     A callable which will be used to filter the clients - it
                     will be passed the same arguments as a
                     :ref:`global filter <attr_service_filter_all>`
     ``exclude``:    A :ref:`class_client` instance, or list of ``Client``
@@ -135,6 +149,7 @@ can be supplemented by the ``filter`` keyword argument - both can use the
 same callables.
 
 The callable that you assign should expect the following arguments:
+
 :   ``service``:    The service that is in the process of writing the data
     ``clients``:    A list of :ref:`class_client` instances
     ``**kwargs``:   The keyword arguments passed to ``write_all`` (except

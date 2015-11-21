@@ -55,6 +55,7 @@ Code overview
 
 Mara is based around services, so start in ``mara.service``. The ``Service``
 class is responsible for:
+
 * collecting settings (work actually done by ``mara.settings.collector``)
 * starting the server (in ``mara.connection.server``)
 * handling events (event classes are in ``mara.events``)

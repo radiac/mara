@@ -16,12 +16,10 @@ No previous public releases
 Changelog
 =========
 
-0.6.0       In development
-            Internal: Add root_path setting for more reliable relative paths
-
-0.5.0       2015-11-21
+0.4.0       2015-11-21
             Feature: Rename project
             Feature: Add angel to support seamless restarts
+            Internal: Add root_path setting for more reliable relative paths
 
 0.3.0       2015-02-16
             Feature: Restructure from plugin-based command to framework

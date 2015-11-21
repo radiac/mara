@@ -25,6 +25,8 @@ Features
   * accounts and login helpers
   * natural language processing tools
 
+Version 0.4.0; supports Python 2.7.
+
 
 Quickstart
 ==========

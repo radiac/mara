@@ -5,3 +5,4 @@ test_talker_store
 .coverage*
 .tox
 htmlcov
+docs/_*

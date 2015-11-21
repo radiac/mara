@@ -20,6 +20,6 @@ Contents
 
     introduction
     installation
-    api/index
     upgrading
     contributing
+    api/index

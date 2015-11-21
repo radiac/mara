@@ -1,12 +1,14 @@
 import os
 from setuptools import setup
 
+VERSION = "0.4.0"
+
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
     name = "mara",
-    version = "1.0.0",
+    version = VERSION,
     author = "Richard Terry",
     author_email = "python@richardterry.co.uk",
     description = ("A framework for network services, talkers and MUDs"),
@@ -15,7 +17,8 @@ setup(
     url = "http://richardterry.co.uk/projects/mara/",
     long_description=read('README.rst'),
     classifiers=[
-        "Development Status :: 5 - Production/Stable",
+        'Development Status :: 4 - Beta',
+        #'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         "License :: OSI Approved :: BSD License",
         'Operating System :: OS Independent',

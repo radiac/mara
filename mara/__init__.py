@@ -4,3 +4,9 @@ from .connection.client import Client
 from .connection.server import Server
 from . import storage
 from . import events
+
+__version__ = "0.4.0"
+__license__ = "BSD"
+__author__ = "Richard Terry"
+__credits__ = [
+]

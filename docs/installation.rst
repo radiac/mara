@@ -7,7 +7,7 @@ Installing Mara
 
 Requires Python 2.7 or later. There are no required dependencies.
 
-Installation is simple with pip:
+Installation is simple with pip::
 
     pip install mara
 
@@ -16,6 +16,7 @@ or to install with optional dependencies::
     pip install mara[full]
 
 This will install the following additional modules:
+
 * ``bcrypt`` for provides encryption in :ref:`class_contrib_users_password`
 * ``dateutil`` for the date-based timer :ref:`class_timers_date_datetimer`
 
@@ -38,7 +39,7 @@ You can now build and run your service, as described in :doc:`introduction`.
 Running the examples
 --------------------
 
-The examples are not installed by pip; to try them out, grab them from github:
+The examples are not installed by pip; to try them out, grab them from github::
 
     git checkout https://github.com/radiac/mara.git
     cd mara/examples
@@ -84,7 +85,7 @@ In Ubuntu the easiest way to achieve this is with ``upstart``; add a script to
             --angel_socket=/var/run/mud_angel.socket
 
 If your version of upstart supports user jobs it would be best to put it there,
-otherwise if it's in ''/etc/init/'' or ''/etc/event.d/'' you will probably want
+otherwise if it's in ``/etc/init/`` or ``/etc/event.d/`` you will probably want
 to change user to avoid running it as root (replace ``ARGS`` with Mara args)::
 
     exec start-stop-daemon --start --chuid USER \
@@ -100,7 +101,8 @@ restarts::
 
     exec /path/to/bin/mara /path/to/myservice
 
-You can then start and stop the process using upstart:
+You can then start and stop the process using upstart::
+
     sudo start myservice
     sudo stop myservice
 

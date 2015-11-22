@@ -1,6 +1,9 @@
-=========================================================
-Mara - A framework for network services, talkers and MUDs
-=========================================================
+====
+Mara
+====
+
+A framework for network services, talkers and MUDs
+==================================================
 
 An event-based python framework designed for building TCP/IP services, such as
 echo servers, flash policy servers, chatrooms, talkers and MUDs. Batteries
@@ -9,8 +12,11 @@ included.
 * Project site: http://radiac.net/projects/mara/
 * Source code: https://github.com/radiac/mara
 
-See the `Documentation <http://radiac.net/projects/mara/documentation/>`_
-for details of how Mara works.
+.. image:: https://travis-ci.org/radiac/mara.svg?branch=master
+    :target: https://travis-ci.org/radiac/mara
+
+.. image:: https://coveralls.io/repos/radiac/mara/badge.svg?branch=master&service=github
+    :target: https://coveralls.io/github/radiac/mara?branch=master 
 
 
 Features
@@ -26,6 +32,9 @@ Features
   * natural language processing tools
 
 Version 0.4.0; supports Python 2.7.
+
+See the `Documentation <http://radiac.net/projects/mara/documentation/>`_
+for details of how Mara works.
 
 
 Quickstart
@@ -46,7 +55,7 @@ A minimal Mara service looks something like this::
     if __name__ == '__main__':
         service.run()
 
-Save it as ``echo.py`` and run it:
+Save it as ``echo.py`` and run it::
 
     python echo.py
     * Server listening on 127.0.0.1:9000

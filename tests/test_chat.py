@@ -2,7 +2,7 @@
 Test the example chat server
 """
 from .lib import *
-from example import chat
+from examples import chat
 
 
 class ChatTestService(TestService):

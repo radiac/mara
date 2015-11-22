@@ -2,7 +2,7 @@
 Test the example echo server
 """
 from .lib import *
-from example import echo
+from examples import echo
 
 
 class EchoTestService(TestService):

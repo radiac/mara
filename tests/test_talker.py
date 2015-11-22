@@ -3,7 +3,7 @@ Test the example talker
 """
 from .lib import *
 import mara
-from example import talker
+from examples import talker
 import os
 import shutil
 

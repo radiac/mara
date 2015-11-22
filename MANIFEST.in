@@ -1,0 +1,5 @@
+include LICENSE tox.ini docs/conf.py docs/Makefile
+recursive-include tests *
+recursive-exclude tests *.pyc
+recursive-include docs *.rst
+prune docs/_build

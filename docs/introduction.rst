@@ -29,8 +29,8 @@ Save it as ``echo.py`` and run it using ``python``::
     $ python echo.py
     * Server listening on 127.0.0.1:9000
 
-Now connect to telnet://127.0.0.1:9000 and anything you enter will be sent back
-to you - you have built a simple echo server.
+Now connect to ``telnet://127.0.0.1:9000`` and anything you enter will be sent
+back to you - you have built a simple echo server.
 
 Lets look at the code in more detail:
 
@@ -70,9 +70,9 @@ This echo server is in the ``examples`` directory of the Mara source, along
 with several more examples which will help get a feel for what Mara can do,
 and how you can develop with it:
 
-:   echo.py:    The echo server shown above
-    chat.py:    A simple IRC-like chat server
-    talker.py:  A talker with support for commands and rooms
+* **echo.py**: The echo server shown above
+* **chat.py**: A simple IRC-like chat server
+* **talker.py**: A talker with support for commands and rooms
 
 
 .. _settings:
@@ -99,8 +99,8 @@ setting that wins:
 
 Settings sources can be:
 
-:   ``module:python.module``:   Name of python module to import
-    ``/path/to/conf.json``:     Path to JSON file
+* ``module:python.module``: Name of python module to import
+* ``/path/to/conf.json``: Path to JSON file
 
 If a setting source isn't found, an error will be raised.
 

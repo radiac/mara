@@ -20,6 +20,8 @@ This will install the following additional modules:
 * ``bcrypt`` for provides encryption in :ref:`class_contrib_users_password`
 * ``dateutil`` for the date-based timer :ref:`class_timers_date_datetimer`
 
+You can now build and run your service, as described in :doc:`introduction`.
+
 .. note::
     If you prefer, you can instead install the development version direct from
     github::
@@ -33,7 +35,6 @@ This will install the following additional modules:
     with the ``dev`` extra requirements - see :doc:`contributing` for more
     details.
 
-You can now build and run your service, as described in :doc:`introduction`.
 
 
 Running the examples

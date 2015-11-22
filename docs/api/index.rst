@@ -14,69 +14,88 @@ Also in this section:
     contrib
 
 
+Core classes
+============
+
 .. _class_service:
 
 ``mara.Service``
-================
+----------------
 
 Central control of the Mara service.
 
 .. _method_service_run:
 
 ``run(*args, **kwargs)``
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Build settings and run the service.
 
 Arguments:
 
-:   ``*args``:      List of settings sources - see :ref:`settings` for options
-    ``**kwargs``:   Settings
+    ``*args``
+        List of settings sources - see :ref:`settings` for options
+
+    ``**kwargs``
+        Settings
 
 
 .. _method_service_listen:
 
 ``listen(event_class, handler)``
---------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Bind a function to a class of event.
-
-Can be used as a direct call, or as a decorator::
-
+Bind a function to a class of event. It can be used as a direct call, or as a
+decorator::
+    
+    # Direct call to bind defined handler function
     service.listen(Event, handler)
     
+    # Decorator to bind while defining handler function
     @service.listen(Event):
     def handler(event):
         pass
 
+For information about writing an event handler, see :ref:`event_handlers`.
+
+The order of binding is important - the first handler to listen to an event
+sees it first, and any handler can stop the event.
+
+It will also be bound to any subclasses of the specified event, allowing you
+to listen to a category of events - see :ref:`event_inheritance` for details.
+
 Arguments:
 
-:   ``Event``:      An :ref:`class_events_event` subclass (not an instance)
-    ``handler``:    A reference to a handler. Omit this argument if you are
-                    using ``listen`` as a decorator. See :ref:`event_handlers`
-                    for details.
+    ``Event``
+        An :ref:`class_events_event` subclass (not an instance)
+
+    ``handler``
+        A reference to a handler. Omit this argument if you are using
+        ``listen`` as a decorator. See :ref:`event_handlers` for details.
+
 
 .. _method_service_trigger:
 
 ``trigger(event)``
-------------------
+~~~~~~~~~~~~~~~~~~
 
-Trigger an event.
+Trigger an event. The event will be passed to all event handlers bound to this
+class of event, in the order they were bound, until either a handler calls
+``event.stop()`` or there are no more handlers to call.
 
 Arguments:
 
-:   ``event``:      An instance of an :ref:`class_events_event` subclass 
+    ``event``
+        An instance of an :ref:`class_events_event` subclass 
 
 
 .. _method_service_timer:
 
 ``timer(cls=PeriodTimer, **kwargs)``
-------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Function decorator to define a timer class instance. The default class is
-``PeriodTimer``; keyword arguments are passed to the timer class constructor,
-and the timer's ``fn`` attribute is set to the decorated function. When
-triggered, the decorated function is passed the timer class instance.
+Function decorator to simplify defining a timer class instance and register it
+with the service.
 
 For example::
 
@@ -99,50 +118,67 @@ You can use a different timer class by passing it as the first argument,
     def every_minute(timer):
         service.write_all('Time passes')
 
-See :doc:`timers` for details of built-in timer classes, and writing your own.
+See :doc:`timers` for more details of how timers work, including how to write
+:ref:`timer handlers <timer_handlers>`, and a list of the built-in
+:ref`timer classes <timer_classes>` for you to use.
+
+Arguments:
+
+    ``cls``
+        The class of timer to instantiate.
+    
+    ``**kwargs``
+        Keyword arguments used to instantiate the timer class
 
 
 .. _method_service_write:
 
 ``write(clients, *data)``
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Send the data to the specified clients.
 
 Arguments:
 
-:   ``clients``:    A :ref:`class_client` instance, or list of ``Client``
-                    instances.
-    ``*data``:      One or more lines of data to send to the client.
-                    Should not contain newline sequences.
+    ``clients``
+        A :ref:`class_client` instance, or list of ``Client`` instances.
+
+    ``*data``
+        One or more lines of data to send to the client. Should not contain
+        newline sequences.
 
 
 .. _method_service_write_all:
 
 ``write_all(*data, **kwargs)``
-------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Send the data to all connected clients.
+Send the data to all connected clients (after using the
+:ref:`global filter <attr_service_filter_all>`).
 
 Arguments:
 
-:   ``*data``:      One or more lines of data to send to the client.
-                    Should not contain newline sequences.
+    ``*data``
+        One or more lines of data to send to the client.
+        Should not contain newline sequences.
 
 Optional keyword arguments:
 
-:   ``filter``:     A callable which will be used to filter the clients - it
-                    will be passed the same arguments as a
-                    :ref:`global filter <attr_service_filter_all>`
-    ``exclude``:    A :ref:`class_client` instance, or list of ``Client``
-                    instances.
-    other:          Any other keyword arguments will be passed to the filters.
+    ``filter``
+        A callable which will be used to filter the clients - it will be passed
+        the same arguments as a :ref:`global filter <attr_service_filter_all>`
+
+    ``exclude``
+        A :ref:`class_client` instance, or list of ``Client`` instances.
+
+    other
+        Any other keyword arguments will be passed to the filters.
 
 
 .. _attr_service_filter_all:
 
 ``filter_all = callable``
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Set a filter for all :ref:`write_all <method_service_write_all>` calls. This
 can be supplemented by the ``filter`` keyword argument - both can use the
@@ -150,22 +186,27 @@ same callables.
 
 The callable that you assign should expect the following arguments:
 
-:   ``service``:    The service that is in the process of writing the data
-    ``clients``:    A list of :ref:`class_client` instances
-    ``**kwargs``:   The keyword arguments passed to ``write_all`` (except
-                    ``filter`` and ``exclude``).
+``service``
+    The service that is in the process of writing the data
+    
+``clients``
+    A list of :ref:`class_client` instances
+
+``**kwargs``
+    The keyword arguments passed to ``write_all`` (except ``filter`` and
+    ``exclude``).
 
 It should then return a filtered list of clients.
 
 If the callable is set to None, the filter will be reset and no filtering will
 be performed.
 
-For example:
+For example::
     
     # Only write to every other client
     service.filter_all = lambda service, clients: clients[::2]
 
-or slightly more complex:
+or slightly more complex::
 
     def room_filter(service, clients, room=None):
         if not room:
@@ -191,17 +232,17 @@ or slightly more complex:
 .. _method_service_store:
 
 ``store(cls, name)``
---------------------
+~~~~~~~~~~~~~~~~~~~~
 
 Retrieve the store instance of the given class and name.
 
-See :ref:`storage` for more details of how storage works.
+See :doc:`storage` for more details of how storage works.
 
 
 .. _method_service_restart:
 
 ``restart()``
--------------
+~~~~~~~~~~~~~
 
 Restarts the process while maintaining the service state and client sockets.
 Only available when the process is run using the :ref:`angel <angel>`.
@@ -245,7 +286,7 @@ immediately.
 .. _class_settings:
 
 ``mara.Settings``
-=================
+-----------------
 
 A container for service settings.
 
@@ -258,7 +299,7 @@ eg: ``myproject_mysetting=20``.
 .. _method_settings_load:
 
 ``load(source)``
-----------------
+~~~~~~~~~~~~~~~~
 
 Load a settings source and override existing settings
 
@@ -274,7 +315,7 @@ to an imported module::
 .. _class_client:
 
 ``mara.Client``
-===============
+---------------
 
 The client object is the telnet socket manager.
 
@@ -282,18 +323,20 @@ The client object is the telnet socket manager.
 .. _method_client_write:
 
 ``write(data)``
----------------
+~~~~~~~~~~~~~~~
 
 Send the data to the client
 
 Arguments:
-:   ``data``:       Raw data received from the client
+
+``data``
+    Raw data received from the client
 
 
 .. _module_events:
 
 ``mara.events``
-=================
+~~~~~~~~~~~~~~~
 
 See :doc:`events` for details
 
@@ -302,30 +345,42 @@ See :doc:`events` for details
 .. _module_settings:
 
 ``mara.settings.defaults``
-==========================
+--------------------------
 
 These are the default settings for any Mara service. Look at this file for
 details of all settings; the important ones are:
 
 
 ``host``
---------
+~~~~~~~~
 Host IP to bind to
 
 Default: ``127.0.0.1``
 
 
 ``port``
---------
+~~~~~~~~
 Port to bind to
 
 Default: ``9000``
 
 
+.. _setting_root_path:
+
+``root_path``
+~~~~~~~~~~~~~
+
+This is an optional root path for all non-absolute path settings. If it is
+set to None, the directory containing the service script will be used.
+Individual path settings will ignore this if they are absolute themselves.
+
+Default: ``None`` (use script directory)
+
+
 .. _setting_socket_raw:
 
 ``socket_raw``
---------------
+~~~~~~~~~~~~~~
 Raw socket mode
 
 Mara is primarily designed to be a telnet server for talkers and MUDs, so it
@@ -345,25 +400,15 @@ suffix all lines of outbound data.
 Default: ``False``
 
 
-.. _setting_root_path:
-
-``root_path``
--------------
-
-This is an optional root path for all non-absolute path settings. If it is
-set to None, the directory containing the service script will be used.
-Individual path settings will ignore this if they are absolute themselves.
-
-Default: ``None`` (use script directory)
-
 .. _setting_store:
 
 ``store_path``
---------------
+~~~~~~~~~~~~~~
 
 Path to store directory. If it does not exist, it will be created.
 
-If it is not an absolute path, Mara will use the root_path setting.
+If it is a relative path, Mara will use the :ref:`setting_root_path` setting to 
+determine the absolute path.
 
 Default: ``store``
 
@@ -371,12 +416,10 @@ Default: ``store``
 .. _class_logger:
 
 ``mara.Logger``
-===============
-
-To replace the 
+---------------
 
 .. _method_logger_write:
 
 ``write(level, *lines)``
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 Write the lines at the specified level

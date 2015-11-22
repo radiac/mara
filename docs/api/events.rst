@@ -2,98 +2,6 @@
 Events
 ======
 
-.. _class_events_event:
-
-``mara.events.Event``
-=====================
-
-Base class for event classes.
-
-Events are containers for event data; event attributes are passed as keyword
-arguments to the constructor. For example::
-
-    event = mara.events.Receive(client=client_obj, data=raw_input)
-
-Events can render to strings; this is used for logging.
-
-
-Methods
--------
-
-``stop()``:     Stop the event from being passed to any more handlers
-
-
-.. _events_service:
-
-Service events
-==============
-
-These are subclasses of the ``mara.events.Service`` event.
-
-When the service starts running:
-
-``mara.events.PreStart``:     The service is about to start (``service``)
-``mara.events.PostStart``:    The service has started (``service``) and is
-                                about to enter its main listen loop
-
-When the service stops:
-
-``mara.events.PreStop``:  The service is about to stop
-``mara.events.PostStop``: The service has stopped, and main program execution
-                            is about to resume after ``service.run()``
-
-When the service restarts:
-``mara.events.PreRestart``:   The service is about to restart (``service``).
-``mara.events.PostRestart``:  The service has restarted (``service``)
-
-For more information about events when restarting, see
-:ref:`method_service_restart`.
-
-
-Server events
-=============
-
-These are subclasses of the ``mara.events.Server`` event.
-
-``mara.events.ListenStart``:      The server is listening.
-                                    Called between the ``service`` events
-                                    ``PreStart`` and ``PostStart``, once
-                                    the server has opened its socket and
-                                    started listening.
-``mara.events.ListenStop``:       The server is no longer listening
-
-
-Client events
-=============
-
-These are subclasses of the ``mara.events.Client`` event.
-
-``mara.events.Connect``
--------------------------
-
-Client has connected (``client``)
-
-Attributes:
-:   ``client``:     Instance of :ref:`class_client`
-
-
-.. _class_events_receive:
-
-``mara.events.Receive``
------------------------
-:   Client has sent data (``client``)
-    
-    Attributes:
-    :   ``client``:     Instance of :ref:`class_client`
-        ``data``:       Input data (a line, or 
-
-``mara.events.Disconnect``
-:   Client has disconnected (``client``)
-
-    Attributes:
-    :   ``client``:     Instance of :ref:`class_client`
-
-
 
 .. _event_handlers:
 
@@ -102,7 +10,8 @@ Event Handlers
 
 An event handler is a function or generator which is registered with the
 Service using :ref:`method_service_listen` for certain classes of events.
-It is passed the instance of the event.
+It is passed the instance of the event, and handlers are able to modify it for
+future handlers if they wish.
 
 Multiple handlers can listen to a single event; they will be called in the
 order they are defined. If a handler does not want later handlers to receive
@@ -132,6 +41,8 @@ instead of ``write``; this stops Mara from adding a newline when it's sent to
 the client, so they will type their name on the same line.
 
 
+.. _event_inheritance:
+
 Event inheritance
 -----------------
 
@@ -159,11 +70,14 @@ example, a handler bound to ``events.Client`` will also be called for
                 # This could be the subevent
 
 Behind the scenes manages this in two ways:
+
 * when binding a handler, the service adds finds subclasses of the specified
   event and binds the handler to those too
 * when a service sees a new event class (when binding or triggering) it looks
   at the bound handlers for its base class, and binds those to the new event
   class. If a class has multiple base classes, only the first one is used.
+
+This means that the order that handlers are bound is still respected.
 
 
 Writing custom events
@@ -174,3 +88,132 @@ or ``__str__`` for logging.
 
 Handlers are matched by comparing classes, so you can have two classes with the
 same name (as long as they are in separate modules).
+
+
+Event classes
+=============
+
+.. _class_events_event:
+
+``mara.events.Event``
+---------------------
+
+Base class for event classes.
+
+Events are containers for event data; event attributes are passed as keyword
+arguments to the constructor. For example::
+
+    event = mara.events.Receive(client=client_obj, data=raw_input)
+
+Events can render to strings; this is used for logging.
+
+Methods:
+
+``stop()``
+~~~~~~~~~~
+Stop the event from being passed to any more handlers
+
+
+.. _events_service:
+
+Service events
+--------------
+
+These are subclasses of the ``mara.events.Service`` event.
+
+
+
+When the service starts running:
+
+    ``mara.events.PreStart``
+        The service is about to start (``service``)
+        
+    ``mara.events.PostStart``
+        The service has started (``service``) and is about to enter its main
+        listen loop
+
+When the service stops:
+
+    ``mara.events.PreStop``
+        The service is about to stop
+        
+    ``mara.events.PostStop``
+        The service has stopped, and main program execution is about to resume
+        after ``service.run()``
+
+When the service restarts:
+    
+    ``mara.events.PreRestart``
+        The service is about to restart (``service``)
+    
+    ``mara.events.PostRestart``
+        The service has restarted (``service``)
+
+For more information about events when restarting, see
+:ref:`method_service_restart`.
+
+
+Server events
+-------------
+
+These are subclasses of the ``mara.events.Server`` event.
+
+``mara.events.ListenStart``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The server is listening.
+
+Called between the ``service`` events ``PreStart`` and ``PostStart``, once
+the server has opened its socket and started listening.
+
+``mara.events.ListenStop``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+The server is no longer listening
+
+
+Client events
+-------------
+
+These are subclasses of the ``mara.events.Client`` event.
+
+``mara.events.Connect``
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Client has connected (``client``)
+
+Attributes:
+    ``client``
+        Instance of :ref:`class_client`
+
+
+.. _class_events_receive:
+
+``mara.events.Receive``
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Client has sent data (``client``).
+
+When in raw mode this will be triggered as soon as data arrives on the socket,
+but when raw mode is disabled (by default), incoming data will be buffered
+until one or more newline sequences are found; at that point a new event will
+be created for each complete line.
+    
+Attributes:
+    ``client``
+        Instance of :ref:`class_client`
+
+    ``data``
+        Input data. When in raw mode this will be the unmodified data exactly
+        as it arrives, but when raw mode is disabled (by default), this is a
+        single full line of input, with newline stripped and any telnet
+        negotiation sequences removed.
+
+
+``mara.events.Disconnect``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Client has disconnected (``client``)
+
+Attributes:
+    ``client``
+        Instance of :ref:`class_client`
+

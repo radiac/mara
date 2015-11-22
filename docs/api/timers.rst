@@ -2,21 +2,56 @@
 Timers
 ======
 
+.. _timer_registry:
+
 Timer registry
 ==============
 
-Timers are held and triggered by the timer registry.
+Timers are held and triggered by the timer registry for each service (on the
+attribute ``service.timers``.
 
-To add a new timer to the registry, call ``add(timer)``. The service is then
-responsible for triggering any due (or overdue) timers at every poll, normally
-at a frequency of roughly 1/10th of a second (controlled by the
-``socket_activity_timeout`` setting, delayed by any event processing).
+It is recommended that you don't interact with the registry directly - instead,
+you should use the :ref:`service.timer <method_service_timer>` method to
+decorate your :ref:`timer handler <timer_handlers>`.
+
+That said it is possible to add a new timer directly by calling the ``add``
+method on the registry, ie ``service.timers.add(timer)``. This can be useful
+if binding a custom timer class which defines its own handler - see
+:ref:`timer_handlers` for an example.
+
+Once a timer is registered, the service is then responsible for triggering any
+due (or overdue) timers at every poll, at a frequency of roughly 1/10th of a
+second by default (controlled by the ``socket_activity_timeout`` setting,
+delayed by any event processing).
 
 Timers are stored in a linked list in the order that they are due. The
 registry holds a reference to the first timer in the list (as the ``next``
 attribute), then each timer holds a reference to the next one (again, as the
 ``next`` attribute).
 
+
+.. _timer_handlers:
+
+Timer handlers
+==============
+
+Timer handlers are the functions called when the timer is triggered. In all the
+built-in timers, handlers are functions assigned to an instantiated timer's
+``fn`` attribute. They are passed a single argument: ``timer``, the timer
+instance they are assigned to. This allows the timer to be modified by the
+handler - see :ref:`timer_classes` for more details.
+
+An alternative approach to defining a timer handler is to define a custom timer
+class, and override the ``trigger`` function. This would be a useful approach
+if you wanted to have multiple timers using the same handler - for example, you
+could create a subclass of :ref:`DateTimer <class_timers_date_datetimer>` which
+takes a user and date in the constructor, then calls the same handler to wish
+the user happy birthday on the specified date. With this approach you would
+add the timer instances to the registry directly - see :ref:`timer_registry`
+for details.
+
+
+.. _timer_classes:
 
 Timer classes
 =============
@@ -41,9 +76,10 @@ Base class for timer classes. It is more likely that the other timer classes
 will be more useful in your code.
 
 Arguments:
-
-:   due:        The timestamp that the event is due
-    context:    Optional context
+    ``due``
+        The timestamp that the event is due
+    ``context``
+        Optional context
 
 
 .. _class_timers_periodtimer:
@@ -56,9 +92,10 @@ This repeats after the specified period (in seconds).
 It is the default class for the service decorator :ref:`method_service_timer`.
 
 Arguments:
-
-:   period:     The number of seconds until it is due
-    context:    Optional context
+    ``period``
+        The number of seconds until it is due
+    ``context``
+        Optional context
 
 Example of a periodic announcement::
 
@@ -95,8 +132,10 @@ maximum period (in seconds)
 
 Arguments:
 
-:   min_period: The number of seconds until it is due
-    context:    Optional context
+    min_period
+        The number of seconds until it is due
+    context
+        Optional context
 
 Example of a periodic announcement, every 1 to 3 minutes::
 
@@ -106,7 +145,7 @@ Example of a periodic announcement, every 1 to 3 minutes::
         service.write_all('You are wasting your life.')
 
 
-.. _class_timers_time_datetimer:
+.. _class_timers_date_datetimer:
 
 ``mara.timers.date.DateTimer``
 ------------------------------
@@ -131,13 +170,20 @@ It is not timezone aware.
 
 Arguments:
 
-:   year:       The year the timer will trigger (None for every year)
-    month:      The month the timer will trigger (None for every month)
-    day:        The day the timer will trigger (None for every day)
-    hour:       The hour the timer will trigger (None for every hour)
-    minute:     The minute the timer will trigger (None for every minute)
-    second:     The second the timer will trigger (None for every second)
-    context:    Optional context
+    ``year``
+        The year the timer will trigger (None for every year)
+    ``month``
+        The month the timer will trigger (None for every month)
+    ``day``
+        The day the timer will trigger (None for every day)
+    ``hour``
+        The hour the timer will trigger (None for every hour)
+    ``minute``
+        The minute the timer will trigger (None for every minute)
+    ``second``
+        The second the timer will trigger (None for every second)
+    ``context``
+        Optional context
 
 Because the calculation of the next due date is more intensive than that of
 other timers, you should probably think carefully before setting

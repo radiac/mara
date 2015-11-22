@@ -18,7 +18,7 @@ it to a virtualenv::
     virtualenv mara
     cd mara
     source bin/activate
-    pip install -e git+https://github.com/USERNAME/mara.git#egg=mara[full][dev]
+    pip install -e git+https://github.com/USERNAME/mara.git#egg=mara[full],dev]
 
 (replacing ``USERNAME`` with your username).
 
@@ -86,7 +86,7 @@ angel script in ``bin/mara`` simply instantiates and runs the ``Angel`` class;
 the ``Process`` class is instantiated and used in ``Service.run()``.
 
 Lastly, anything which isn't classed as a core feature is defined in
-``mara.contrib``. See the :doc:`contrib` docs for more information.
+``mara.contrib``. See the :doc:`api/contrib` docs for more information.
 
 
 .. _roadmap:
@@ -94,12 +94,12 @@ Lastly, anything which isn't classed as a core feature is defined in
 Roadmap
 =======
 
-Planned:    Not scheduled for a specific version
-            * Python 3 support
-            * More contrib modules:
-              * Multiple rooms
-              * Items and inventory
-              * Combat (health and weapons)
-              * Improved natural language processing tools
-            * SSH support
-            * Support for poll, epoll
+Planned but not scheduled for a specific version:
+* Python 3 support
+* More contrib modules:
+  * Multiple rooms
+  * Items and inventory
+  * Combat (health and weapons)
+  * Improved natural language processing tools
+* SSH support
+* Support for poll, epoll

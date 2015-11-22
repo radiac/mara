@@ -14,7 +14,7 @@ Mara, but which can be useful when building your own services.
 This provides a ``Receive`` handler for parsing commands, a command registry,
 and a decorator to register command functions.
 
-Example usage:
+Example usage::
 
     # Create a command registry
     # This will add its own Receive handler
@@ -43,7 +43,7 @@ to the client who entered the command.
 Registering commands
 --------------------
 
-Register a command with the ``CommandRegistry.register`` method:
+Register a command with the ``CommandRegistry.register`` method::
 
     @commands.register
     def help(event):
@@ -55,7 +55,7 @@ Register a command with the ``CommandRegistry.register`` method:
 
 Commands written outside the scope of the command registry (and before their
 name is known) can have their parameters pre-defined with the
-``@define_command`` decorator:
+``@define_command`` decorator::
 
     from mara.contrib.commands import define_command
     @define_command(args=r'(.*)')
@@ -74,16 +74,21 @@ defining your own re-usable modules.
 The exact arguments for the ``register`` method depend on which class of
 ``Command`` you're using, but the default ``Command`` accepts the following
 keyword arguments:
-   
-:   args:       Optional regular expression to match arguments
-                (case insensitive)
-    syntax:     Optional human-readable syntax
-    group:      Optional command group
-    help:       Optional help; if missing, will be taken from docstring
-    can         Optional callback to determine command availability.
-                It is passed the event, and if it returns True, the
-                command can be used. If not set, it can always be used.
-    context:    Optional object to set as CommandEvent.context
+
+``args``
+    Optional regular expression to match arguments (case insensitive)
+``syntax``
+    Optional human-readable syntax
+``group``
+    Optional command group
+``help``
+    Optional help; if missing, will be taken from docstring
+``can``
+    Optional callback to determine command availability.
+    It is passed the event, and if it returns True, the
+    command can be used. If not set, it can always be used.
+``context``
+    Optional object to set as CommandEvent.context
 
 
 Command functions
@@ -91,15 +96,18 @@ Command functions
 
 Command functions are passed the following arguments:
 
-:   event:      A ``CommandEvent`` based on the ``Receive`` event, (ie
-                containing its ``service``, ``client`` etc), plus:
-                
-                ``event.cmd``:          The command name which was matched for
-                                        this command
-                ``event.registry``:     The command registry this command is
-                                        registered with
-    *args:      A list of values of unnamed groups in the ``args`` regex
-    **kwargs    A dict of values of named groups in the ``args`` regex
+``event``
+    A ``CommandEvent`` based on the ``Receive`` event, (ie
+    containing its ``service``, ``client`` etc), plus:
+    
+    ``event.cmd``
+        The command name which was matched for this command
+    ``event.registry``
+        The command registry this command is registered with
+``*args``
+    A list of values of unnamed groups in the ``args`` regex
+``**kwargs``
+    A dict of values of named groups in the ``args`` regex
 
 If a keyword argument's value is None, it will not be passed to the function.
 
@@ -165,7 +173,7 @@ restart::
         store_name = 'user'
         attr = 'user'
 
-Add a command to list all users:
+Add a command to list all users::
 
     from mara.contrib.users import cmd_list_users
     commands.register('users', cmd_list_users, context={'User': User})
@@ -182,7 +190,7 @@ Requires the ``bcrypt`` module::
 
     pip install bcrypt
 
-Add the password mixin to your user store:
+Add the password mixin to your user store::
 
     from mara.contrib.users.password import PasswordMixin
     class User(PasswordMixin, BaseUser):
@@ -191,8 +199,10 @@ Add the password mixin to your user store:
 This adds a new encrypted ``password`` field to the user store, and two new
 methods:
 
-:   set_password(pass):     Encrypt the password and store it on the object
-    check_password(pass):   Check the password against the one stored
+``set_password(pass)``
+    Encrypt the password and store it on the object
+``check_password(pass)``
+    Check the password against the one stored
 
 
 .. _class_contrib_users_admin:
@@ -239,15 +249,24 @@ Add the gender mixin to your user store::
 This adds a new ``gender`` field to the user store, which returns a ``Gender``
 object with the following attributes:
 
-:   type:       A string set to one of ``'male'``, ``'female'`` or ``'other'``.
-                These are available as constants on the class, as
-                ``MALE``, ``FEMALE`` and ``OTHER``. Default is ``OTHER``.
-    subject:    Pronoun for the subject (he, she or they)
-    object:     Pronoun for the object (him, her, they)
-    possessive: Possessive pronoun (his, her, their)
-    self:       Referring to oneself (himself, herself, themselves)
+``type``
+    A string set to one of ``'male'``, ``'female'`` or ``'other'``.
+    These are available as constants on the class, as
+    ``MALE``, ``FEMALE`` and ``OTHER``. Default is ``OTHER``.
+    
+``subject``
+    Pronoun for the subject (he, she or they)
+    
+``object``
+    Pronoun for the object (him, her, they)
+    
+``possessive``
+    Possessive pronoun (his, her, their)
+    
+``self``
+    Referring to oneself (himself, herself, themselves)
 
-There is also a command to check or set gender:
+There is also a command to check or set gender::
 
     from mara.contrib.users.gender import cmd_gender
     commands.register('gender', cmd_gender)

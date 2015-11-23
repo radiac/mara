@@ -131,20 +131,27 @@ class CommandRegistry(object):
         Handle a CommandEvent
         """
         try:
-            if inspect.isgeneratorfunction(event.command.fn):
+            if (
+                inspect.isgeneratorfunction(event.command.fn)
+                or isinstance(event.command.fn, events.Handler)
+            ):
                 # ++ python 3.3 has yield from
                 generator = event.command.fn(event, *event.args, **event.kwargs)
-                generator.send(None)
-                while True:
-                    try:
+                try:
+                    generator.next()
+                except StopIteration:
+                    pass
+                else:
+                    while True:
                         try:
-                            raw = yield
-                        except Exception as e:
-                            generator.throw(e)
-                        else:
-                            generator.send(raw)
-                    except StopIteration:
-                        break
+                            try:
+                                raw = yield
+                            except Exception as e:
+                                generator.throw(e)
+                            else:
+                                generator.send(raw)
+                        except StopIteration:
+                            break
                 # ++ end python 2.7 support
             else:
                 event.command.fn(event, *event.args, **event.kwargs)

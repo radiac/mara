@@ -16,6 +16,13 @@ No previous public releases
 Changelog
 =========
 
+0.5.0, In development
+---------------------
+Feature:
+
+* Class-based event handlers, with support for use as command functions
+
+
 0.4.0, 2015-11-21
 -----------------
 Feature:

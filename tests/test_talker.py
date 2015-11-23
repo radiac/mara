@@ -28,7 +28,7 @@ class TalkerClient(Client):
     def create_account(self, username, password):
         self.tn.read_until(self.username_prompt)
         self.write(username)
-        self.tn.read_until('Do you want to create account? (Enter yes or no) ')
+        self.tn.read_until('Do you want to create an account? (Enter yes or no) ')
         self.write('yes')
         self.tn.read_until('Enter a password: ')
         self.assertResponse(password, '')
@@ -70,10 +70,10 @@ class ChatTest(TestCase):
     def test_account_create(self):
         "Test manual account creation in talker"
         client = TalkerClient(self)
-        client.assertLine('Welcome to the mara example talker!', '')
+        client.assertLine('Welcome to the Mara example talker!', '')
         client.assertRead('What is your name? ')
         client.assertResponse('ann', 'There is nobody with that name.')
-        client.assertRead('Do you want to create account? (Enter yes or no) ')
+        client.assertRead('Do you want to create an account? (Enter yes or no) ')
         client.assertResponse(
             'yes',
             'Please pick a password for your account.',

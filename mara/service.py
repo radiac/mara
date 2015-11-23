@@ -128,7 +128,10 @@ class Service(object):
         for handler in self.events[event.__class__]:
             if event.stopped:
                 return
-            if inspect.isgeneratorfunction(handler):
+            if (
+                inspect.isgeneratorfunction(handler)
+                or isinstance(handler, events.Handler)
+            ):
                 generator = handler(event)
                 try:
                     generator.next()

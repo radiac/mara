@@ -8,10 +8,10 @@ Events
 Event Handlers
 ==============
 
-An event handler is a function or generator which is registered with the
-Service using :ref:`method_service_listen` for certain classes of events.
-It is passed the instance of the event, and handlers are able to modify it for
-future handlers if they wish.
+An event handler is a function, generator or :ref:`class_events_handler`, which
+is registered with the service using :ref:`method_service_listen` for certain
+classes of events. It is passed the instance of the event, and handlers are
+able to modify it for future handlers if they wish.
 
 Multiple handlers can listen to a single event; they will be called in the
 order they are defined. If a handler does not want later handlers to receive
@@ -41,10 +41,55 @@ instead of ``write``; this stops Mara from adding a newline when it's sent to
 the client, so they will type their name on the same line.
 
 
+.. _class_events_handler:
+
+``mara.events.Handler``
+-----------------------
+
+Event handler base class.
+
+Event handlers can be stand-alone functions or generators, but you can also
+use the ``Handler`` class to create compound handlers which can be designed
+to be inherited from and overridden.
+
+Any methods on the class with a name starting ``handler_`` will be run in
+alphanumeric name order - so if order is important to you, use a number in your
+method name to ensure clear ordering, eg ``handler_10_get_name``.
+
+Each handler method can be a functions or a generator. Because calling a
+sub-generator in python 2.7 is a pain, this makes the ``Handler`` class the
+easiest way to write re-usable event handlers which rely on user input.
+
+Each handler method is passed two arguments:
+    self
+        Reference to the handler class
+    event
+        The event which triggered this handler class. This is also available
+        on self.event.
+
+There are two ways to manage flow between handler methods:
+
+* Calls to ``event.stop()`` are respected; no further handler methods will be
+  called once an event is stopped
+* Modify ``self.handlers`` - this is the queue of remaining handlers to run.
+  It is a simple list of method references; add or remove items as needed. You
+  can reset it to the full list of handlers by using ``get_handlers()``::
+
+        def handler_infinite_loop(self):
+            "This is very silly and will lock up your service"
+            self.handlers = self.get_handlers()
+
+For an example of a more complex event handler, see the ``ConnectHandler``
+classes in :ref:`class_contrib_users` and :ref:`class_contrib_users_password`.
+
+Event handlers are compatible with the :ref:`class_contrib_commands` module;
+see :ref:`contrib_commands_handlers` for more details.
+
+
 .. _event_inheritance:
 
 Event inheritance
------------------
+=================
 
 It is often desirable to bind a handler to listen to a category of events; for
 example, when you want to extend all client events by adding a user attribute

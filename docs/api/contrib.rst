@@ -40,10 +40,12 @@ level, and if ``settings.commands_debug`` is ``True``, it will also be sent
 to the client who entered the command.
 
 
+.. _contrib_commands_register:
+
 Registering commands
 --------------------
 
-Register a command with the ``CommandRegistry.register`` method::
+Register a command function with the ``CommandRegistry.register`` method::
 
     @commands.register
     def help(event):
@@ -91,6 +93,8 @@ keyword arguments:
     Optional object to set as CommandEvent.context
 
 
+.. _contrib_commands_functions:
+
 Command functions
 -----------------
 
@@ -110,6 +114,34 @@ Command functions are passed the following arguments:
     A dict of values of named groups in the ``args`` regex
 
 If a keyword argument's value is None, it will not be passed to the function.
+
+
+.. _contrib_commands_handlers:
+
+Using event handlers as command functions
+-----------------------------------------
+
+Instead of registering a command function you can register an instance of
+:ref:`class_events_handler`. The handler methods in the command will be passed
+the same arguments as :ref:`contrib_commands_functions`. An event handler class
+can also use the ``@define_command`` decorator.
+
+For example::
+
+    @define_command(args=r'^(?:at\s+)?(?P<thing>.*)?$', group='room'):
+    class ContrivedLookHandler(events.Handler)
+        def handler_user(self, event, thing=None):
+            event.client.write('You look at the %s' % thing or 'void')
+        def handler_others(self, event, thing=None):
+            event.service.write_all(
+                '%s looks at something' % event.user.name,
+                exclude=event.client,
+            )
+    
+    commands.register('look', ContrivedLookHandler())
+
+This is a contrived example, but in practice it means that complex commands
+can be split into multiple methods, and inherited from and overridden.
 
 
 Subclassing the ``CommandRegistry``
@@ -178,6 +210,14 @@ Add a command to list all users::
     from mara.contrib.users import cmd_list_users
     commands.register('users', cmd_list_users, context={'User': User})
 
+There is also an event handler to ask for a user's name when they connect; this
+should be used in conjunction with a ``SessionStore``-based user store (for
+saved users use the authenticating ``ConnectHandler`` in
+:ref:`class_contrib_users_password`)::
+    
+    from mara.contrib.users import ConnectHandler
+    service.listen(events.Connect, ConnectHandler(User))
+
 
 .. _class_contrib_users_password:
 
@@ -203,6 +243,18 @@ methods:
     Encrypt the password and store it on the object
 ``check_password(pass)``
     Check the password against the one stored
+
+There is also an event handler to authenticate existing users, or create
+accounts for new users::
+    
+    from mara.contrib.users.password import ConnectHandler
+    service.listen(events.Connect, ConnectHandler(User))
+
+There is also an event handler which changes the user's password; use this with
+the commands framework::
+
+    from mara.contrib.users.password import ChangePasswordHandler
+    commands.register('password', ChangePasswordHandler())
 
 
 .. _class_contrib_users_admin:

@@ -1,10 +1,11 @@
 """
 Mara rooms
 """
+from ... import container
 from ... import storage 
 
 
-class Room(storage.Store):
+class Room(container.ClientContainer, storage.Store):
     users = storage.Field(lambda: [])
 
     def find_user(self, name):

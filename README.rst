@@ -26,6 +26,7 @@ Features
 * Supports raw sockets or telnet with negotiation
 * Supports seamless restarts while maintaining connections
 * Common extras included, such as:
+
   * command manager
   * storage system
   * accounts and login helpers

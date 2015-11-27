@@ -24,6 +24,17 @@ Core classes
 
 Central control of the Mara service.
 
+A service is responsible for managing its server and clients. All events,
+timers and storage are tied to a specific service instance.
+
+The ``Service`` class is a subclass of :ref:`class_clientcontainer`, but it
+disables the ``add_client`` and ``remove_client`` methods - clients are added
+automatically when they connect to the server, and removed when they
+disconnect. Unlike the standard ``ClientContainer``, a service also has a
+:ref:`global filter <attr_service_filter_all>` callback to allow you to filter
+it to clients who have logged in, for example.
+
+
 .. _method_service_run:
 
 ``run(*args, **kwargs)``
@@ -136,43 +147,20 @@ Arguments:
 ``write(clients, *data)``
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Send the data to the specified clients.
-
-Arguments:
-
-    ``clients``
-        A :ref:`class_client` instance, or list of ``Client`` instances.
-
-    ``*data``
-        One or more lines of data to send to the client. Should not contain
-        newline sequences.
+Send the lines of data to the specified clients. See
+:ref:`ClientContainer.write <method_clientcontainer_write>` for details.
 
 
 .. _method_service_write_all:
 
-``write_all(*data, **kwargs)``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``write_all(*data, filter_fn=function, exclude=list)``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Send the data to all connected clients (after using the
-:ref:`global filter <attr_service_filter_all>`).
+Send the data to all connected clients, filtered by the service's
+:ref:`global filter <attr_service_filter_all>`.
 
-Arguments:
-
-    ``*data``
-        One or more lines of data to send to the client.
-        Should not contain newline sequences.
-
-Optional keyword arguments:
-
-    ``filter``
-        A callable which will be used to filter the clients - it will be passed
-        the same arguments as a :ref:`global filter <attr_service_filter_all>`
-
-    ``exclude``
-        A :ref:`class_client` instance, or list of ``Client`` instances.
-
-    other
-        Any other keyword arguments will be passed to the filters.
+See :ref:`ClientContainer.write_all <method_clientcontainer_write_all>` for
+details.
 
 
 .. _attr_service_filter_all:
@@ -191,10 +179,6 @@ The callable that you assign should expect the following arguments:
     
 ``clients``
     A list of :ref:`class_client` instances
-
-``**kwargs``
-    The keyword arguments passed to ``write_all`` (except ``filter`` and
-    ``exclude``).
 
 It should then return a filtered list of clients.
 
@@ -423,3 +407,114 @@ Default: ``store``
 ``write(level, *lines)``
 ~~~~~~~~~~~~~~~~~~~~~~~~
 Write the lines at the specified level
+
+
+.. _class_clientcontainer:
+
+``mara.connection.ClientContainer``
+-----------------------------------
+
+Clients are grouped together in ``ClientContainer`` instances to make it
+easier to write to them in bulk.
+
+The class :ref:`class_service` is a subclass of ``ClientContainer``, so that
+you can easily write to and filter all clients connected to the service.
+
+Rather than using a container directly, you should normally create a subclass
+which also inherits from :ref:`class_storage_store`` (for containers with
+persistent state, eg talker or mud rooms which have flags or items) or
+:ref:`class_storage_sessionstore`` (for containers without persistent state,
+eg chat channels), changing the ``clients`` attribute into a list field::
+
+    class Room(storage.Store):
+        service = service
+        clients = storage.Field(default=[])
+
+This will allow connected clients to remain associated with their container
+instances across restarts.
+
+
+.. _attr_clientcontainer_clients:
+
+``clients``
+~~~~~~~~~~~
+
+A read-only list of clients in this container.
+
+
+.. _method_clientcontainer_add_client:
+
+``add_client(client)``
+~~~~~~~~~~~~~~~~~~~~~~
+
+Add the specified client to this container.
+
+
+.. _method_clientcontainer_remove_client:
+
+``remove_client(client)``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Remove the specified client from this container.
+
+
+.. _method_clientcontainer_write:
+
+``write(clients, *data)``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Send the lines of data to the specified clients.
+
+Arguments:
+
+    ``clients``
+        A :ref:`class_client` instance, or list of ``Client`` instances.
+
+    ``*data``
+        One or more lines of data to send to the client. Should not contain
+        newline sequences.
+
+
+.. _method_clientcontainer_write_all:
+
+``write_all(*data, filter_fn=function, exclude=clients)``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Send the data to all clients in this container.
+
+Arguments:
+
+    ``*data``
+        One or more lines of data to send to the client.
+        Should not contain newline sequences.
+
+The optional keyword arguments are passed to
+:ref:`method_clientcontainer_filter_clients` to filter the client list.
+
+
+.. _method_clientcontainer_filter_clients:
+
+``filter_clients(filter_fn=function, exclude=clients)``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Returns a filtered list of clients in this container.
+
+Optional keyword arguments:
+
+    ``filter``
+        A callable which will be used to filter the clients. It should expect
+        the following arguments:
+
+            ``service``
+                The service that is in the process of writing the data
+                
+            ``clients``
+                A list of :ref:`class_client` instances
+
+        It should then return a filtered list of clients.
+        
+        Default: ``None``
+        
+    ``exclude``
+        A :ref:`class_client` instance, or list of ``Client`` instances.
+

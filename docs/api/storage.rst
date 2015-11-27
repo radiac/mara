@@ -169,8 +169,31 @@ normally used to set the default value for the field, by setting the instance
 attribute with the field's ``name`` on the ``store``.
 
 This can be overridden by subclasses to implement more complex behaviours, such
-as replacing the attribute with a per-instance descriptor, to hold data
-internally for that store instance.
+as replacing the attribute with a per-instance object.
+
+
+.. _method_storage_field_get_value:
+
+``get_value(obj, name)``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Get the value of this field from the object ``obj``, where the field has the
+name ``name``. By default this just returns the value of the named attribute.
+
+This is used internally by :ref:`method_storage_field_serialise`; you should
+normally just access the attribute directly on the store instance.
+
+
+.. _method_storage_field_get_value:
+
+``set_value(obj, name)``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Set the value of this field on the object ``obj``, where the field has the
+name ``name``. By default this just sets the value of the named attribute.
+
+This is used internally by :ref:`method_storage_field_deserialise`; you should
+normally just access the attribute directly on the store instance.
 
 
 .. _method_storage_field_serialise:
@@ -180,7 +203,27 @@ internally for that store instance.
 
 Serialise the field value from the specified field name on the object provided.
 
-This is used to prepare data to be encoded to JSON to be saved to disk.
+This uses :ref:`method_storage_field_get_value` to retrieve the value, and
+:ref:`method_storage_field_serialise_value` to serialise it.
+
+This is used to prepare data value for serialisation in a dict to send to
+another process via the angel, or to save to disk as a JSON string.
+
+
+.. _method_storage_field_serialise_value:
+
+``serialise_value(data)``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Used by :ref:`method_storage_field_serialise` to serialise the value returned
+by :ref:`method_storage_field_get_value`.
+
+The base class serialiser can serialise dicts, lists and references to
+Client objects. Everything else will be passed unchanged, so you should
+override this method in your subclass if you want to serialise other objects -
+as well as write a matching :ref:`method_storage_field_deserialise_value`.
+For an example, look at how Mara serialises ``Client`` objects - see
+:source:`mara/storage/fields.py`.
 
 
 .. _method_storage_field_deserialise:
@@ -191,8 +234,24 @@ This is used to prepare data to be encoded to JSON to be saved to disk.
 Deserialise the specified serialised data onto the specified object under the
 field name provided.
 
-This is used for restoring data from decoded from JSON when being loaded from
-disk.
+This uses :ref:`method_storage_field_deserialise_value` to deserialise the
+value, and :ref:`method_storage_field_set_value` to set it.
+
+This is used for restoring data from :ref:`method_storage_field_serialise`.
+
+
+.. _method_storage_field_deserialise_value:
+
+``deserialise_value(obj, data)``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Used by :ref:`method_storage_field_deserialise` to deserialise the value for
+by :ref:`method_storage_field_set_value`.
+
+The base class deserialiser can deserialise anything that the base serialiser
+produces; if you write a custom serialiser, you should write a matching
+deserialiser too.
+
 
 
 .. _class_storage_manager:

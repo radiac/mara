@@ -154,7 +154,7 @@ class Manager(object):
         """
         frozen = {}
         for key, obj in self.cache.items():
-            frozen[key] = obj.to_dict(session)
+            frozen[key] = obj.to_dict(session=session)
         self.cache.clear()
         return frozen
     
@@ -164,4 +164,4 @@ class Manager(object):
         """
         for key, json in frozen.items():
             obj = self.store_cls(key, active=True)
-            obj.from_dict(json)
+            obj.from_dict(json, session=session)

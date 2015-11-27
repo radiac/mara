@@ -9,7 +9,6 @@ import socket
 import select
 
 from .. import events
-from .. import storage
 from .. import util
 from .util import serialise_socket, deserialise_socket
 
@@ -103,60 +102,19 @@ class TelnetOption(object):
         self.local, self.remote, self.pending = data
         
 
-###############################################################################
-################################################# Custom attribute serialisers
-###############################################################################
-
-client_serialisers = defaultdict(list)
-
-class ClientSerialiserType(type):
-    def __init__(self, name, bases, dct):
-        """
-        Register class
-        """
-        super(ClientSerialiserType, self).__init__(name, bases, dct)
-        
-        # If it's an abstract class, no further initialisation required
-        if dct.get('abstract', False):
-            return
-        
-        # A non-abstract serialiser needs a service
-        if not self.service:
-            raise ValueError('A client serialiser class must have a service')
-        
-        # Instantiate serialiser class and register
-        serialiser = self()
-        client_serialisers[self.service].append(serialiser)
-
-
-class ClientSerialiser(object):
-    """
-    Base class for custom client attribute serialisers
-    """
-    __metaclass__ = ClientSerialiserType
-    abstract = True
-    service = None
-    def serialise(self, client, serialised):
-        """
-        Serialise custom client attributes into the serialised dict
-        """
-        raise NotImplementedError
-    
-    def deserialise(self, client, data):
-        """
-        Deserialise custom client attributes from the serialised dict
-        """
-        raise NotImplementedError
-
 
 ###############################################################################
 ############################################################### Client
 ###############################################################################
 
+# Global registry of client id -> Client instance
+client_registry = {}
+
 class Client(object):
     """
     Telnet client socket manager
     """
+    _id = None
     # Default state variables
     got_iac = False     # Are we inside an IAC sequence?
     got_cmd = None      # Did we get a telnet command?
@@ -183,6 +141,9 @@ class Client(object):
         if serialised:
             self.deserialise(serialised)
             return
+        
+        # Get unique id for this client (and register with client registry)
+        self.update_id()
         
         # Fix socket and find IP
         self.prepare_socket()
@@ -214,11 +175,28 @@ class Client(object):
         self.service.log.client('Client %s connected' % self.ip)
         self.service.trigger(events.Connect(self))
     
+    @property
+    def id(self):
+        return self._id
+    
+    @id.setter
+    def id(self, value):
+        """
+        Store id locally and on global client registry
+        """
+        if self._id and self._id in client_registry:
+            del client_registry[self._id]
+        self._id = value
+        client_registry[self._id] = self
+    
+    def update_id(self):
+        self.id = id(self)
+    
     # Attributes to be serialised that don't need special pickling
     # Other attrs to be serialised: socket, options
     # Can't pickle: handler
     SERIALISE_ATTRS = [
-        'ip', 'port', '_connect_time', '_last_activity', '_is_connected',
+        'id', 'ip', 'port', '_connect_time', '_last_activity', '_is_connected',
         '_is_closing', '_flash_waiting', '_recv_buffer', '_send_buffer',
         'got_iac', 'got_cmd', 'got_sb', 'echo', '_supress_echo',
         'sb_buffer', 'terminal_type', 'columns', 'rows',
@@ -257,10 +235,6 @@ class Client(object):
         data['socket'] = serialise_socket(self.socket)
         data['options'] = {key: val.serialise() for key, val in self.options.items()}
         
-        # Use custom serialisers
-        for serialiser in client_serialisers[self.service]:
-            serialiser.serialise(self, data)
-        
         self.service.log.client('Client %s serialised' % self.ip)
         return data
     
@@ -283,11 +257,6 @@ class Client(object):
             for key, val in data['options'].items()
         }
         
-        # Use custom serialisers
-        for serialiser in client_serialisers[self.service]:
-            serialiser.deserialise(self, data)
-        
-    
     is_connected = property(
         fget = lambda self: self._is_connected,
         doc = 'State of the connection'
@@ -500,6 +469,8 @@ class Client(object):
         self.socket = None
         self._is_connected = False
         self._is_closing = False
+        if self._id and self._id in client_registry:
+            del client_registry[self._id]
 
     
     #

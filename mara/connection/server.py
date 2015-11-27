@@ -160,7 +160,7 @@ class Server(object):
                 if not client.is_connected:
                     del self._clients[client_socket]
                     del self._client_sockets[i]
-                
+                    
                 # Client has data on the send buffer
                 if client.is_connected and client.send_pending:
                     send_pending.append(client_socket)
@@ -205,7 +205,7 @@ class Server(object):
         
         self.service.log.server('Server stopped listening')
         self.service.trigger(events.server.ListenStop())
-                        
+    
     def _new_client(self, read_socket):
         """
         A new client has connected; accept and register

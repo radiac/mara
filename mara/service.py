@@ -14,20 +14,23 @@ import subprocess
 import sys
 import time
 
-from .settings import collect as collect_settings
-from .connection import Server
 from .angel import Process
+from .container import ClientContainer
+from .connection import Server
+from .connection.client import client_registry
+from .settings import collect as collect_settings
 from . import logger
 from . import events
-from . import storage
 from . import timers
 
 
-class Service(object):
+class Service(ClientContainer):
     """
     Service management
     """
     def __init__(self):
+        super(Service, self).__init__()
+        
         # Store settings
         self.settings = None
         
@@ -57,8 +60,6 @@ class Service(object):
         fget = lambda self: datetime.datetime.fromtimestamp(self.time),
         doc = "Get the current time as a datetime object"
     )
-    
-    clients = property(lambda self: self.server._clients.values())
     
     
     #
@@ -158,59 +159,19 @@ class Service(object):
             return fn
         return wrap
 
-
+        
     #
-    # Service-wide client operations
+    # Container overrides
     #
     
-    def write(self, clients, *data):
-        """
-        Send the provided lines to the given client, or list of clients
-        """
-        if not hasattr(clients, '__iter__'):
-            clients = [clients]
-        for client in clients:
-            client.write(*data)
-    
-    def write_all(self, *data, **kwargs):
-        """
-        Send the provided lines to all active clients, as returned by get_all()
-        
-        Takes the same arguments as get_all()
-        """
-        # Get client list
-        clients = self.get_all(**kwargs)
-        
-        # Write data to the clients
-        for client in clients:
-            client.write(*data)
-    
-    def get_all(self, **kwargs):
-        """
-        Get a list of clients, filtered by the global filter, a local filter
-        and an exclude list
-        """
-        # Capture kwargs
-        filter_fn = kwargs.pop('filter', None)
-        exclude = kwargs.pop('exclude', [])
-        if kwargs:
-            raise ValueError('Unexpected keyword arguments: %s' % kwargs)
-        if not hasattr(exclude, '__iter__'):
-            exclude = [exclude]
-            
-        # Filter the client list using global filter and exclude list
-        clients = self.filter_all(
-            self,
-            (client for client in self.clients if client not in exclude),
-            **kwargs
-        )
-        
-        # Further filtering for this call
-        if filter_fn:
-            clients = filter_fn(self, clients, **kwargs)
-        
-        return clients
-        
+    # Clients attribute returns server's clients with service global filter
+    clients = property(
+        lambda self: self.filter_all(self, self.server._clients.values())
+    )
+    def add_client(self, client):
+        raise NotImplementedError('Cannot add a client to a service')
+    def remove_client(self, client):
+        raise NotImplementedError('Cannot remove a client from a service')
     
     @staticmethod
     def _filter_all_default(service, clients, **kwargs):
@@ -228,8 +189,8 @@ class Service(object):
         elif not callable(value):
             raise ValueError('Filter must be a callable')
         self._filter_all = value
-        
-    
+
+
     #
     # Internal operations
     #
@@ -319,9 +280,9 @@ class Service(object):
         self.log.service('Service restarting')
         self.trigger(events.PreRestart())
         
-        # Flush all client output buffers
-        clients = self.get_all()
-        for client in clients:
+        # Flush all server's client output buffers
+        # (bypass our .clients attribute, that's filtered)
+        for client in self.server._clients.values():
             client.flush()
         
         # Suspend server, so sockets will back up waiting for new process
@@ -355,6 +316,9 @@ class Service(object):
         """
         Deserialise a serialised service into this instance
         """
+        # Restore server and clients (using their old ids)
+        self.server = Server(self, serialised=serialised['server'])
+        
         # Deserialise store of stores (with session data)
         store_data = serialised['store_data']
         for store_name, data in store_data.items():
@@ -364,7 +328,10 @@ class Service(object):
                     'Could not thaw store "%s" - no longer defined' % store_name
                 )
                 continue
-            store_cls.manager.deserialise(data)
+            store_cls.manager.deserialise(data, session=True)
         
-        # Restore server and clients
-        self.server = Server(self, serialised=serialised['server'])
+        # Update all known clients' ids
+        clients = client_registry.values()
+        client_registry.clear()
+        for client in clients:
+            client.update_id()

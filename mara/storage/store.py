@@ -243,7 +243,6 @@ class Store(object):
         return True
 
 
-
 class SessionStore(Store):
     """
     A session-only store, where saving and loading is disabled

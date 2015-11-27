@@ -196,15 +196,6 @@ Add the client's related ``user`` to ``Client`` events by binding
     from mara.contrib.users import event_add_user
     service.listen(events.Client, event_add_user)
 
-Add a client serialiser so that the user object can be restored after a
-restart::
-
-    from mara.contrib.users import BaseUserSerialiser
-    class UserSerialiser(BaseUserSerialiser):
-        service = service
-        store_name = 'user'
-        attr = 'user'
-
 Add a command to list all users::
 
     from mara.contrib.users import cmd_list_users

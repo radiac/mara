@@ -20,11 +20,3 @@ service.listen(events.Client, event_add_user)
 class User(PasswordMixin, AdminMixin, GenderMixin, BaseUser):
     service = service
 
-
-# Give client class a serialiser for the user attribute
-from mara.contrib.users import BaseUserSerialiser
-
-class UserSerialiser(BaseUserSerialiser):
-    service = service
-    store_name = 'user'
-    attr = 'user'

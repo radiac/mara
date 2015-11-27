@@ -3,6 +3,8 @@ Mara storage fields
 """
 import copy
 
+from ..connection.client import Client, client_registry
+
 
 class Field(object):
     """
@@ -50,15 +52,64 @@ class Field(object):
 
     def serialise(self, obj, name):
         """
-        Prepare a value for serialisation in a dict or json string
+        Prepare a value for serialisation in a dict to send to another process,
+        or save as a json string
         """
-        return getattr(obj, name)
+        return self.serialise_value(self.get_value(obj, name))
     
+    def get_value(self, obj, name):
+        return getattr(obj, name)
+        
+    def serialise_value(self, data):
+        """
+        Make sure that objects are serialised safely
+        * Serialises dict keys and values
+        * Serialises list and tuple values into lists
+        * Serialises Client objects
+        """
+        if isinstance(data, dict):
+            return {
+                self.serialise_value(key): self.serialise_value(value)
+                for key, value in data.items()
+            }
+        elif isinstance(data, list):
+            # No duck typing here - we need to deserialise exactly
+            return [self.serialise_value(value) for value in data]
+        elif isinstance(data, Client):
+            return {'__client__': data.id}
+        
+        # Otherwise assume it's safe, or a subclass will know what to do
+        return data
+        
     def deserialise(self, obj, name, data):
         """
         Deserialise a serialised value onto the object
         """
+        value = self.deserialise_value(data)
+        self.set_value(obj, name, value)
+    
+    def set_value(self, obj, name, data):
         setattr(obj, name, data)
+    
+    def deserialise_value(obj, data):
+        """
+        Deserialise whatever was returned from serialise_data
+        """
+        if isinstance(data, dict):
+            # Catch serialised objects
+            if '__client__' in data:
+                return client_registry.get(data['__client__'])
+            
+            return {
+                self.deserialise_value(key): self.deserialise_value(value)
+                for key, value in data.items()
+            }
+        elif isinstance(data, list):
+            return [self.deserialise_value(value) for value in data]
+        
+        # Otherwise assume it's unchanged
+        return data
+
 
 
 SFD_STORE = '_storefield_store_%s'

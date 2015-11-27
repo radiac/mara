@@ -4,7 +4,6 @@ Mara users
 import re
 
 from ..commands import define_command
-from ...connection.client import ClientSerialiser
 from ... import events
 from ... import storage
 from ... import util
@@ -19,12 +18,18 @@ def event_add_user(event):
 
 class ClientField(storage.Field):
     """
-    The client attribute is special - it will be assigned by the client's
-    UserSerialiser
+    Manage the client.user attribute
     """
-    def serialise(self, obj, name):
-        return None
-    
+    def deserialise(self, obj, name, data):
+        print "DESERIALISNG THE CLIENT"
+        super(ClientField, self).deserialise(obj, name, data)
+        
+        # Link this client to this user
+        client = self.get_value(obj, name)
+        print "Linking user.client", obj, client
+        if client:
+            client.user = obj
+            
 
 class UserManager(storage.Manager):
     def get_active_by_name(self, names):
@@ -84,36 +89,6 @@ def cmd_list_users(event):
         'Offline: ' + util.pretty_list(offline),
         util.HR(),
     )
-
-# Give client class a serialiser for the user attribute
-class BaseUserSerialiser(ClientSerialiser):
-    """
-    Client serialiser to persist user object across reboots
-    
-    Subclasses must set two attributes:
-    
-        store_name      The name of the user store
-        attr            The name of the client that holds the user object
-    """
-    abstract = True
-    store_name = None
-    attr = None
-    
-    def serialise(self, client, data):
-        user = getattr(client, self.attr, None)
-        if user is None:
-            return
-        data[self.attr] = user.key
-        
-    def deserialise(self, client, data):
-        user_key = data.get(self.attr)
-        user_store = self.service.stores.get(self.store_name)
-        if user_key is None or user_store is None:
-            return
-        user = user_store.manager.load(user_key)
-        user.client = client
-        setattr(client, self.attr, user)
-
 
 
 class ConnectHandler(events.Handler):
@@ -209,7 +184,7 @@ class ConnectHandler(events.Handler):
         # Find others here
         others = [
             client.user.name
-            for client in event.service.get_all(exclude=event.client)
+            for client in event.service.filter_clients(exclude=event.client)
         ]
         if not others:
             others = [self.msg_no_others]

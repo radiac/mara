@@ -7,8 +7,12 @@ For an overview of what has changed between versions, see the :ref:`changelog`.
 Instructions
 ============
 
-No previous public releases
+Upgrading from 0.4.0
+--------------------
 
+The class ``mara.service.Service`` now inherits from
+``container.ClientContainer``, which means the ``get_all`` attribute has been
+renamed to ``filter_clients``.
 
 
 .. _changelog:
@@ -20,26 +24,28 @@ Changelog
 ---------------------
 Feature:
 
-* Class-based event handlers, with support for use as command functions
+* Added class-based event handlers, with support for use as command functions
+* Removed ClientSerialiser, replaced with improved Field serialiser
+* Added client containers
 
 
 0.4.0, 2015-11-21
 -----------------
 Feature:
 
-* Rename project
-* Add angel to support seamless restarts
+* Renamed project
+* Added angel to support seamless restarts
 
 Internal:
 
-* Add root_path setting for more reliable relative paths
+* Added root_path setting for more reliable relative paths
 
 
 0.3.0, 2015-02-16
 -----------------
 Feature:
 
-* Restructure from plugin-based command to framework
+* Restructured from plugin-based command to framework
 
 
 0.2.1, 2012-01-20

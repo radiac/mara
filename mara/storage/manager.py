@@ -36,12 +36,12 @@ class Manager(object):
         self._store_cls = store_cls
         self.service = store_cls.service
         
-        # Now know the service, we can hook up post_start
+        # Now know the service, we can hook up pre_start
         if self.service.server:
-            # PostStart already fired
-            self.post_start()
+            # PreStart already fired
+            self.pre_start()
         else:
-            self.service.listen(events.PostStart, self.post_start)
+            self.service.listen(events.PreStart, self.pre_start)
     
     @property
     def store_path(self):
@@ -72,17 +72,17 @@ class Manager(object):
         new_manager.store_cls = store_cls
         setattr(store_cls, 'manager', new_manager)
     
-    def post_start(self, event=None):
+    def pre_start(self, event=None):
         """
-        Bound to the PostStart event by contribute_to_class (or if PostStart
+        Bound to the PreStart event by contribute_to_class (or if PreStart
         has already fired, it is called as soon as the manager is initialised)
         
-        Builds filenames for any stores instantiated before the service is
-        known.
+        Lets stores take action if they were instantiated before the service
+        was known, or before it had its settings (eg build filenames etc)
         """
         self._started = True
         for obj in self.cache.values():
-            obj._post_start(event)
+            obj._pre_start(event)
         
     def get(self, keys):
         """
@@ -155,7 +155,16 @@ class Manager(object):
                     obj = None
                 objs[key] = obj
             return objs
-                
+    
+    def load_or_new(self, key, active=True):
+        """
+        Load an object from disk (or cache), or create it if it does not exist
+        """
+        obj = self.load(key, active)
+        if not obj:
+            obj = self.store_cls(key, active)
+        return obj
+    
     def add_active(self, obj):
         """
         Add an object to the active cache
@@ -208,8 +217,9 @@ class Manager(object):
     
     def deserialise(self, frozen, session=True):
         """
-        Deserialise a serialsed dict into active objects
+        Deserialise a serialised dict into active objects
         """
         for key, json in frozen.items():
-            obj = self.store_cls(key, active=True)
+            # Get from cache, in case it has already been referenced
+            obj = self.load_or_new(key, active=True)
             obj.from_dict(json, session=session)

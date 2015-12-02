@@ -17,7 +17,7 @@ class RoomUserMixin(storage.Store):
     Mixin for a user store to associate a related Room
     """
     abstract = True
-    room = storage.StoreField(default=None)
+    room = storage.Field(default=None)
 
     def move(self, direction):
         """
@@ -39,6 +39,18 @@ class RoomUserMixin(storage.Store):
             self.room.exits[direction].use(self)
         except ExitError, e:
             self.write(str(e))
+
+    def disconnected(self):
+        """
+        Clean up User object when a user disconnects
+        """
+        super(RoomUserMixin, self).disconnected()
+        
+        # Remove user from the room - but put it back on the user so they'll
+        # end up in the right place when they come back.
+        room = self.room
+        room.exit(self)
+        self.room = room
 
 
 class RoomConnectHandler(events.Handler):

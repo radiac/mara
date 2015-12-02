@@ -164,7 +164,7 @@ class Store(object):
         
         # Set filename (if service has started)
         if self.manager._started:
-            self._post_start()
+            self._pre_start()
         
         # Tell fields to initialise themselves
         for field_name, field in self._fields.items():
@@ -174,7 +174,7 @@ class Store(object):
         if active:
             self.manager.add_active(self)
     
-    def _post_start(self, event=None):
+    def _pre_start(self, event=None):
         self._filename = os.path.join(
             self.manager.store_path, "%s.json" % self.key
         )

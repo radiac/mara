@@ -5,7 +5,7 @@ import copy
 
 from ..connection.client import Client, client_registry
 
-__all__ = ['Field', 'StoreField']
+__all__ = ['Field']
 
 
 class Field(object):
@@ -69,6 +69,8 @@ class Field(object):
         * Serialises list and tuple values into lists
         * Serialises Client objects
         """
+        from .store import Store
+        
         if isinstance(data, dict):
             return {
                 self.serialise_value(key): self.serialise_value(value)
@@ -79,6 +81,11 @@ class Field(object):
             return [self.serialise_value(value) for value in data]
         elif isinstance(data, Client):
             return {'__client__': data.id}
+        elif isinstance(data, Store):
+            return {
+                '__store__': data._name,
+                'key': data.key,
+            }
         
         # Otherwise assume it's safe, or a subclass will know what to do
         return data
@@ -87,13 +94,13 @@ class Field(object):
         """
         Deserialise a serialised value onto the object
         """
-        value = self.deserialise_value(data)
+        value = self.deserialise_value(obj, data)
         self.set_value(obj, name, value)
     
     def set_value(self, obj, name, data):
         setattr(obj, name, data)
     
-    def deserialise_value(obj, data):
+    def deserialise_value(self, obj, data):
         """
         Deserialise whatever was returned from serialise_data
         """
@@ -101,73 +108,22 @@ class Field(object):
             # Catch serialised objects
             if '__client__' in data:
                 return client_registry.get(data['__client__'])
-            
+                
+            elif '__store__' in data:
+                # Find the object; if it hasn't been deserialised yet it should
+                # be in a moment
+                store = obj.service.stores.get(data['__store__'])
+                if not store:
+                    return None
+                return store.manager.load_or_new(data['key'])
+                
             return {
-                self.deserialise_value(key): self.deserialise_value(value)
+                self.deserialise_value(obj, key):
+                self.deserialise_value(obj, value)
                 for key, value in data.items()
             }
         elif isinstance(data, list):
-            return [self.deserialise_value(value) for value in data]
+            return [self.deserialise_value(obj, value) for value in data]
         
         # Otherwise assume it's unchanged
         return data
-
-
-
-SFD_STORE = '_storefield_store_%s'
-SFD_KEY = '_storefield_key_%s'
-class StoreFieldDescriptor(object):
-    """
-    Descriptor to hold references to stores by store name and key, rather than
-    by reference
-    """
-    def __init__(self, name):
-        self.name = name
-    
-    def __get__(self, obj, type=None):
-        # Find service
-        if not hasattr(obj, 'service'):
-            raise AttributeError('StoreField must be defined on a Store')
-        service = obj.service
-        
-        # Collect reference from obj
-        store_name = getattr(obj, SFD_STORE % self.name, None)
-        key = getattr(obj, SFD_KEY % self.name, None)
-        store = service.stores.get(store_name)
-        if not store_name or not key or not store:
-            # Either hasn't been set, or store no longer exists
-            return None
-        
-        # Get the object from cache, or load it from disk, or return None if it
-        # no longer exists
-        return store.manager.load(key)
-        
-    def __set__(self, obj, ref):
-        if ref is None:
-            name, key = None, None
-        else:
-            name, key = ref._name, ref.key
-        setattr(obj, SFD_STORE % self.name, name)
-        setattr(obj, SFD_KEY % self.name, key)
-    
-    def __delete__(self, obj):
-        delattr(obj, SFD_STORE % self.name)
-        delattr(obj, SFD_KEY % self.name)
-        
-
-class StoreField(Field):
-    def contribute_to_class(self, store_cls, name):
-        """
-        Add a StoreFieldDescriptor to the object
-        """
-        setattr(store_cls, name, StoreFieldDescriptor(name))
-    
-    def serialise(self, obj, name):
-        return {
-            'store': getattr(obj, SFD_STORE % name, None),
-            'key': getattr(obj, SFD_KEY % name, None),
-        }
-    
-    def deserialise(self, obj, name, data):
-        setattr(obj, SFD_STORE % name, data.get('store')),
-        setattr(obj, SFD_KEY % name, data.get('key')),

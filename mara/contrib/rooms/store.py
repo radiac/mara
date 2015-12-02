@@ -74,6 +74,9 @@ class BaseRoom(storage.Store, container.ClientContainer):
     # Don't save the users who are in this room; when the mud starts up, the
     # users won't be available. They'll add themselves if this is a restart.
     users = storage.Field(list, session=True)
+    
+    # Container clients are the users who are here
+    clients = property(lambda self: [u.client for u in self.users])
 
     # Name of room
     # Used for titles and exits
@@ -91,6 +94,10 @@ class BaseRoom(storage.Store, container.ClientContainer):
 
     # Exits instance
     exits = None
+    
+    # If true, this room will be cloned for each user, and they will never
+    # see or interact with each other
+    clone = False
 
     def __init__(
         self, key, name,
@@ -103,10 +110,16 @@ class BaseRoom(storage.Store, container.ClientContainer):
         # Store room instance arguments
         self.name = name
         self.short = short
-        self.intro = intro
-        self.desc = desc
         self.exits = exits
         self.clone = clone
+        
+        # Introduction and description can be a single line, or lists of lines
+        if isinstance(intro, basestring):
+            intro = [intro]
+        if isinstance(desc, basestring):
+            desc = [desc]
+        self.intro = intro
+        self.desc = desc
         
         # Tell exits which room they're bound to
         if self.exits:
@@ -115,11 +128,11 @@ class BaseRoom(storage.Store, container.ClientContainer):
         # Would be nice to load saved data here, but we can't do that until
         # the service has collected its settings and we know where the store is
 
-    def _post_start(self, event=None):
+    def _pre_start(self, event=None):
         """
         Try to load any saved data from disk
         """
-        super(BaseRoom, self)._post_start(event)
+        super(BaseRoom, self)._pre_start(event)
         self.load()
 
     def gen_clone(self):
@@ -132,6 +145,8 @@ class BaseRoom(storage.Store, container.ClientContainer):
         self.__class__(
             # Same key; not active so we don't overwrite original instance
             self.key, active=False,
+            # Set clone to false now - we don't want to clone it again
+            clone=False,
             # Copy everything except clone flag.
             name=self.name, short=self.short, intro=self.intro, desc=self.desc,
             # It's ok to reference the single self.exits - it's already bound
@@ -171,14 +186,16 @@ class BaseRoom(storage.Store, container.ClientContainer):
         
         # Show the intro, if set
         if self.intro:
-            user.write(self.intro, '')
+            user.write(*self.intro)
+            user.write('')
         
         # Show them the room
-        user.write(self.desc, '')
-        short = self.short
-        if not short:
-            short = 'in ' + self.name
-        user.write('You are ' + short)
+        if self.desc:
+            user.write(*self.desc)
+            user.write('')
+        
+        # Tell them where they are
+        user.write('You are ' + self.get_short())
         
         # Tell them who else is here
         user.write(self.get_who(exclude=user.client))
@@ -196,19 +213,18 @@ class BaseRoom(storage.Store, container.ClientContainer):
                 enter_msg += ' from ' + exit.source.name
         else:
             # Must have logged in or jumped to the room
-            enter_msg += 'appears from nowhere'
+            enter_msg += ' appears from nowhere'
         self.write_all(enter_msg, exclude=user)
 
-    def exit(self, user, exit):
+    def exit(self, user, exit=None):
         """
         User leaves this room
         """
         # Remove the user from the room
         self.users.remove(user)
         
-        # Clear the user's room, but don't save
-        # That way if they're disconnecting they'll end up where they were
-        # If they're moving they'll get their new room soon anyway
+        # Clear the user's room - don't save, they'll normally be going
+        # somewhere, which will save anyway
         user.room = None
         
         # Tell other local users
@@ -217,5 +233,11 @@ class BaseRoom(storage.Store, container.ClientContainer):
             exit_msg += ' leaves ' + constants.EXIT_TO[exit.direction]
         else:
             # Must have logged in or jumped to the room
-            exit_msg += 'disappears'
+            exit_msg += ' disappears'
         self.write_all(exit_msg, exclude=user)
+    
+    def get_short(self):
+        short = self.short
+        if not short:
+            short = 'in the ' + self.name
+        return short

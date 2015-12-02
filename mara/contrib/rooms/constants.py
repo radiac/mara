@@ -23,6 +23,9 @@ DIRECTIONS = [
     UP, DOWN,
 ]
 
+# Build a lookup table - used for sorting partial lists of directions
+DIRECTIONS_INDEX = {d: i for i, d in enumerate(DIRECTIONS)}
+
 
 # Abbreviations for directions
 # Used to generate exit command aliases

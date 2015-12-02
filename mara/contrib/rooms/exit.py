@@ -23,16 +23,17 @@ class Exit(object):
     """
     def __init__(self, target, related=None):
         """
-        Define an exit, with an optional related exit in the target room. The
-        source room will be set automatically.
+        Define an exit, with an optional related exit in the target room.
         
-        The target can be a Room instance, or the key value for a Room that
-        is yet to be defined.
+        Arguments:
         
-        The related exit is available for the target room to generate the
-        enter message (see Room.enter) - eg if the  related exit is north, the
-        message will be "enters from the north". If it is not defined, Mara
-        will try to detect it automatically.
+        target      Room that the exit leads to. Can either be a ``Room``
+                    instance, or the key value for a room that is yet to be
+                    defined.
+        
+        related     Optional: the related exit is the other side of this exit
+                    in the target room; for example, if this exit is north, the
+                    related exit will (usually) be south.
         """
         self._target = target
         self._related = related
@@ -174,19 +175,31 @@ class Exits(dict):
         # Variables set automatically by Room.__init__
         self.room = None
     
-    def get_missing_msg(self):
-        return self.missing_msg or self.default_missing_msg
-    
     def get_desc(self):
         """
-        Return the description of exits in this room. Used to generate the
-        enter message, and as the response for cmd_exits.
+        Return the description of exits in this room. If ``desc`` was
+        provided to the constructor that will be returned, otherwise a string
+        will be built with a list of the defined exits.
+        
+        Used to generate the enter message, and as the response for cmd_exits. 
         """
-        exits = self.values()
+        if self.desc:
+            return self.desc
+        
+        # Sort available directions by DIRECTIONS
+        exits = sorted(
+            self.items(),
+            key=lambda pair: constants.DIRECTIONS_INDEX[pair[0]]
+        )
+        
+        # Generate message
         if not exits:
             return "There are no exits."
+            
         elif len(exits) == 1:
-            return "There is one exit %s" % exits[0].get_desc()
-        return "There are exits %s" % util.pretty_list([
-            exit.get_desc() for exit in exits
+            direction, exit = exits[0]
+            return "There is one exit %s." % exit.get_desc()
+            
+        return "There are exits %s." % util.pretty_list([
+            exit.get_desc() for direction, exit in exits
         ])

@@ -31,7 +31,24 @@ class ClientField(storage.Field):
 
 class UserManager(storage.Manager):
     def get_active_by_name(self, names):
+        """
+        Given a username string, return the matching user object.
+        
+        Given a list of username strings, return a dict of {key: user} of
+        active user objects
+        
+        If a username is not found, a ValueError will be raised.
+        """
         active = self.active()
+        
+        # Single string
+        if not hasattr(names, '__iter__'):
+            name = names.lower()
+            if name not in active:
+                raise ValueError('Unknown user %s' % name)
+            return active[name]
+        
+        # List of names
         lower_names = [name.lower() for name in names]
         found = { k: v for k, v in active.items() if k in lower_names }
         missing = set(lower_names).difference(set(found.keys()))

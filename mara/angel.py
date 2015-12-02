@@ -309,7 +309,8 @@ class Process(object):
             # The new process has to start and take over the sockets first
             ok, response = self.client.recv()
         except Exception as e:
-            self._log.service('Failed to %s with angel: %s' % (cmd, e))
+            if cmd != CMD_LOG:
+                self._log.service('Failed to %s with angel: %s' % (cmd, e))
             raise ValueError('Failed to %s with angel: %s' % (cmd, e))
         else:
             if ok == CMD_OK:

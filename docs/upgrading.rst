@@ -14,6 +14,16 @@ The class ``mara.service.Service`` now inherits from
 ``container.ClientContainer``, which means the ``get_all`` attribute has been
 renamed to ``filter_clients``.
 
+The class ``mara.storage.StoreField`` has been removed; replace your use of it
+with the normal ``mara.storage.Field``, which can now automatically serialise
+and deserialise references to ``Store`` instances. The field now also supports
+the use of store instances in list and dict values.
+
+Client serialisers have been removed; you should now write custom fields with
+their own ``serialise`` and ``deserialise`` methods, which can then set
+attributes on the client object; see ``ClientField`` in
+:source:`mara/contrib/useres/base.py` for an example.
+
 
 .. _changelog:
 
@@ -25,8 +35,10 @@ Changelog
 Feature:
 
 * Added class-based event handlers, with support for use as command functions
-* Removed ClientSerialiser, replaced with improved Field serialiser
 * Added client containers
+* Added room support
+* Removed ClientSerialiser, replaced with improved Field serialiser
+* Removed StoreField, replaced with improved Field serialiser
 
 
 0.4.0, 2015-11-21

@@ -218,12 +218,15 @@ another process via the angel, or to save to disk as a JSON string.
 Used by :ref:`method_storage_field_serialise` to serialise the value returned
 by :ref:`method_storage_field_get_value`.
 
-The base class serialiser can serialise dicts, lists and references to
-Client objects. Everything else will be passed unchanged, so you should
-override this method in your subclass if you want to serialise other objects -
-as well as write a matching :ref:`method_storage_field_deserialise_value`.
-For an example, look at how Mara serialises ``Client`` objects - see
-:source:`mara/storage/fields.py`.
+The base class serialiser can serialise dicts, lists and references to Store or
+Client objects. Everything else will be passed unchanged.
+
+The easiest way to serialise custom objects is to build them as subclasses of
+Store, so they will be serialised automaticaly. Where that's not practical,
+override this method in your subclass, as well as write a matching
+:ref:`method_storage_field_deserialise_value`. Look at how Mara serialises
+``Store`` or ``Client`` objects in :source:`mara/storage/fields.py` for an idea
+of how you can serialise your objects.
 
 
 .. _method_storage_field_deserialise:
@@ -251,6 +254,10 @@ by :ref:`method_storage_field_set_value`.
 The base class deserialiser can deserialise anything that the base serialiser
 produces; if you write a custom serialiser, you should write a matching
 deserialiser too.
+
+When deserialising references to store objects, the object will be retrieved
+from cache if it has already been deserialised, or loaded from disk to be
+updated with its serialised data later.
 
 
 

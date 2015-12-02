@@ -337,8 +337,331 @@ This is used by :ref:`class_contrib_commands_socials` to modify social actions.
 ``mara.contrib.rooms``
 ======================
 
-This provides a ``Room`` store for keeping track of ``User`` objects.
+Rooms for users
 
-It extends the ``User`` store with a ``room`` field.
+Create a room store by subclassing ``BaseRoom``::
+
+    from mara.contrib.rooms import BaseRoom
+    class Room(BaseRoom):
+        service=service
+
+Add a ``room`` attribute and ``move(direction)`` method to your user store with
+the ``RoomUserMixin``::
+
+    from mara.contrib.rooms import RoomUserMixin
+    class User(RoomUserMixin, PasswordMixin, BaseUser):
+        service = service
+
+Create rooms by defining instances of the room store (see
+:ref:`contrib_rooms_define` for more details)::
+
+    room_lobby = Room(
+        'lobby',
+        name='Lobby',
+        short='in the lobby',
+        desc="You are standing in the lobby",
+    )
+
+Add the ``RoomConnectHandler`` mixin to your connect handler to so new users
+go into the ``default_room``, and existing users return to the room they were
+last in (or the default room if their room has been removed)::
+
+    from mara.contrib.rooms import RoomConnectHandler
+    class MudConnectHandler(RoomConnectHandler, ConnectHandler):
+        msg_welcome_initial = 'Welcome to the Mara example mud!'
+        default_room = room_lobby
+    service.listen(events.Connect, MudConnectHandler(User))
+
+Use ``room_restart_handler_factory`` to create a ``PostRestart`` handler, to
+put users somewhere if you remove the room they were in::
+
+    from mara.contrib.rooms import room_restart_handler_factory
+    service.listen(
+        events.PostRestart, room_restart_handler_factory(User, room_lobby)
+    )
+
+And lastly, add some commands for using the rooms; ``gen_nav_cmds`` will add
+commands to move in standard directions (north, south, up, down etc)::
+
+    from mara.contrib.rooms import cmd_exits, gen_nav_cmds
+    commands.register('exits', cmd_exits)
+    gen_nav_cmds(service, commands)
 
 
+.. _contrib_rooms_define:
+
+Defining rooms
+--------------
+
+Rooms are defined in code as instances of your ``Room`` store. See
+:ref:`class_contrib_rooms_baseroom` for details. Rooms are linked to each other
+by instances of :ref:`class_contrib_rooms_exit`, managed by the
+:ref:`class_contrib_rooms_exits` class.
+
+
+.. _contrib_rooms_referencing:
+
+Referencing rooms
+-----------------
+
+Room store classes are not like normal stores: subclasses of a concrete
+``BaseRoom`` subclass will share the same manager. This means that rooms of
+one class can refer to the keys of other room classes, as long as they
+share a common concrete room superclass. Take a look at this contrived
+example::
+
+    class Room(BaseRoom):
+        service = service
+    
+    class FancyRoom(Room): pass
+    class OtherRoom(Room): pass
+    
+    class ForeignRoom(BaseRoom):
+        service = service
+    
+    # Instances of the related room classes can refer to each other by key
+    r1 = Room('room1', exits=Exits(north='room2'))
+    r2 = FancyRoom('room2', exits=Exits(south='room1', north='room3'))
+    r3 = OtherRoom('room3', exits=Exits(south='room2'))
+    
+    # This room can't refer to r1, r2 or r3, so this will fail:
+    r4 = ForeignRoom('room4', exits=Exits(north='room1'))
+    
+    # unless we define a room1 in that set of rooms:
+    r5 = ForeignRoom('room1', exits=Exits(south='room4'))
+    # Because r1 and r5 don't share a concrete base store class, they both
+    # exist independently, despite having the same keys.
+
+
+.. _class_contrib_rooms_baseroom:
+
+``mara.contrib.rooms.BaseRoom``
+-------------------------------
+
+
+``__init__(...)``
+
+Define a room in code by instantiating your ``Room`` store object with the 
+following arguments:
+
+key
+    Internal name of room. Must be unique; used by ``Exit`` definitions to
+    refer to rooms which have not yet been defined.
+    
+    Keys are stored between room subclasses which share a concrete ancestor -
+    see :ref:`contrib_rooms_referencing` for details.
+
+name
+    Name of room, used for titles and describing exits.
+    
+    Default: ``None``
+
+short
+    Short description, used to describe the user's position in the room. This
+    will be used after "You are" or "User is".
+    
+    Default: ``'in the ' + name``
+
+intro
+    Introductory block of text; shown on entry to the room, but not when the
+    user looks around.
+    
+    This can either be a single line as a string, or multiple lines as a list
+    of strings.
+    
+    Default: ``None``
+
+desc
+    Full room description, shown on entry (after ``intro``) and when the user
+    looks around.
+    
+    This can either be a single line as a string, or multiple lines as a list
+    of strings.
+    
+    Default: ``None``
+
+exits
+    Instance of the :ref:`class_contrib_rooms_exits` class, holding the list of
+    exit definitions.
+    
+    Default: ``None``
+
+
+.. _method_contrib_rooms_room_exit:
+
+``enter(user, exit=None)``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Move the specified ``user`` into the room, show them the intro and description,
+and tell others in the room they have arrived.
+
+This will also save the user's profile, so their room is remembered next time
+they connect.
+
+If the room was defined with ``clone=True``, this will create a temporary copy
+and put the user in there on their own.
+
+If ``exit`` is provided, that is the exit that the user is using; this will be
+used to tell others in the room where the user is coming from. If it is not
+provided, the user will just appear.
+
+
+.. _method_contrib_rooms_room_enter:
+
+``exit(user, exit=None)``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Remove the specified ``user`` from the room, and tell others in the room they
+have left.
+
+If ``exit`` is provided, that is the exit that the user is using; this will be
+used to tell others in the room which direction the user is leaving in. If it
+is not provided, the user will just disappear.
+
+
+.. _class_contrib_rooms_exits:
+
+``mara.contrib.rooms.Exits``
+----------------------------
+
+An ``Exits`` object is a glorified dict which manages the exits for a room. The
+constructor takes the following arguments:
+
+desc
+    Static description string for the exits in this room.
+    
+    If not defined, will be built automatically by
+    :ref:`method_contrib_rooms_exits_get_desc`
+    
+default
+    Message to show when a user tries to exit in
+    a direction without an exit.
+    
+    If not set, uses the ``default`` attribute of the class.
+    
+    To override messages for individual directions, see
+    :ref:`class_contrib_rooms_fakeexit`.
+    
+    Default: ``'You cannot go that way.'``
+    
+<direction>
+    Exit definition
+    
+    The key must be one of north, south, east, west, northeast, northwest,
+    southeast, southwest, up or down.
+    
+    The value should be an instance of `class_contrib_rooms_exit`, although
+    as a shortcut it can be the first value for the ``Exit`` constructor
+    (ie the room instance or key)
+
+In addition to the standard ``dict`` methods, the ``Exits`` class has the
+following methods:
+
+
+.. _method_contrib_rooms_exits_get_desc:
+
+``get_desc()``
+~~~~~~~~~~~~~~
+
+Used internally to find the description of exits in this room. If ``desc`` was
+provided to the constructor that will be returned, otherwise a string
+will be built with a list of the defined exits; for example::
+
+    >>> Exits().get_desc()
+    'There are no exits'
+    
+    >>> Exits(south='room1')
+    'There is one exit to the south.'
+    
+    >>> Exits(south='room1', up='room2', east='room3')
+    'There are exits to the south, to the east and upwards.'
+
+
+.. _class_contrib_rooms_exit:
+
+``mara.contrib.rooms.Exit``
+---------------------------
+
+An exit holds a reference to the rooms it connects, and manages a user's
+movement between rooms.
+
+It has the following attributes and methods:
+
+``__init__(target, related=None)``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Define an exit.
+
+Arguments:
+
+    target
+        Room that the exit leads to. Can either be a ``Room``
+        instance, or the key value for a room that is yet to be
+        defined.
+
+    related
+        Optional: the related exit is the other side of this exit
+        in the target room; for example, if this exit is north, the
+        related exit will (usually) be south.
+
+
+.. _method_contrib_rooms_exit_use:
+
+``use(user)``
+~~~~~~~~~~~~~
+
+Make the user use the exit.
+
+It is assumed that they are currently in the ``source`` room. For this reason
+you should not normally call this method directly; call
+``user.move(direction)`` instead.
+
+It can raise a ``mara.contrib.rooms.ExitError`` if the exit cannot be used
+for some reason; the message as defined in ``ExitError(msg)`` will be shown
+to the user, and they will stay in their current room. You can use this to
+implement exit subclasses with locked doors etc.
+
+If the user can use this exit, it calls the room's
+:ref:`enter <method_contrib_rooms_room_enter>` and
+:ref:`exit <method_contrib_rooms_room_exit>` methods to move the user and
+inform them and others of the move.
+
+``source``
+~~~~~~~~~~
+The room that has this exit.
+
+``target``
+~~~~~~~~~~
+The room this exit leads to.
+
+``related``
+~~~~~~~~~~~
+The related exit is the exit in the target room which leads the user back to
+the source room; for example, if this exit is north, the related exit will
+(usually) be the south exit in the target room.
+
+If it is not defined, Mara will try to detect it automatically.
+
+``get_desc()``
+~~~~~~~~~~~~~~
+Return a description of the exit, eg ``'to the south'``.
+
+
+.. _class_contrib_rooms_fakeexit:
+
+``mara.contrib.rooms.FakeExit``
+-------------------------------
+
+Instead of taking a target, it takes a name for the fake exit, and a message to
+show a user who tries to use it.
+
+For example::
+
+    Room(
+        key='deck', name='the deck of the boat', short='on the deck',
+        Exits(
+            default="You decide against jumping into the water",
+            up=FakeExit('the mast', "Don't be silly, you can't climb the mast")
+            down='hold',
+        )
+    )

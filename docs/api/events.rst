@@ -166,33 +166,42 @@ Service events
 
 These are subclasses of the ``mara.events.Service`` event.
 
-
-
 When the service starts running:
 
     ``mara.events.PreStart``
-        The service is about to start (``service``)
+        The service is about to start its server (``service.server`` is not
+        yet defined). Settings have been collected, a connection to the angel
+        (if present) has been established, and the logger has been initialised.
         
     ``mara.events.PostStart``
-        The service has started (``service``) and is about to enter its main
-        listen loop
+        The server has been initialised and is about to enter its main listen
+        loop. If the process is restarting, the clients and stores have now
+        been deserialised.
 
 When the service stops:
 
     ``mara.events.PreStop``
-        The service is about to stop
+        The service is about to stop its server by telling it to terminate its
+        main listen loop. This is the last opportunity to write to clients -
+        but flush them to make sure the data gets to them.
         
     ``mara.events.PostStop``
-        The service has stopped, and main program execution is about to resume
-        after ``service.run()``
+        The server has left its main listen loop and has closed its socket and
+        those of its clients. Main program execution is about to resume from
+        where it called ``service.run()``
 
 When the service restarts:
     
     ``mara.events.PreRestart``
-        The service is about to restart (``service``)
+        The service is about to restart the process. It has confirmed that it
+        is connected to the angel and can proceed; it is about to flush client
+        sockets, suspend the server, serialise all client sockets and store
+        data and send it to the angel, before terminating this process.
     
     ``mara.events.PostRestart``
-        The service has restarted (``service``)
+        The service has restarted. This is called immediately after
+        ``PostStart``, so everything has been deserialised now. This is a new
+        process to the one which triggered the ``PreRestart``.
 
 For more information about events when restarting, see
 :ref:`method_service_restart`.

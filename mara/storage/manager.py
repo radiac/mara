@@ -1,15 +1,23 @@
 """
 Registry for a data store
 """
-
 import copy
 import os
 
+from .. import events
+
 
 class Manager(object):
+    # Flag for PostStart management
+    _started = False
+    
     def __init__(self):
+        # Store class and server this manager is attached to
+        # Set when StoreType metaclass calls our contribute_to_class
         self._store_cls = None
         self.service = None
+        
+        # Internal cache of active objects
         self.cache = {}
     
     @property
@@ -27,6 +35,13 @@ class Manager(object):
         """
         self._store_cls = store_cls
         self.service = store_cls.service
+        
+        # Now know the service, we can hook up post_start
+        if self.service.server:
+            # PostStart already fired
+            self.post_start()
+        else:
+            self.service.listen(events.PostStart, self.post_start)
     
     @property
     def store_path(self):
@@ -56,6 +71,39 @@ class Manager(object):
         new_manager = copy.copy(self)
         new_manager.store_cls = store_cls
         setattr(store_cls, 'manager', new_manager)
+    
+    def post_start(self, event=None):
+        """
+        Bound to the PostStart event by contribute_to_class (or if PostStart
+        has already fired, it is called as soon as the manager is initialised)
+        
+        Builds filenames for any stores instantiated before the service is
+        known.
+        """
+        self._started = True
+        for obj in self.cache.values():
+            obj._post_start(event)
+        
+    def get(self, keys):
+        """
+        Get a cached object. Similar to load(), but only returns from the
+        cache.
+        
+        If a single key string is passed, the object matching the key will be
+        returned, or None if it is not cached
+        
+        If a list of keys is passed, a dict keyed on object key will be
+        returned; if an object is not cached, its value will be None.
+        """
+        if isinstance(keys, basestring):
+            return self.cache.get(keys.lower())
+        else:
+            objs = {}
+            for key in keys:
+                key = key.lower()
+                objs[key] = self.cache.get(key)
+            return objs
+            
     
     def load(self, keys, active=True):
         """

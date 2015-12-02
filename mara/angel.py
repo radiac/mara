@@ -310,10 +310,12 @@ class Process(object):
             ok, response = self.client.recv()
         except Exception as e:
             self._log.service('Failed to %s with angel: %s' % (cmd, e))
+            raise ValueError('Failed to %s with angel: %s' % (cmd, e))
         else:
             if ok == CMD_OK:
                 return response
             self._log.service('Failed to get OK from angel')
+            raise ValueError('Failed to get OK from angel')
         self.client = None
     
     def get_service(self):

@@ -93,23 +93,33 @@ class StoreType(type):
         if not self.service:
             raise ValueError('A store class must have a service')
         
+        # Register
+        self._register_fields()
+        self._register_service()
+        self._register_manager()
+            
+    def _register_fields(self):
+        "Let fields register themselves with the store class"
         # Give fields an opportunity to manage how they're added to the class
         for field_name, field in self._fields.items():
             field.contribute_to_class(self, field_name)
-        
+    
+    def _register_service(self):
+        "Register with service"
         # Register with the service's registry, ensure there's only one
         if self._name in self.service.stores:
             raise ValueError(
                 'Store with name %s already defined' % self._name
             )
         self.service.stores[self._name] = self
-    
+        
+    def _register_manager(self):
+        "Register with the manager"
         # Give the manager instance a reference to the store
         if isinstance(self.manager, Manager):
             self.manager.contribute_to_class(self)
         else:    
             raise ValueError('Store manager must be a Manager instance')
-        
 
 class Store(object):
     """
@@ -143,13 +153,18 @@ class Store(object):
         
         If active is True, will be added to the manager's active list.
         """
+        # Support multiple inheritance
+        super(Store, self).__init__()
+        
+        # Make key safe and set it
         key = key.lower()
         if not is_filename_safe(key):
             raise ValueError('Key is not safe for filename')
         self.key = key
-        self._filename = os.path.join(
-            self.manager.store_path, "%s.json" % self.key
-        )
+        
+        # Set filename (if service has started)
+        if self.manager._started:
+            self._post_start()
         
         # Tell fields to initialise themselves
         for field_name, field in self._fields.items():
@@ -158,7 +173,12 @@ class Store(object):
         # Ensure manager knows about it
         if active:
             self.manager.add_active(self)
-        
+    
+    def _post_start(self, event=None):
+        self._filename = os.path.join(
+            self.manager.store_path, "%s.json" % self.key
+        )
+    
     def to_dict(self, session=False):
         """
         Create data dict from instance data, suitable for json.dumps

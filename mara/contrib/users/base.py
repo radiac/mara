@@ -21,12 +21,10 @@ class ClientField(storage.Field):
     Manage the client.user attribute
     """
     def deserialise(self, obj, name, data):
-        print "DESERIALISNG THE CLIENT"
         super(ClientField, self).deserialise(obj, name, data)
         
         # Link this client to this user
         client = self.get_value(obj, name)
-        print "Linking user.client", obj, client
         if client:
             client.user = obj
             
@@ -113,7 +111,7 @@ class ConnectHandler(events.Handler):
     #   name    user's name
     #   others  list of other users present
     #   are     correct version of is/are for the ``others`` list
-    msg_welcome_complete = 'Welcome, %(name)s! %(others)s %(are)s here'
+    msg_welcome_complete = 'Welcome, %(name)s!'
     
     # If nobody else is here, this is used for ``others``
     msg_no_others = 'Nobody else'
@@ -161,7 +159,7 @@ class ConnectHandler(events.Handler):
             self.user.name = self.name
         self.user.save()
     
-    def handler_80_attach_user(self, event):
+    def handler_70_attach_user(self, event):
         """
         Attach user object to client
         """
@@ -177,25 +175,10 @@ class ConnectHandler(events.Handler):
             self.reconnecting = True
         self.user.client = event.client
     
-    def handler_90_announce_user(self, event):
+    def handler_80_announce_user(self, event):
         """
-        Announce user's arrival
+        Announce user's arrival to everyone
         """
-        # Find others here
-        others = [
-            client.user.name
-            for client in event.service.filter_clients(exclude=event.client)
-        ]
-        if not others:
-            others = [self.msg_no_others]
-        
-        # Welcome user
-        event.client.write(self.msg_welcome_complete % {
-            'name':     self.user.name,
-            'others':   util.pretty_list(sorted(others)),
-            'are':      'is' if len(others) == 1 else 'are',
-        })
-        
         # Announce to everyone else
         msg_announce = self.msg_announce_connect
         if self.reconnecting:
@@ -206,3 +189,8 @@ class ConnectHandler(events.Handler):
             exclude=event.client,
         )
 
+    def handler_90_user_connected(self, event):
+        """
+        Welcome the user
+        """
+        event.client.write(event.service.get_who(exclude=event.client))

@@ -5,6 +5,8 @@ import copy
 
 from ..connection.client import Client, client_registry
 
+__all__ = ['Field', 'StoreField']
+
 
 class Field(object):
     """
@@ -46,7 +48,7 @@ class Field(object):
     
     def get_default(self):
         if callable(self._default):
-            return self.default()
+            return self._default()
         return copy.copy(self._default)
     default = property(get_default)
 
@@ -136,18 +138,24 @@ class StoreFieldDescriptor(object):
             # Either hasn't been set, or store no longer exists
             return None
         
+        # Get the object from cache, or load it from disk, or return None if it
+        # no longer exists
         return store.manager.load(key)
         
     def __set__(self, obj, ref):
-        setattr(obj, SFD_STORE % self.name, ref._name)
-        setattr(obj, SFD_KEY % self.name, ref.key)
+        if ref is None:
+            name, key = None, None
+        else:
+            name, key = ref._name, ref.key
+        setattr(obj, SFD_STORE % self.name, name)
+        setattr(obj, SFD_KEY % self.name, key)
     
     def __delete__(self, obj):
         delattr(obj, SFD_STORE % self.name)
         delattr(obj, SFD_KEY % self.name)
         
 
-def StoreField(Field):
+class StoreField(Field):
     def contribute_to_class(self, store_cls, name):
         """
         Add a StoreFieldDescriptor to the object

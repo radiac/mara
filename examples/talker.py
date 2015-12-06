@@ -3,4 +3,4 @@
 from talker import service
 
 if __name__ == '__main__': # pragma: no cover
-    service.run()
+    service.run(store_path='talker_store')

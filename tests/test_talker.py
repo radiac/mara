@@ -90,14 +90,15 @@ class ChatTest(TestCase):
             'password1',
             '',
             'Account created!',
-            'Welcome, ann! Nobody else is here',
+            'Welcome, ann!',
+            'Nobody else is here.',
         )
         client.quit()
         
         # Check we can now log in
         client.open()
         client.login('ann', 'password1')
-        client.assertLine('Welcome, ann! Nobody else is here')
+        client.assertLine('Welcome, ann!', 'Nobody else is here.')
         client.quit()
         
     def test_multiple(self):
@@ -105,16 +106,16 @@ class ChatTest(TestCase):
         # Create accounts
         ann = TalkerClient(self)
         ann.create_account('ann', 'password1')
-        ann.assertLine('Welcome, ann! Nobody else is here')
+        ann.assertLine('Welcome, ann!', 'Nobody else is here.')
         
         bob = TalkerClient(self)
         bob.create_account('bob', 'password2')
-        bob.assertLine('Welcome, bob! ann is here')
+        bob.assertLine('Welcome, bob!', 'ann is here.')
         ann.assertLine('-- bob has connected --')
         
         cat = TalkerClient(self)
         cat.create_account('cat', 'password3')
-        cat.assertLine('Welcome, cat! ann and bob are here')
+        cat.assertLine('Welcome, cat!', 'ann and bob are here.')
         ann.assertLine('-- cat has connected --')
         bob.assertLine('-- cat has connected --')
         
@@ -141,7 +142,7 @@ class ChatTest(TestCase):
         )
         ann.assertResponse(
             'who',
-            hr('Currently here'),
+            hr('Currently online'),
             'ann\t0 seconds ago',
             'bob\t0 seconds ago',
             'cat\t0 seconds ago',
@@ -171,11 +172,7 @@ class ChatTest(TestCase):
         
         ann.assertResponse(
             'look',
-            hr('Currently here'),
-            'ann\t0 seconds ago',
-            'bob\t0 seconds ago',
-            'cat\t0 seconds ago',
-            hr(),
+            'bob and cat are here.',
         )
         bob.assertLine('ann looks around')
         cat.assertLine('ann looks around')

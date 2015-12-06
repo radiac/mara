@@ -1,2 +1,2 @@
 from .core import *
-from .socials import *
+from .standard import *

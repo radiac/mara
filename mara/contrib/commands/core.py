@@ -10,7 +10,6 @@ from ... import util
 
 __all__ = [
     'CommandRegistry', 'Command', 'CommandEvent', 'define_command',
-    'cmd_commands', 'cmd_help', 'cmd_restart',
     'RE_WORD', 'MATCH_WORD', 'RE_STR', 'MATCH_STR', 'RE_LIST', 'MATCH_LIST',
 ]
 
@@ -62,6 +61,7 @@ class CommandRegistry(object):
         """
         Register a command
         """
+        
         # Can take multiple argument combinations
         if isinstance(name, Command):
             # Passed a Command instance
@@ -85,6 +85,10 @@ class CommandRegistry(object):
             new_kwargs.update(fn.command_kwargs)
             new_kwargs.update(kwargs)
             kwargs = new_kwargs
+        
+        # Instantiate an uninstantiated Handler class
+        if isinstance(fn, events.handler.HandlerType):
+            fn = fn()
         
         # Closure to register with args and kwargs
         def closure(fn):
@@ -218,7 +222,8 @@ class Command(object):
         Build a command
             registry    Command registry
             name        Name of command
-            fn          Function to call to perform the command
+            fn          Callable to perform the command - either a function, or
+                        an instantiated event handler class.
             args        Optional regular expression to match arguments
                         (case insensitive)
             syntax      Optional human-readable syntax
@@ -328,77 +333,3 @@ def define_command(**kwargs):
         return fn
     return closure
 
-
-@define_command(args=r'^(?P<group>\w+)?$', syntax="(groups|<group>)")
-def cmd_commands(event, group=None):
-    """
-    List commands
-    """
-    groups = event.registry.groups
-    if group:
-        if (group == 'groups' or group not in groups):
-            event.client.write('Valid groups are: %s' % ', '.join(
-                [name or '(None)' for name in groups.keys()]
-            ))
-            return
-    
-    groupname = ''
-    if group:
-        groupname = group.title() + ' '
-    
-    event.client.write(
-        util.HR('%sCommands' % groupname),
-        ' '.join(
-            (cmd.name for cmd in groups[group] if cmd.is_available(event))
-        ),
-        util.HR(),
-    )
-    
-@define_command(
-    args=r'^(?P<cmd>\w+)?$', syntax="<command>",
-    help="Show help for a command",
-)
-def cmd_help(event, cmd=None):
-    """
-    Show help for a command
-    
-    Pass context={'commands': 'name of cmd_commands command'} to make the
-    syntax error message more helpful.
-    Recommend that registration overrides syntax with a reference to the 
-    commands command, eg '<command>, or type "commands" to see a list of commands'
-    """
-    # Helpful syntax error
-    if cmd is None:
-        msg = 'Syntax: %s %s' % (event.match, event.command.syntax)
-        if event.context and 'cmd_commands' in event.context:
-            msg += ', or type %s to see a list of commands' % (
-                event.context['cmd_commands']
-            )
-        event.client.write(msg)
-        return
-    
-    # Look up command
-    command = event.registry.commands.get(cmd)
-    if command is None or not command.is_available(event):
-        event.client.write('Unknown command')
-        return
-    
-    syntax = 'Syntax: %s %s' % (command.name, command.syntax or '')
-    
-    if not command.help:
-        event.client.write(syntax)
-        return
-    
-    event.client.write(
-        util.HR('Help: %s' % command.name),
-        command.help,
-        '', syntax,
-        util.HR()
-    )
-
-
-@define_command(help="Restart the server")
-def cmd_restart(event):
-    event.exception_fatal = True
-    event.service.write_all('-- Restarting server --')
-    event.service.restart()

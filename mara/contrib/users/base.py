@@ -3,7 +3,6 @@ Mara users
 """
 import re
 
-from ..commands import define_command
 from ... import events
 from ... import storage
 from ... import util
@@ -71,7 +70,11 @@ class BaseUser(storage.Store):
     
     def disconnect(self):
         """
-        Call to disconnect the user
+        Call to disconnect the user; wrapper for client.close()
+        
+        Since disconnections can also be triggered in other ways (timeout,
+        direct calls to client.close etc), any user-specific disconnection
+        logic should go in disconnected()
         """
         # Tell the client to close
         self.client.close()
@@ -87,23 +90,6 @@ class BaseUser(storage.Store):
         self.manager.remove_active(self)
 
 
-@define_command(help='List all users')
-def cmd_list_users(event):
-    """
-    List admin users
-    
-    Needs the user class in context as: context={'User': User}
-    """
-    User = event.context['User']
-    
-    online = [user.name for user in sorted(User.manager.active().values())]
-    offline = [user.name for user in sorted(User.manager.saved().values())]
-    event.user.write(
-        util.HR('Users'),
-        'Online: ' + util.pretty_list(online),
-        'Offline: ' + util.pretty_list(offline),
-        util.HR(),
-    )
 
 
 class ConnectHandler(events.Handler):
@@ -129,9 +115,6 @@ class ConnectHandler(events.Handler):
     #   others  list of other users present
     #   are     correct version of is/are for the ``others`` list
     msg_welcome_complete = 'Welcome, %(name)s!'
-    
-    # If nobody else is here, this is used for ``others``
-    msg_no_others = 'Nobody else'
     
     # Announcement messages for connecting and reconnecting
     #   name    user's name
@@ -210,4 +193,7 @@ class ConnectHandler(events.Handler):
         """
         Welcome the user
         """
-        event.client.write(event.service.get_who(exclude=event.client))
+        event.client.write(
+            self.msg_welcome_complete % {'name': self.user.name},
+            event.service.get_who(exclude=event.client),
+        )

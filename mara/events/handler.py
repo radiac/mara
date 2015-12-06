@@ -32,12 +32,27 @@ class Handler(object):
     # Reference to current event
     event = None
     
+    # Reference to current container
+    container = None
+    
     def get_handlers(self):
         return self._handlers[:]
     
+    def get_container(self, event):
+        """
+        Given the event, find the container so it can be made available
+        """
+        return event.service
+    
     def __call__(self, event, *args, **kwargs):
-        # Load up clean queue of handlers and loop until they're all run
+        """
+        Run all handlers
+        """
+        # Prepare handler context
         self.event = event
+        self.container = self.get_container(event)
+        
+        # Load up clean queue of handlers and loop until they're all run
         self.handlers = self.get_handlers()
         while self.handlers:
             # Get next handler
@@ -72,4 +87,5 @@ class Handler(object):
         
         # Clean up
         self.event = None
+        self.container = None
         self.handlers = []

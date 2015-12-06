@@ -2,119 +2,37 @@
 Talker-style communication and commands
 """
 from mara import util
-from mara.contrib.users.password import ChangePasswordHandler
 
 from .core import service
 from .users import User
 
 # Add command handler
-from mara.contrib.commands import CommandRegistry, gen_social_cmds
+from mara.contrib.commands import CommandRegistry
 commands = CommandRegistry(service)
 
 #
-# Build-in commands
+# Built-in commands
 #
 
 # Register admin commands
-from mara.contrib.users.admin import if_admin, cmd_list_admin, cmd_set_admin
-commands.register('admin', cmd_list_admin, context={'User': User})
-commands.register(
-    'set_admin', cmd_set_admin, context={'User': User}, can=if_admin,
-)
+from mara.contrib.users.admin import register_cmds as admin_register_cmds
+admin_register_cmds(commands)
 
 # Register standard built-in commands
-from mara.contrib.commands import (
-    cmd_commands, cmd_help, cmd_restart, MATCH_STR, RE_LIST,
-)
-commands.register('commands', cmd_commands)
-commands.register('help', cmd_help, context={'cmd_commands': 'commands'})
-commands.register('restart', cmd_restart, can=if_admin)
-
-# Add social commands
-gen_social_cmds(service, commands, User)
+from mara.contrib.commands import register_cmds as cmds_register_cmds
+cmds_register_cmds(commands, admin=True)
 
 # Add user commands
-from mara.contrib.users import cmd_list_users
+from mara.contrib.users import register_cmds as users_register_cmds
+users_register_cmds(commands)
+
 from mara.contrib.users.gender import cmd_gender
-commands.register('users', cmd_list_users, context={'User': User})
 commands.register('gender', cmd_gender)
 
-
-#
-# Custom commands
-#
-
-@commands.register('say', args=MATCH_STR, syntax='<message>')
-def say(event, message):
-    event.client.write("You say: %s" % message)
-    service.write_all(
-        "%s says: %s" % (event.user.name, message),
-        exclude=event.client,
-    )
-
-@commands.register('emote', args=MATCH_STR, syntax='<action>')
-def emote(event, action):
-    if not action.startswith("'"):
-        action = ' ' + action
-    service.write_all("%s%s" % (event.user.name, action))
-
-@commands.register(
-    'tell',
-    args=r'^' + RE_LIST + '\s+(?P<msg>.*?)$',
-    syntax='<user>[, <user>] <message>',
-)
-def tell(event, usernames, msg):
-    usernames = [a.strip() for a in usernames.split(',')]
-    users = User.manager.get_active_by_name(usernames)
-    
-    # Validate target user
-    if event.user.name.lower() in users:
-        event.client.write('Why would you want to tell yourself that?')
-        return
-        
-    # Send
-    user_objs = users.values()
-    for target in user_objs:
-        targets = util.pretty_list(['you'] + sorted(
-            [user.name for user in user_objs if user != target]
-        ))
-        service.write(
-            target.client, '%s tells %s: %s' % (event.user.name, targets, msg),
-        )
-    event.client.write('You tell %s: %s' % (
-        util.pretty_list(sorted([u.name for u in user_objs])),
-        msg,
-    ))
-
-
-@commands.register
-def who(event):
-    # Find users
-    users = User.manager.active().values()
-    users.sort(key=lambda user: user.name)
-    
-    # Build lines of output
-    lines = [util.HR('Currently here')]
-    for user in users:
-        lines.append(
-            "%s\t%s" % (user.name, user.client.get_idle_age())
-        )
-    lines.append(util.HR())
-    
-    event.client.write(*lines)
-
-@commands.register
-def look(event):
-    service.write_all(
-        '%s looks around' % event.user.name,
-        exclude=event.client,
-    )
-    who(event)
-
-
+from mara.contrib.users.password import ChangePasswordHandler
 commands.register('password', ChangePasswordHandler())
 
-@commands.register
-def quit(event):
-    event.user.write(util.HR('Goodbye!'))
-    event.user.disconnect()
+# Add social commands
+from mara.contrib.commands.socials import gen_social_cmds
+gen_social_cmds(service, commands, User)
+

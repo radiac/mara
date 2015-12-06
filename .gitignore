@@ -1,6 +1,6 @@
 *.pyc
 mara.egg-info
-examples/store
+examples/talker_store
 test_talker_store
 .coverage*
 .tox

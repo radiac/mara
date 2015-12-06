@@ -76,7 +76,7 @@ class ClientContainer(object):
         
         return clients
     
-    msg_who = '%(others)s %(are)s %(where)s'
+    msg_who = '%(others)s %(are)s %(where)s.'
     def get_who(self, exclude=None, where='here'):
         """
         Return a string of users who are in the container

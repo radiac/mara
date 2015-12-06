@@ -16,6 +16,11 @@ from ..commands import define_command, RE_WORD
 from ... import storage
 from ... import util
 
+__all__ = [
+    'AdminMixin', 'if_admin',
+    'cmd_list_admin', 'cmd_set_admin', 'register_cmds',
+]
+
 
 class AdminMixin(storage.Store):
     """
@@ -41,14 +46,16 @@ def if_admin(event):
     return event.user.is_admin is True
 
 
+###############################################################################
+############################################################### Commands
+###############################################################################
+
 @define_command(help='List admin users')
 def cmd_list_admin(event):
     """
     List admin users
-    
-    Needs the user class in context as: context={'User': User}
     """
-    User = event.context['User']
+    User = event.user.__class__
     
     # List active admins
     active = [
@@ -87,11 +94,10 @@ def cmd_set_admin(event, username, state):
     """
     Set or unset a user as an admin
     
-    Needs the user class in context as: context={'User': User}
     Should probably be used with: can=if_admin
     """
     # Find user
-    User = event.context['User']
+    User = event.user.__class__
     user = User.manager.load(username, active=False)
     if user is None:
         event.user.write('That user is not found')
@@ -103,3 +109,15 @@ def cmd_set_admin(event, username, state):
         event.user.write('%s is an admin' % user.name)
     else:
         event.user.write('%s is not an admin' % user.name)
+
+
+###############################################################################
+############################################################# Command shortcut
+###############################################################################
+
+def register_cmds(registry):
+    """
+    Shortcut to register all admin commands with default names
+    """
+    registry.register('admin', cmd_list_admin)
+    registry.register('set_admin', cmd_set_admin, can=if_admin)

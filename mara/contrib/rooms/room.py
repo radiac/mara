@@ -164,6 +164,23 @@ class BaseRoom(storage.Store, container.ClientContainer):
         exclude = [getattr(c, 'client', c) for c in exclude]
         return super(BaseRoom, self).filter_clients(filter_fn, exclude)
     
+    def look(self, user):
+        """
+        Show the user what is happening in the room
+        """
+        if self.desc:
+            user.write(*self.desc)
+            user.write('')
+        
+        # Tell them where they are
+        user.write('You are ' + self.get_short())
+        
+        # Tell them who else is here
+        user.write(self.get_who(exclude=user.client))
+        
+        # Show them the exits
+        user.write(self.exits.get_desc())
+
     def enter(self, user, exit=None):
         """
         User enters this room
@@ -190,18 +207,7 @@ class BaseRoom(storage.Store, container.ClientContainer):
             user.write('')
         
         # Show them the room
-        if self.desc:
-            user.write(*self.desc)
-            user.write('')
-        
-        # Tell them where they are
-        user.write('You are ' + self.get_short())
-        
-        # Tell them who else is here
-        user.write(self.get_who(exclude=user.client))
-        
-        # Show them the exits
-        user.write(self.exits.get_desc())
+        self.look(user)
         
         # Tell other local users
         enter_msg = user.name

@@ -3,7 +3,7 @@ Extensions for users
 """
 
 from .exit import ExitError
-from .store import BaseRoom
+from .room import BaseRoom
 from ... import storage 
 from ... import events
  

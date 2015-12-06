@@ -24,6 +24,14 @@ their own ``serialise`` and ``deserialise`` methods, which can then set
 attributes on the client object; see ``ClientField`` in
 :source:`mara/contrib/useres/base.py` for an example.
 
+The module ``mara.contrib.commands.socials`` is no longer imported into
+``mara.contrib.commands``, so change your imports to specify the ``socials``
+module.
+
+The command function ``mara.contrib.users.cmd_list_users`` has been renamed to
+``cmd_list_all_users``. That command and the two admin commands,
+``cmd_list_admin`` and ``cmd_set_admin``, no longer need the ``User`` context.
+
 
 .. _changelog:
 
@@ -37,8 +45,11 @@ Feature:
 * Added class-based event handlers, with support for use as command functions
 * Added client containers
 * Added room support
+* Refactored user-related commands from talker example into
+  :source:`mara/contrib/users/commands.py`
 * Removed ClientSerialiser, replaced with improved Field serialiser
 * Removed StoreField, replaced with improved Field serialiser
+* Removed socials import from contrib.commands
 
 
 0.4.0, 2015-11-21

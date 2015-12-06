@@ -80,9 +80,10 @@ There are two ways to manage flow between handler methods:
             self.handlers = self.get_handlers()
 
 For an example of a more complex event handler, see the ``ConnectHandler``
-classes in :ref:`class_contrib_users` and :ref:`class_contrib_users_password`.
+classes in :ref:`module_contrib_users` and
+:ref:`module_contrib_users_password`.
 
-Event handlers are compatible with the :ref:`class_contrib_commands` module;
+Event handlers are compatible with the :ref:`module_contrib_commands` module;
 see :ref:`contrib_commands_handlers` for more details.
 
 
@@ -93,7 +94,7 @@ Event inheritance
 
 It is often desirable to bind a handler to listen to a category of events; for
 example, when you want to extend all client events by adding a user attribute
-to them, as is done with :ref:`class_contrib_users`.
+to them, as is done with :ref:`module_contrib_users`.
 
 To make this easy, Mara lets you bind a handler to an event base class. For
 example, a handler bound to ``events.Client`` will also be called for

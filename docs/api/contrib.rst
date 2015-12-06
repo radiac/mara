@@ -6,7 +6,7 @@ The ``contrib`` module contains functionality which isn't used by the core of
 Mara, but which can be useful when building your own services.
 
 
-.. _class_contrib_commands:
+.. _module_contrib_commands:
 
 ``mara.contrib.commands``
 =========================
@@ -18,17 +18,13 @@ Example usage::
 
     # Create a command registry
     # This will add its own Receive handler
-    from mara.contrib.commands import CommandRegistry, cmd_commands, cmd_help
+    from mara.contrib.commands import CommandRegistry, register_cmds
     commands = CommandRegistry(service)
     
-    # Register the ``commands`` command, to list registered commands
-    commands.register('commands', cmd_commands)
+    # Register the standard commands
+    register_cmds(commands)
     
-    # Register the ``help`` command, to show help for registered commands
-    # The extra context tells help what we've registered cmd_commands as
-    commands.register('help', cmd_help, extra={'cmd_commands': 'commands'})
-    
-    # Start registering commands
+    # Start registering custom commands
     @commands.register('look')
     def cmd_look(event):
         client = event.client
@@ -38,6 +34,31 @@ Example usage::
 If a command suffers an exception, it will be logged to the ``command`` log
 level, and if ``settings.commands_debug`` is ``True``, it will also be sent
 to the client who entered the command.
+
+There are some standard commands that you may find useful:
+
+    ``cmd_commands`` (eg ``commands``)
+        List commands
+    ``cmd_help`` (eg ``help <command>``)
+        Show help for a command
+    ``cmd_restart`` (eg ``restart``)
+        Restart the service, maintaining existing connections. Requires the
+        angel; probably best registered with a ``can`` permission argument
+        (see :ref:`contrib_commands_register`).
+    ``cmd_quit`` (eg ``quit``)
+        Disconnect from the service
+
+These can either be registered individually, eg::
+
+    from mara.contrib.commands import cmd_commands
+    commands.register('commands', cmd_commands)
+
+Or they can be registered in bulk using default command names (see command
+examples above)::
+
+    from mara.contrib.commands import register_cmds
+    register_cmds(commands)
+
 
 
 .. _contrib_commands_register:
@@ -156,13 +177,13 @@ tuple of ``(command_name, command_raw_args)``, or raise a ``ValueError`` if the
 command is not found or not available.
 
 
-.. _class_contrib_commands_socials:
+.. _module_contrib_commands_socials:
 
 ``mara.contrib.commands.socials``
 =================================
 
-Social commands. These require a :ref:`user store <class_contrib_users>`, and
-work best if the user store has the :ref:`gender <class_contrib_users_gender>`
+Social commands. These require a :ref:`user store <module_contrib_users>`, and
+work best if the user store has the :ref:`gender <module_contrib_users_gender>`
 extension on the ``.gender`` attribute.
 
 To add the default socials, call ``gen_social_cmds`` with the service,
@@ -170,12 +191,12 @@ commands handler and user store::
 
     gen_social_cmds(service, commands, User)
 
-This module uses :ref:`class_contrib_language`` to get its list of social verbs
+This module uses :ref:`module_contrib_language`` to get its list of social verbs
 and to perform basic natural language processing to conjugate verbs and convert
 usernames and pronouns.
 
 
-.. _class_contrib_users:
+.. _module_contrib_users:
 
 ``mara.contrib.users``
 ======================
@@ -196,21 +217,42 @@ Add the client's related ``user`` to ``Client`` events by binding
     from mara.contrib.users import event_add_user
     service.listen(events.Client, event_add_user)
 
-Add a command to list all users::
-
-    from mara.contrib.users import cmd_list_users
-    commands.register('users', cmd_list_users, context={'User': User})
-
 There is also an event handler to ask for a user's name when they connect; this
 should be used in conjunction with a ``SessionStore``-based user store (for
 saved users use the authenticating ``ConnectHandler`` in
-:ref:`class_contrib_users_password`)::
+:ref:`module_contrib_users_password`)::
     
     from mara.contrib.users import ConnectHandler
     service.listen(events.Connect, ConnectHandler(User))
 
+There are a standard of commands available:
 
-.. _class_contrib_users_password:
+    ``cmd_say`` (eg ``say <message>``)
+        Say something to the other users
+    ``cmd_emote`` (eg ``emote <message>``)
+        Emote something to the other users
+    ``cmd_tell`` (eg ``tell <user> <message>``)
+        Tell one or more users something
+    ``cmd_look`` (eg ``look``)
+        Look around (see who is here)
+    ``cmd_list_active_users`` (eg ``who``)
+        List active users and their idle times
+    ``cmd_list_all_users`` (eg ``users``)
+        List all online and offline users
+
+These can be registered individually, eg::
+
+    from mara.contrib.users import cmd_look
+    commands.register('look', cmd_look)
+
+Or they can be registered in bulk using default command names (see command
+examples above)::
+
+    from mara.contrib.users import register_cmds
+    register_cmds(commands)
+
+
+.. _module_contrib_users_password:
 
 ``mara.contrib.users.password``
 ===============================
@@ -248,13 +290,13 @@ the commands framework::
     commands.register('password', ChangePasswordHandler())
 
 
-.. _class_contrib_users_admin:
+.. _module_contrib_users_admin:
 
 ``mara.contrib.users.admin``
 ============================
 
 Mark users as admins. This will normally be used in conjunction with the
-:ref:`passwords <class_contrib_users_password>` user extension.
+:ref:`passwords <module_contrib_users_password>` user extension.
 
 Add the admin mixin to your user store::
 
@@ -267,16 +309,26 @@ the ``can`` command definition attribute::
 
     commands.register('restart', cmd_restart, can=if_admin)
 
-There are two commands available, one to list admin users, and another to set
-or unset admin users::
+There are two commands available:
 
-    from mara.contrib.users.admin import cmd_list_admin, cmd_set_admin
-    commands.register('admin', cmd_list_admin, context={'User': User})
-    commands.register(
-        'set_admin', cmd_set_admin, context={'User': User}, can=if_admin,
-    )
+    ``cmd_list_admin`` (eg ``admin``)
+        List admin users
+    ``cmd_set_admin`` (eg ``set_admin bob on``)
+        Set or unset admin users
 
-.. _class_contrib_users_gender:
+These can either be registered individually, eg::
+
+    from mara.contrib.users.admin import cmd_list_admin
+    commands.register('staff', cmd_list_admin)
+
+Or they can be registered in bulk using default command names (see command
+examples above)::
+
+    from mara.contrib.users.admin import register_cmds
+    register_cmds(commands)
+
+
+.. _module_contrib_users_gender:
 
 ``mara.contrib.users.gender``
 =============================
@@ -315,7 +367,7 @@ There is also a command to check or set gender::
     commands.register('gender', cmd_gender)
 
 
-.. _class_contrib_language:
+.. _module_contrib_language:
 
 ``mara.contrib.language``
 =========================
@@ -329,10 +381,10 @@ solution - stupid things are almost certain to happen. When something does,
 please let me know (tweet `@radiac <https://twitter.com/radiac>`_ or add a bug
 to github), or better yet, :doc:`contribute a test or fix <../contributing>`.
 
-This is used by :ref:`class_contrib_commands_socials` to modify social actions.
+This is used by :ref:`module_contrib_commands_socials` to modify social actions.
 
 
-.. _class_contrib_rooms:
+.. _module_contrib_rooms:
 
 ``mara.contrib.rooms``
 ======================
@@ -380,12 +432,35 @@ put users somewhere if you remove the room they were in::
         events.PostRestart, room_restart_handler_factory(User, room_lobby)
     )
 
-And lastly, add some commands for using the rooms; ``gen_nav_cmds`` will add
-commands to move in standard directions (north, south, up, down etc)::
+There are also a set of commands for using the rooms:
 
-    from mara.contrib.rooms import cmd_exits, gen_nav_cmds
-    commands.register('exits', cmd_exits)
+    ``cmd_say``, ``cmd_emote``, ``cmd_tell``, ``cmd_look``,
+    ``cmd_list_active_users``, ``cmd_list_all_users``
+        Room-aware versions of the standard :ref:`module_contrib_users`
+        commands
+    
+    ``cmd_exits`` (eg ``exits``)
+        List available exits
+    
+    ``cmd_where`` (eg ``where [<user>]``)
+        Show where you are (or another user is)
+
+These can be registered individually, eg::
+
+    from mara.contrib.commands import cmd_commands
+    commands.register('commands', cmd_commands)
+
+There is also a function to generate navigational commands; ``gen_nav_cmds``
+will add commands to move in standard directions (north, south, up, down etc)::
+
+    from mara.contrib.rooms import gen_nav_cmds
     gen_nav_cmds(service, commands)
+
+Alternatively, all of these (including navigation) can be registered at once
+using default command names (see command examples above)::
+
+    from mara.contrib.rooms import register_cmds
+    register_cmds(commands)
 
 
 .. _contrib_rooms_define:

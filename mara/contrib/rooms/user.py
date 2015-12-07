@@ -46,6 +46,10 @@ class RoomUserMixin(storage.Store):
         """
         super(RoomUserMixin, self).disconnected()
         
+        # If they aren't in a room, do nothing
+        if not self.room:
+            return
+        
         # Remove user from the room - but put it back on the user so they'll
         # end up in the right place when they come back.
         room = self.room

@@ -21,6 +21,10 @@ class Exit(object):
     An exit holds a reference to the rooms it connects, and manages a user's
     movement between rooms, calling the room's enter() and exit() methods.
     """
+    # No target or related exit yet
+    _target = None
+    _related = None
+    
     def __init__(self, target, related=None):
         """
         Define an exit, with an optional related exit in the target room.

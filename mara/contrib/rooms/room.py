@@ -142,7 +142,7 @@ class BaseRoom(storage.Store, container.ClientContainer):
         Used to generate per-user rooms
         """
         # Create new instance
-        self.__class__(
+        return self.__class__(
             # Same key; not active so we don't overwrite original instance
             self.key, active=False,
             # Set clone to false now - we don't want to clone it again
@@ -164,16 +164,22 @@ class BaseRoom(storage.Store, container.ClientContainer):
         exclude = [getattr(c, 'client', c) for c in exclude]
         return super(BaseRoom, self).filter_clients(filter_fn, exclude)
     
-    def look(self, user):
+    def look(self, user, intro=False):
         """
         Show the user what is happening in the room
+        
+        If intro=True, show the intro message too
         """
+        # Room name
+        user.write(self.name),
+        
+        # Show the intro, if set
+        if intro and self.intro:
+            user.write(*self.intro)
+        
+        # Main description
         if self.desc:
             user.write(*self.desc)
-            user.write('')
-        
-        # Tell them where they are
-        user.write('You are ' + self.get_short())
         
         # Tell them who else is here
         user.write(self.get_who(exclude=user.client))
@@ -212,13 +218,8 @@ class BaseRoom(storage.Store, container.ClientContainer):
         if not already_here:
             self.users.append(user)
         
-        # Show the intro, if set
-        if self.intro:
-            user.write(*self.intro)
-            user.write('')
-        
-        # Show them the room
-        self.look(user)
+        # Show them the room, with intro
+        self.look(user, intro=True)
         
         # Done if they were already here
         if already_here:

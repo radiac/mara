@@ -11,13 +11,14 @@ room_lobby = Room(
     'lobby',
     name='Lobby',
     short='in the lobby',
-    desc="You are standing in a room with a tall ceiling and a reception desk",
+    desc="You are in a room with a tall ceiling and a reception desk.",
     exits=Exits(
         north=Exit('pool'),
         south=FakeExit(
             'outside',
             "You think about leaving, but decide it's nice here.",
         ),
+        east=Exit('clone_zone'),
     ),
 )
 
@@ -31,3 +32,19 @@ room_pool = Room(
     ),
 )
 
+clone_zone = Room(
+    'clone_zone',
+    name='Clone zone',
+    clone=True,
+    intro=(
+        "Everything shimmers as reality seems to distort for a moment."
+    ),
+    short='in the clone zone',
+    desc=(
+        "In the clone zone, no-one can hear you scream. Or, in fact, do "
+        "anything at all. You are forever alone."
+    ),
+    exits=Exits(
+        west=Exit('lobby'),
+    ),
+)

@@ -152,6 +152,9 @@ class Angel(object):
                     )
                     socket_to_process[process_socket] = active_process
                     process_to_socket[active_process] = process_socket
+                    
+                    # Reset the delay
+                    start_delay = 0
                 
                 # Check process sockets who want to say something
                 for process_socket in read_sockets:
@@ -209,9 +212,6 @@ class Angel(object):
                     elif cmd == CMD_STARTED:
                         # New process has started, how nice for it
                         process_socket.send((CMD_OK, None))
-                        
-                        # Reset the delay
-                        start_delay = 0
                         
                         # Tell old process it's ok to die now
                         if old_process in process_to_socket:

@@ -5,11 +5,13 @@ Based on miniboa's telnet.py
 http://miniboa.googlecode.com/svn/trunk/miniboa/telnet.py
 """
 from collections import defaultdict
+import inspect
 import socket
 import select
 
 from .. import events
 from .. import util
+from .. import styles
 from .util import serialise_socket, deserialise_socket
 
 
@@ -387,8 +389,18 @@ class Client(object):
         # Resolve special lines
         out = []
         for line in lines:
-            if hasattr(line, 'render'):
-                line = line.render(self.columns)
+            # Instantiate Strings
+            if inspect.isclass(line) and issubclass(line, styles.String):
+                line = line()
+            
+            # Render Strings
+            if isinstance(line, styles.String):
+                state = (
+                    styles.State()
+                    if self.terminal_type else styles.StatePlain()
+                )
+                line = line.render(self, state) + state.__class__().render()
+            
             out.append(str(line))
         
         self._send_buffer += "\r\n".join(out) + "\r\n"

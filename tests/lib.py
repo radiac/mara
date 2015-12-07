@@ -2,7 +2,6 @@
 Test library
 """
 import os
-import select
 import socket
 import telnetlib
 import time
@@ -10,6 +9,7 @@ import threading
 import unittest
 
 import mara
+from mara import styles
 from mara.settings import defaults
 
 
@@ -26,8 +26,15 @@ IMPOSSIBLE = '$$--__--$$'
 NEWLINE = '\r\n'
 
 
-def hr(msg=None):
-    return mara.util.HR(msg).render()
+class FakeClient:
+    columns = 80
+    class service:
+        class settings:
+            hr_sequence = '-'
+            hr_state = None
+
+def hr(*msg):
+    return styles.hr(*msg).render(FakeClient(), styles.StatePlain())
 
 class TestCase(unittest.TestCase):
     def assertLine(self, response, expected):

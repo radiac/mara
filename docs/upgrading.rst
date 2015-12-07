@@ -25,7 +25,8 @@ Feature:
   :source:`mara/contrib/users/commands.py`
 * Simplified social command definition and generation - see
   :ref:`module_contrib_commands_socials`
-  
+* Added :ref:`module_styles`
+
 Removed:
 
 * Replaced ClientSerialiser with improved Field serialiser
@@ -33,7 +34,7 @@ Removed:
 * Removed socials import from contrib.commands, so the code is now only loaded
   if you specifically want it
 
-Internal
+Internal:
 
 * Added client containers
 
@@ -155,3 +156,5 @@ instead of defining a custom command - see
 The social command generator takes different arguments; for normal usage it
 now only needs the command registry, eg ``gen_social_cmds(commands)``.
 
+The undocumented colour functions and ``HR`` have been removed from ``util`` in
+favour of the new :ref:`module_styles` classes.

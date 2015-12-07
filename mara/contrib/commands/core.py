@@ -7,6 +7,7 @@ import re
 from collections import defaultdict
 from ... import events
 from ... import util
+from ... import styles
 
 __all__ = [
     'CommandRegistry', 'Command', 'CommandEvent', 'define_command',
@@ -188,9 +189,9 @@ class CommandRegistry(object):
             details = util.detail_error()
             event.command.registry.service.log.write('command', *(report + details))
             if event.command.registry.service.settings.commands_debug:
-                report.append(util.HR('Traceback'))
+                report.append(styles.hr('Traceback'))
                 report.extend(details)
-                report.append(util.HR())
+                report.append(styles.hr)
             event.client.write(*report)
             
             # Re-raise if exceptions should be fatal

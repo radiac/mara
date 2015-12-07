@@ -4,6 +4,7 @@ Mara rooms
 from . import constants
 from ... import container
 from ... import storage 
+from ... import styles
 
 __all__ = ["BaseRoom"]
 
@@ -171,7 +172,7 @@ class BaseRoom(storage.Store, container.ClientContainer):
         If intro=True, show the intro message too
         """
         # Room name
-        user.write(self.name),
+        user.write(styles.bold(self.name)),
         
         # Show the intro, if set
         if intro and self.intro:

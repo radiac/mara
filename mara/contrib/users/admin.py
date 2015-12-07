@@ -15,6 +15,7 @@ restriction, or set it manually:
 from ..commands import define_command, RE_WORD
 from ... import storage
 from ... import util
+from ... import styles
 
 __all__ = [
     'AdminMixin', 'if_admin',
@@ -64,7 +65,7 @@ def cmd_list_admin(event):
     ]
     if active:
         event.user.write(
-            util.HR('Admin users here now'),
+            styles.hr('Admin users here now'),
             util.pretty_list(active)
         )
     
@@ -75,12 +76,12 @@ def cmd_list_admin(event):
     ]
     if saved:
         event.user.write(
-            util.HR('Admin users who are offline'),
+            styles.hr('Admin users who are offline'),
             util.pretty_list(saved)
         )
     
     if saved or active:
-        event.user.write(util.HR())
+        event.user.write(styles.hr)
     else:
         event.user.write('There are no admin users')
 

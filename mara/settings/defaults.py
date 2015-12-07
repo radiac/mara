@@ -153,6 +153,16 @@ angel_authkey = '1234567890'
 # If False, do not collect from command line
 settings_collect_args = True
 
+# Character sequence to use for styles.hr
+hr_sequence = '-'
+
+# Base State instance for styles.hr
+hr_state = None
+# For bold red lines:
+#from .. import styles as _styles
+#hr_state = _styles.State(_styles.RED, _styles.BOLD)
+
+
 #
 # contrib.comments
 #

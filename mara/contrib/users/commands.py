@@ -11,6 +11,7 @@ code can be overridden while still using the same logic for preparing data.
 from ..commands import define_command, MATCH_STR, RE_LIST
 from ... import events
 from ... import util
+from ... import styles
 
 
 __all__ = [
@@ -108,12 +109,12 @@ class cmd_list_active_users(events.Handler):
     
     def handler_20_display(self, event):
         # Build lines of output
-        lines = [util.HR('Currently online')]
+        lines = [styles.hr('Currently online')]
         for user in self.users:
             lines.append(
                 "%s\t%s" % (user.name, user.client.get_idle_age())
             )
-        lines.append(util.HR())
+        lines.append(styles.hr)
         
         # Write to the user
         event.client.write(*lines)
@@ -131,10 +132,10 @@ class cmd_list_all_users(events.Handler):
     
     def handler_20_display(self, event):
         event.user.write(
-            util.HR('Users'),
+            styles.hr('Users'),
             'Online: ' + util.pretty_list(self.online),
             'Offline: ' + util.pretty_list(self.offline),
-            util.HR(),
+            styles.hr,
         )
 
 

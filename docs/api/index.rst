@@ -518,3 +518,55 @@ Optional keyword arguments:
     ``exclude``
         A :ref:`class_client` instance, or list of ``Client`` instances.
 
+
+.. _module_styles:
+
+``mara.styles``
+---------------
+
+The styles module contains a set of classes for rendering strings with ANSI
+styles and other decorations; they all subclass ``styles.String`` which is
+instantiated with strings and other ``String`` instances, which can also be
+concatenated.
+
+Most of the time rendering will be handled for you by the ``Client``; behind
+the scenes each ``String`` has a ``render(client, state)`` method, where
+``state`` is an instance of ``styles.State`` (or ``styles.StatePlain`` if ANSI
+is not supported by the client's terminal).
+
+Classes available for you to use are:
+
+    ``normal``
+        Reset all styles and colours
+    
+    ``bold``, ``faint``, ``italic``, ``underline``, ``negative, ``strike``
+        Font styles
+    
+    ``red``, ``green``, ``yellow``, ``blue``, ``magenta``, ``cyan``, ``white``
+        Colours
+    
+    ``hr``
+        Horizontal rule; if it has any content, the content will be centered.
+        
+        Takes its style state and sequence from the settings ``hr_state`` and
+        ``hr_sequence``
+
+Example usage::
+
+    client.write(
+        # Horizontal rule with centered message
+        styles.hr('Welcome'),
+        
+        # Multi-coloured concatenated style objects
+        styles.red('Red') + ' and ' + styles.blue('blue'),
+        
+        # Multiple nested style objects
+        styles.bold(
+            'This', styles.cyan('is'), ' ', styles.red(
+                styles.strike('dumb'), 'amazing',
+            ), '.',
+        ),
+        
+        # Horizontal rule without message, does not need to be instantiated
+        styles.hr,
+    )

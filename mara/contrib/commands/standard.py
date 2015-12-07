@@ -1,8 +1,8 @@
 """
 Standard commands
 """
-from ... import util
 from .core import define_command
+from ... import styles
 
 
 ###############################################################################
@@ -27,11 +27,11 @@ def cmd_commands(event, group=None):
         groupname = group.title() + ' '
     
     event.client.write(
-        util.HR('%sCommands' % groupname),
+        styles.hr('%sCommands' % groupname),
         ' '.join(
             (cmd.name for cmd in groups[group] if cmd.is_available(event))
         ),
-        util.HR(),
+        styles.hr,
     )
     
 @define_command(
@@ -70,10 +70,10 @@ def cmd_help(event, cmd=None):
         return
     
     event.client.write(
-        util.HR('Help: %s' % command.name),
+        styles.hr('Help: %s' % command.name),
         command.help,
         '', syntax,
-        util.HR()
+        styles.hr()
     )
 
 
@@ -90,7 +90,7 @@ def cmd_restart(event):
 
 @define_command(help="Disconnect")
 def cmd_quit(event):
-    event.client.write(util.HR('Goodbye!'))
+    event.client.write(styles.hr('Goodbye!'))
     event.client.close()
 
 

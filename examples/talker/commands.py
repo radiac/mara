@@ -28,4 +28,4 @@ admin_register_cmds(commands)
 
 # Add social commands
 from mara.contrib.commands.socials import gen_social_cmds
-gen_social_cmds(service, commands, User)
+gen_social_cmds(commands)

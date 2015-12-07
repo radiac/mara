@@ -6,23 +6,40 @@ have .name and .client attributes, and an optional .gender attribute for
 correct use of pronouns.
 """
 from ..language import DirectedAction, SOCIAL_VERBS
-
+from .core import Command
 
 __all__ = ['gen_social_cmds']
 
-def gen_social_cmd(service, commands, user_store, verb, parser=DirectedAction):
+
+class SocialCommand(Command):
     """
-    Build and register a social command for the specified verb, using the
-    specified directed action parser (defaults to DirectedAction)
+    A social command for the specified verb, using a directed action parser
     """
-    def command(event, action):
+    # Command group to register it in
+    group = 'social'
+    
+    # Directed action parser
+    parser = DirectedAction
+    
+    def __init__(self, name):
+        super(SocialCommand, self).__init__(
+            name, args=r'^(.*)$', group=self.group,
+        )
+    
+    def get_container(self, event):
+        "Get the container for this command"
+        return event.service
+        
+    def fn(self, event, action=None):
+        # Find active users
+        container = self.get_container(event)
+        users = {client.user.key: client.user for client in container.clients}
+        
+        # Run the directed action parser on the action string
         if not action:
             action = ''
-        action = verb + ' ' + action
-        
-        users = user_store.manager.active()
-        
-        parsed = parser(action, users)
+        action = self.name + ' ' + action
+        parsed = self.parser(action, users)
         
         # Tell the originating user
         event.client.write(
@@ -43,15 +60,20 @@ def gen_social_cmd(service, commands, user_store, verb, parser=DirectedAction):
             set(users.values()).difference(set([event.user] + parsed.users))
         ]
         if others:
-            service.write(
+            container.write(
                 others,
                 event.user.name + ' ' + parsed.third_person(source=event.user),
             )
-        
-    commands.register(verb, command, args=r'^(.*)$', group='social')
-        
+
+
+class RoomSocialCommand(SocialCommand):
+    def get_container(self, event):
+        return event.user.room
+
+
 def gen_social_cmds(
-    service, commands, user_store, verbs=SOCIAL_VERBS, parser=DirectedAction,
+    commands, verbs=SOCIAL_VERBS, command_cls=SocialCommand,
+    parser=DirectedAction,
 ):
     """
     Build and register social commands for the specified verbs (must be first
@@ -59,4 +81,4 @@ def gen_social_cmds(
     (defaults to DirectedAction)
     """
     for verb in verbs:
-        gen_social_cmd(service, commands, user_store, verb)
+        commands.register(command_cls(verb))

@@ -72,7 +72,7 @@ class CommandRegistry(object):
         # Or could be used as a decorator without arguments
         #   @cmd.register
         #   def mycmd(..)
-        elif callable(name):
+        if callable(name):
             fn = name
             name = name.__name__
         
@@ -89,7 +89,7 @@ class CommandRegistry(object):
         # Closure to register with args and kwargs
         def closure(fn):
             # Build command and register
-            cmd = Command(self, name, fn, **kwargs)
+            cmd = Command(name, fn, **kwargs)
             self._register_command(cmd)
             
             # Return original fn
@@ -104,6 +104,12 @@ class CommandRegistry(object):
         #   def mycmd(..)
         return closure
     
+    def _register_command(self, cmd):
+        "Register a command instance"
+        cmd.registry = self
+        self.commands[cmd.name] = cmd
+        self.groups[cmd.group].append(cmd)
+        
     def alias(self, match, replace):
         """
         Define a command alias
@@ -125,11 +131,6 @@ class CommandRegistry(object):
         match = re.compile(match, re.IGNORECASE)
         self.aliases.append((match, replace))
     
-    def _register_command(self, cmd):
-        "Register a command instance"
-        self.commands[cmd.name] = cmd
-        self.groups[cmd.group].append(cmd)
-        
     def handle_receive(self, event):
         """
         Handle a Receive event
@@ -149,7 +150,7 @@ class CommandRegistry(object):
             return
         
         # Run command
-        self.commands[cmd].call(event, cmd, raw_args)
+        self.commands[cmd].trigger(event, cmd, raw_args)
     
     def handle_command(self, event):
         """
@@ -234,18 +235,27 @@ class Command(object):
     This command class parses arguments based on the regular expression in
     ``args``.
     """
+    # Command registry is set by the registry during register().
+    # If a subclass needs to take special actions after registration, replace
+    # this with a property.
+    registry = None
+    
+    # No bound fn class - means the fn argument is required by constructor
+    fn = None
+    
     def __init__(
-        self, registry, name, fn,
-        args=None, syntax=None, group=None, help=None, can=None,
+        self, name,
+        fn=None, args=None, syntax=None, group=None, help=None, can=None,
         context=None,
     ):
         """
         Build a command
-            registry    Command registry
             name        Name of command
             fn          Callable to perform the command - either a function, or
                         an event handler class. The handler class will be
-                        instantiated if it is not already.
+                        instantiated if it is not already. If not provided,
+                        it will look for a bound ``fn`` method on the command
+                        class; if that doesn't exist it will raise a TypeError.
             args        Optional regular expression to match arguments
                         (case insensitive)
             syntax      Optional human-readable syntax
@@ -256,16 +266,20 @@ class Command(object):
                         command can be used. If not set, it can always be used.
             context     Optional object to set as CommandEvent.context
         """
-        self.registry = registry
         self.name = name
         self.group = group
         self.syntax = syntax
         self.can = can
         
         # Instantiate an uninstantiated Handler class
-        if isinstance(fn, events.handler.HandlerType):
-            fn = fn()
-        self.fn = fn
+        if fn:
+            if isinstance(fn, events.handler.HandlerType):
+                fn = fn()
+            self.fn = fn
+        elif not self.fn:
+            raise TypeError(
+                'Command classes require a fn argument, or a bound fn method',
+            )
         
         # Find help
         if help is not None:
@@ -292,8 +306,10 @@ class Command(object):
             return self.can(event)
         return True
         
-    def call(self, event, cmd, raw_args):
+    def trigger(self, event, cmd, raw_args):
         """
+        Trigger a CommandEvent for this command
+        
         Parse the input from the command and call the command function
         
         Arguments:

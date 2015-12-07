@@ -212,11 +212,21 @@ extension on the ``.gender`` attribute.
 To add the default socials, call ``gen_social_cmds`` with the service,
 commands handler and user store::
 
-    gen_social_cmds(service, commands, User)
+    gen_social_cmds(commands)
 
-This module uses :ref:`module_contrib_language`` to get its list of social verbs
-and to perform basic natural language processing to conjugate verbs and convert
-usernames and pronouns.
+If defines a social command for each verb in ``SOCIAL_VERBS`` from
+:ref:`module_contrib_language``. You can override this by passing a new list
+in as ``verbs=['jump', 'run']``.
+
+Behind the scenes each social command is created as an instance of the
+``SocialCommand`` class. This can be overridden (eg to change command group or
+container) by passing in a subclass as ``command_cls=SocialCommand``.
+
+This module also uses :ref:`module_contrib_language`` to perform basic natural
+language processing, to conjugate verbs and convert usernames and pronouns. You
+can override the default processor by passing a subclass of ``DirectedAction``
+in as ``parser=DirectedAction``.
+
 
 
 .. _module_contrib_users:

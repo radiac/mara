@@ -15,6 +15,17 @@ class HandlerType(type):
             getattr(self, handler_name) for handler_name in sorted(dir(self))
             if handler_name.startswith('handler_')
         ]
+        
+        # Inherit missing docstrings
+        if not self.__doc__:
+            docbases = bases[:]
+            for base in docbases:
+                if issubclass(Handler, base):
+                    # Either Handler or one of its bases - gone too far
+                    continue
+                if base.__doc__:
+                    self.__doc__ = base.__doc__
+                    break
 
 
 class Handler(object):

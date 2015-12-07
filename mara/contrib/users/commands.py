@@ -19,7 +19,7 @@ __all__ = [
     'cmd_look', 'cmd_list_active_users', 'cmd_list_all_users',
     
     # Shortcut
-    'register_cmds',
+    'register_cmds', 'register_aliases',
 ]
 
 
@@ -152,3 +152,12 @@ def register_cmds(registry):
     registry.register('look', cmd_look)
     registry.register('who', cmd_list_active_users)
     registry.register('users', cmd_list_all_users)
+
+def register_aliases(registry):
+    """
+    Shortcut to register common aliases
+    """
+    registry.alias(r"^'", 'say ')
+    registry.alias(r'^;', 'emote ')
+    registry.alias(r'^>', 'tell ')
+    registry.alias(r'^l$', 'look')

@@ -1,8 +1,6 @@
 """
 Talker-style communication and commands
 """
-from mara import util
-
 from .core import service, User
 
 # Add command handler
@@ -14,8 +12,9 @@ from mara.contrib.commands import register_cmds as cmds_register_cmds
 cmds_register_cmds(commands, admin=True)
 
 # Add user commands
-from mara.contrib.users import register_cmds as users_register_cmds
-users_register_cmds(commands)
+from mara.contrib import users as contrib_users
+contrib_users.register_cmds(commands)
+contrib_users.register_aliases(commands)
 
 # Add user extensions
 from mara.contrib.users.gender import cmd_gender
@@ -30,4 +29,3 @@ admin_register_cmds(commands)
 # Add social commands
 from mara.contrib.commands.socials import gen_social_cmds
 gen_social_cmds(service, commands, User)
-

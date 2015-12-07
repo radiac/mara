@@ -50,11 +50,12 @@ class UserManager(storage.Manager):
         # List of names
         lower_names = [name.lower() for name in names]
         found = { k: v for k, v in active.items() if k in lower_names }
-        missing = set(lower_names).difference(set(found.keys()))
+        missing = list(set(lower_names).difference(set(found.keys())))
         if missing:
-            raise ValueError(
-                'Unknown users %s' % util.pretty_list(list(missing))
-            )
+            raise ValueError('Unknown user%s: %s' % (
+                '' if len(missing) == 1 else 's',
+                util.pretty_list(["'%s'" % name for name in missing])
+            ))
         return found
 
 
@@ -88,8 +89,6 @@ class BaseUser(storage.Store):
         
         # Remove from active list
         self.manager.remove_active(self)
-
-
 
 
 class ConnectHandler(events.Handler):

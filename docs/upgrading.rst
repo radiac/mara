@@ -45,6 +45,7 @@ Feature:
 * Added class-based event handlers, with support for use as command functions
 * Added client containers
 * Added room support
+* Added command aliases
 * Refactored user-related commands from talker example into
   :source:`mara/contrib/users/commands.py`
 * Removed ClientSerialiser, replaced with improved Field serialiser

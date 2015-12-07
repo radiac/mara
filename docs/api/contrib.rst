@@ -251,6 +251,12 @@ examples above)::
     from mara.contrib.users import register_cmds
     register_cmds(commands)
 
+There are also a function to define common aliases; ``'msg`` to ``say msg``,
+``;msg`` to ``emote msg`` and ``>who msg`` to ``tell who msg``::
+
+    from mara.contrib.users import register_aliases
+    register_aliases(commands)
+
 
 .. _module_contrib_users_password:
 
@@ -461,6 +467,14 @@ using default command names (see command examples above)::
 
     from mara.contrib.rooms import register_cmds
     register_cmds(commands)
+
+There are also a function to define common aliases; it will add the standard
+communication aliases from :ref:`module_contrib_users`, as well as ``l`` to
+``look``, and ``n``, ``s``, ``e``, ``w``, ``ne``, ``nw``, ``se``, ``sw`` for
+moving in the cardinal directions::
+
+    from mara.contrib.rooms import register_aliases
+    register_aliases(commands)
 
 
 .. _contrib_rooms_define:

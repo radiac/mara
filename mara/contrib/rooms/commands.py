@@ -20,7 +20,7 @@ __all__ = [
     'gen_nav_cmds',
     
     # Shortcut
-    'register_cmds',
+    'register_cmds', 'register_aliases',
 ]
 
 
@@ -106,6 +106,8 @@ def gen_nav_cmds(registry):
 def register_cmds(registry):
     """
     Shortcut to register all standard room commands with default names
+    
+    Includes room-aware versions of the ones in contrib.users.register_cmds
     """
     # Standard commands referenced/overridden from contrib.users
     registry.register('say', cmd_say)
@@ -119,3 +121,16 @@ def register_cmds(registry):
     registry.register('exits', cmd_exits)
     registry.register('where', cmd_where)
     gen_nav_cmds(registry)
+
+def register_aliases(registry):
+    """
+    Shortcut to register common aliases
+    
+    Includes the ones defined by contrib.users.register_aliases
+    """
+    # Use the standard ones in contrib.users
+    user_cmds.register_aliases(registry)
+    
+    # Add navigation aliases
+    for alias, cmd in constants.SHORT_DIRECTIONS.items():
+        registry.alias(r'^%s$' % alias, cmd)

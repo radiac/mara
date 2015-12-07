@@ -50,6 +50,7 @@ class CommandRegistry(object):
     def __init__(self, service):
         self.service = service
         self.commands = {}
+        self.aliases = []
         self.groups = defaultdict(list)
         
         # Bind event handlers
@@ -61,7 +62,6 @@ class CommandRegistry(object):
         """
         Register a command
         """
-        
         # Can take multiple argument combinations
         if isinstance(name, Command):
             # Passed a Command instance
@@ -104,6 +104,27 @@ class CommandRegistry(object):
         #   def mycmd(..)
         return closure
     
+    def alias(self, match, replace):
+        """
+        Define a command alias
+        
+        Matches will be evaluated in order they are defined, before commands
+        are checked.
+        
+        The ``replace`` argument can include backreferences; the arguments will
+        be used with re.sub, equivalent to::
+        
+            input = re.sub(match, replace, input)
+        
+        Examples::
+        
+            commands.alias(r'^s$', 'south')
+            commands.alias(r'^;', 'emote ')
+            commands.alias(r'^!(\S+?) (.*)$', r'emote shouts at \1: \2')
+        """
+        match = re.compile(match, re.IGNORECASE)
+        self.aliases.append((match, replace))
+    
     def _register_command(self, cmd):
         "Register a command instance"
         self.commands[cmd.name] = cmd
@@ -115,6 +136,10 @@ class CommandRegistry(object):
         """
         # Hijack event
         event.stop()
+        
+        # Run aliases
+        for match, replace in self.aliases:
+            event.data = match.sub(replace, event.data)
         
         # Parse command
         try:

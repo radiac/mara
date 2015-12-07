@@ -32,6 +32,11 @@ The command function ``mara.contrib.users.cmd_list_users`` has been renamed to
 ``cmd_list_all_users``. That command and the two admin commands,
 ``cmd_list_admin`` and ``cmd_set_admin``, no longer need the ``User`` context.
 
+The talker example now uses the command registry's built-in aliases feature
+instead of defining a custom command - see
+:ref:`contrib_commands_aliases`, :source:`mara/contrib/users/commands.py` and
+:source:`examples/talker/commands.py`.
+
 
 .. _changelog:
 

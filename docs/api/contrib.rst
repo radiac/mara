@@ -166,6 +166,28 @@ This is a contrived example, but in practice it means that complex commands
 can be split into multiple methods, and inherited from and overridden.
 
 
+.. _contrib_commands_aliases:
+
+Command aliases
+---------------
+
+It's often useful to create command aliases; eg ``'hi`` short for ``say hi``,
+or ``n`` short for ``north``. The command registry has built-in support for
+alises using the ``alias(match, replace)`` method; for example::
+
+    commands.alias(r'^s$', 'south')
+    commands.alias(r'^;', 'emote ')
+    commands.alias(r'^!(\S+?) (.*)$', r'emote shouts at \1: \2')
+
+Matches will be evaluated in order they are defined, before commands are
+checked.
+        
+The ``replace`` argument can include backreferences; the arguments will be used
+with ``re.sub``, equivalent to::
+
+    input = re.sub(match, replace, input)
+ 
+
 Subclassing the ``CommandRegistry``
 -----------------------------------
 

@@ -86,10 +86,6 @@ class CommandRegistry(object):
             new_kwargs.update(kwargs)
             kwargs = new_kwargs
         
-        # Instantiate an uninstantiated Handler class
-        if isinstance(fn, events.handler.HandlerType):
-            fn = fn()
-        
         # Closure to register with args and kwargs
         def closure(fn):
             # Build command and register
@@ -223,7 +219,8 @@ class Command(object):
             registry    Command registry
             name        Name of command
             fn          Callable to perform the command - either a function, or
-                        an instantiated event handler class.
+                        an event handler class. The handler class will be
+                        instantiated if it is not already.
             args        Optional regular expression to match arguments
                         (case insensitive)
             syntax      Optional human-readable syntax
@@ -236,10 +233,16 @@ class Command(object):
         """
         self.registry = registry
         self.name = name
-        self.fn = fn
         self.group = group
         self.syntax = syntax
         self.can = can
+        
+        # Instantiate an uninstantiated Handler class
+        if isinstance(fn, events.handler.HandlerType):
+            fn = fn()
+        self.fn = fn
+        
+        # Find help
         if help is not None:
             self.help = help
         elif fn.__doc__:
@@ -248,6 +251,7 @@ class Command(object):
             self.help = ''
         self.context = context
         
+        # Pre-compile arguments regex
         if args:
             args = re.compile(args, re.IGNORECASE)
         self.args = args

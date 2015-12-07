@@ -189,12 +189,6 @@ class ConnectHandler(
     prompt_enter_password = 'Enter your password, or press enter to pick a new name: '
     
     
-    def handler_05_reset(self, event):
-        # Make sure all internal variables are clean
-        self.name = None
-        self.user = None
-        self.password = None
-    
     def handler_20_get_user(self, event):
         """
         Look up the user from base.ConnectHandler.handler_10_get_name

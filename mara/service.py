@@ -72,11 +72,15 @@ class Service(ClientContainer):
         """
         # Called directly
         if handler:
+            if isinstance(handler, events.handler.HandlerType):
+                handler = handler()
             self._listen(event_class, handler)
             return
 
         # Called as a decorator
         def decorator(fn):
+            if isinstance(fn, events.handler.HandlerType):
+                fn = fn()
             self._listen(event_class, fn)
             return fn
         return decorator
@@ -127,8 +131,11 @@ class Service(ClientContainer):
         
         self.log.event(event)
         for handler in self.events[event.__class__]:
+            # Catch stopped event
             if event.stopped:
                 return
+                
+            # Run handler co-routine or function
             if (
                 inspect.isgeneratorfunction(handler)
                 or isinstance(handler, events.Handler)

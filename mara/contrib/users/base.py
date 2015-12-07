@@ -197,3 +197,25 @@ class ConnectHandler(events.Handler):
             self.msg_welcome_complete % {'name': self.user.name},
             event.service.get_who(exclude=event.client),
         )
+
+
+class DisconnectHandler(events.Handler):
+    """
+    Disconnect handler to process a disconnected user
+    
+    Usage::
+        
+        service.listen(events.Disconnect, DisconnectHandler)
+    """
+    def handler_10_users_only(self, event):
+        # If the client doesn't have a user, it hasn't logged in
+        if not getattr(event.client, 'user', None):
+            # Abort all future handlers
+            event.stop()
+        
+    def handler_50_user_disconnected(self, event):
+        # Disconnect the user, remove them from the room, but don't tell them
+        event.user.disconnected()
+    
+    def handler_50_report(self, event):
+        event.service.write_all('-- %s has disconnected --' % event.user.name)

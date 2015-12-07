@@ -74,7 +74,7 @@ def cmd_where(event, username=None):
 ################################################################ Navigation
 ###############################################################################
 
-def gen_nav_cmd(commands, verb, direction):
+def gen_nav_cmd(registry, verb, direction):
     """
     Build and register a navigational command to move a user between rooms
     
@@ -84,19 +84,19 @@ def gen_nav_cmd(commands, verb, direction):
     """
     def command(event):
         event.user.move(direction)
-    commands.register(verb, command, group='nav')
+    registry.register(verb, command, group='nav')
 
-def gen_nav_cmds(commands):
+def gen_nav_cmds(registry):
     """
     Build and register navigation commands for users to move between rooms
     """
     # Build directions
     for direction in constants.DIRECTIONS:
-        gen_nav_cmd(commands, direction, direction)
+        gen_nav_cmd(registry, direction, direction)
 
     # Add aliases
     for alias, direction in constants.SHORT_DIRECTIONS.items():
-        gen_nav_cmd(commands, alias, direction)
+        gen_nav_cmd(registry, alias, direction)
 
 
 ###############################################################################
@@ -118,4 +118,4 @@ def register_cmds(registry):
     # Room-specific commands
     registry.register('exits', cmd_exits)
     registry.register('where', cmd_where)
-    gen_nav_cmds(commands)
+    gen_nav_cmds(registry)

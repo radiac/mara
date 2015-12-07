@@ -22,6 +22,15 @@ def church_bell(timer):
     ))
 
 
+# Create User class
+from mara.contrib.users import BaseUser
+from mara.contrib.users.password import PasswordMixin
+from mara.contrib.users.admin import AdminMixin
+from mara.contrib.users.gender import GenderMixin
+class User(PasswordMixin, AdminMixin, GenderMixin, BaseUser):
+    service = service
+
+
 # Set up a filter for write_all to filter to users who have logged in,
 # otherwise they'll see things on the login prompt
 def filter_to_users(service, clients, **kwargs):

@@ -194,12 +194,23 @@ class BaseRoom(storage.Store, container.ClientContainer):
             room.enter(user, exit)
             return
         
+        # Make sure the user isn't still in a room
+        already_here = False
+        if user.room:
+            # See if they're reconnecting
+            if user.room == self and user in self.users:
+                already_here = True
+            else:
+                # Make them leave their current room
+                user.room.exit(user)
+        
         # Move the user in here and save
         user.room = self
         user.save()
         
         # Add the user to our list of users in the room
-        self.users.append(user)
+        if not already_here:
+            self.users.append(user)
         
         # Show the intro, if set
         if self.intro:
@@ -209,14 +220,18 @@ class BaseRoom(storage.Store, container.ClientContainer):
         # Show them the room
         self.look(user)
         
+        # Done if they were already here
+        if already_here:
+            return
+        
         # Tell other local users
         enter_msg = user.name
         if exit:
-            enter_msg += ' enters'
+            enter_msg += ' enters '
             if exit.related and exit.related.direction:
                 enter_msg += constants.ENTER_FROM[exit.related.direction]
             else:
-                enter_msg += ' from ' + exit.source.name
+                enter_msg += 'from ' + exit.source.name
         else:
             # Must have logged in or jumped to the room
             enter_msg += ' appears from nowhere'
@@ -226,12 +241,16 @@ class BaseRoom(storage.Store, container.ClientContainer):
         """
         User leaves this room
         """
-        # Remove the user from the room
-        self.users.remove(user)
-        
         # Clear the user's room - don't save, they'll normally be going
         # somewhere, which will save anyway
         user.room = None
+        
+        # Check the user is actually in the room - may have been saved
+        if user not in self.users:
+            return
+            
+        # Remove the user from the room
+        self.users.remove(user)
         
         # Tell other local users
         exit_msg = user.name

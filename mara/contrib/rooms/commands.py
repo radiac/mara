@@ -59,15 +59,45 @@ def cmd_exits(event):
     event.user.write(event.user.room.exits.get_desc())
 
 
-
-@commands.define_command(args=r'(\w+)?', syntax='[<user>]')
+@commands.define_command(args=r'^(\w+)?$', syntax='[<user>]')
 def cmd_where(event, username=None):
+    "See the location of yourself or another user"
     if not username:
         event.user.write('You are %s' % event.user.room.get_short())
         return
     
     user = event.user.manager.get_active_by_name(username)
     event.user.write('%s is %s' % (user.name, user.room.get_short()))
+
+
+@commands.define_command(args=r'^(\w+)$', syntax='<room_id>')
+def cmd_goto(event, room_key):
+    "Go to a room, specified by internal id"
+    Room = event.user.room
+    room = Room.manager.get(room_key)
+    if not room:
+        event.user.write('Room "%s" not found.' % room_key)
+        return
+    
+    # Jump to the new room
+    room.enter(event.user)
+
+
+@commands.define_command(args=r'^(\w+)$', syntax='<user>')
+class cmd_bring(events.Handler):
+    "Bring a user to your room"
+    source_msg = 'You bring %(target)s to you'
+    target_msg = '%(source)s brings you to them'
+    
+    def handler_10_find(self, event, username):
+        self.target = event.user.manager.get_active_by_name(username)
+    
+    def handler_20_notify(self, event, username):
+        event.user.write(self.source_msg % {'target': self.target.name})
+        self.target.write(self.target_msg % {'source': event.user.name})
+    
+    def handler_30_move(self, event, username):
+        event.user.room.enter(self.target)
 
 
 ###############################################################################
@@ -103,12 +133,19 @@ def gen_nav_cmds(registry):
 ################################################################ Shortcut
 ###############################################################################
 
-def register_cmds(registry):
+def register_cmds(registry, admin=False):
     """
     Shortcut to register all standard room commands with default names
     
     Includes room-aware versions of the ones in contrib.users.register_cmds
+    
+    If using contrib.users.admin, set the optional argument ``admin=True``;
+    this will limit the use of sensitive commands to admin users.
     """
+    if_admin = None
+    if admin:
+        from ..users.admin import if_admin
+    
     # Standard commands referenced/overridden from contrib.users
     registry.register('say', cmd_say)
     registry.register('emote', cmd_emote)
@@ -120,6 +157,12 @@ def register_cmds(registry):
     # Room-specific commands
     registry.register('exits', cmd_exits)
     registry.register('where', cmd_where)
+    
+    # Admin commands
+    registry.register('goto', cmd_goto, can=if_admin)
+    registry.register('bring', cmd_bring, can=if_admin)
+    
+    # Nav commands
     gen_nav_cmds(registry)
 
 def register_aliases(registry):

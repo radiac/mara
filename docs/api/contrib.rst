@@ -58,7 +58,8 @@ examples above)::
 
     from mara.contrib.commands import register_cmds
     register_cmds(commands)
-
+    # Or if you are using mara.contrib.users.admin:
+    register_cmds(commands, admin=True)
 
 
 .. _contrib_commands_register:
@@ -444,12 +445,14 @@ There are also a set of commands for using the rooms:
     ``cmd_list_active_users``, ``cmd_list_all_users``
         Room-aware versions of the standard :ref:`module_contrib_users`
         commands
-    
     ``cmd_exits`` (eg ``exits``)
         List available exits
-    
     ``cmd_where`` (eg ``where [<user>]``)
         Show where you are (or another user is)
+    ``cmd_goto`` (eg ``goto <room_key>``)
+        Jump to another room (normally admin only)
+    ``cmd_bring`` (eg ``bring <user>``)
+        Bring a user to the room (normally admin only)
 
 These can be registered individually, eg::
 
@@ -467,6 +470,8 @@ using default command names (see command examples above)::
 
     from mara.contrib.rooms import register_cmds
     register_cmds(commands)
+    # Or if you are using mara.contrib.users.admin:
+    register_cmds(commands, admin=True)
 
 There are also a function to define common aliases; it will add the standard
 communication aliases from :ref:`module_contrib_users`, as well as ``l`` to

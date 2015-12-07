@@ -184,7 +184,7 @@ This is used internally by :ref:`method_storage_field_serialise`; you should
 normally just access the attribute directly on the store instance.
 
 
-.. _method_storage_field_get_value:
+.. _method_storage_field_set_value:
 
 ``set_value(obj, name)``
 ~~~~~~~~~~~~~~~~~~~~~~~~

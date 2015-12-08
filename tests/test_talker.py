@@ -43,9 +43,9 @@ class TalkerClient(Client):
         self.assertClosed()
 
 
-class ChatTest(TestCase):
+class TalkerTest(TestCase):
     """
-    Test the example chat server
+    Test the example talker
     
     Multiple tests of same service to check service.stop() cleans up correctly.
     """

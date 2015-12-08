@@ -96,10 +96,11 @@ Roadmap
 
 Planned but not scheduled for a specific version:
 * Python 3 support
+* Unicode support
 * More contrib modules:
-  * Multiple rooms
   * Items and inventory
-  * Combat (health and weapons)
+  * Combat (health, weapons and armour)
   * Improved natural language processing tools
+  * NPCs
 * SSH support
 * Support for poll, epoll

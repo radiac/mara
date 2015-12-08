@@ -131,7 +131,7 @@ You can use a different timer class by passing it as the first argument,
 
 See :doc:`timers` for more details of how timers work, including how to write
 :ref:`timer handlers <timer_handlers>`, and a list of the built-in
-:ref`timer classes <timer_classes>` for you to use.
+:ref:`timer classes <timer_classes>` for you to use.
 
 Arguments:
 
@@ -421,9 +421,9 @@ The class :ref:`class_service` is a subclass of ``ClientContainer``, so that
 you can easily write to and filter all clients connected to the service.
 
 Rather than using a container directly, you should normally create a subclass
-which also inherits from :ref:`class_storage_store`` (for containers with
+which also inherits from :ref:`class_storage_store` (for containers with
 persistent state, eg talker or mud rooms which have flags or items) or
-:ref:`class_storage_sessionstore`` (for containers without persistent state,
+:ref:`class_storage_sessionstore` (for containers without persistent state,
 eg chat channels), changing the ``clients`` attribute into a list field::
 
     class Room(storage.Store):
@@ -539,7 +539,7 @@ Classes available for you to use are:
     ``normal``
         Reset all styles and colours
     
-    ``bold``, ``faint``, ``italic``, ``underline``, ``negative, ``strike``
+    ``bold``, ``faint``, ``italic``, ``underline``, ``negative``, ``strike``
         Font styles
     
     ``red``, ``green``, ``yellow``, ``blue``, ``magenta``, ``cyan``, ``white``

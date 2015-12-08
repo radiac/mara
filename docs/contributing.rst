@@ -18,7 +18,7 @@ it to a virtualenv::
     virtualenv mara
     cd mara
     source bin/activate
-    pip install -e git://github.com/USERNAME/mara.git#egg=mara[full],dev]
+    pip install -e git://github.com/USERNAME/mara.git#egg=mara[full,dev]
 
 (replacing ``USERNAME`` with your username).
 

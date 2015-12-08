@@ -26,7 +26,7 @@ You can now build and run your service, as described in :doc:`introduction`.
     If you prefer, you can instead install the development version direct from
     github::
    
-        pip install -e git+https://github.com/radiac/mara.git#egg=mara
+        pip install -e git+https://github.com/radiac/mara.git#egg=mara[full]
     
     This may contain changes made since the last version was released -
     these will be listed in the :ref:`changelog`.
@@ -51,6 +51,9 @@ the :ref:`angel`::
     python echo.py
     python chat.py
     mara talker.py
+    mara mud.py
+
+All examples listen to 127.0.0.1 on port 9000.
 
 
 Keeping Mara running

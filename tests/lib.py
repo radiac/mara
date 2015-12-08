@@ -15,11 +15,19 @@ from mara.settings import defaults
 
 __all__ = ['unittest', 'TestCase', 'TestService', 'Client', 'hr']
 
-DEBUG = True
 
+# Debug everything that we do
+DEBUG = False
+
+# Debug everything that telnetlib does
+DEBUG_TN = False
+
+# Limits for attempting to start the server, and to connect to the server
 ATTEMPT_MAX = 10
 ATTEMPT_SLEEP = 0.1
-ATTEMPT_TIMEOUT = ATTEMPT_SLEEP
+
+# Timeout for socket reading
+ATTEMPT_TIMEOUT = 1
 
 # A string which will not be returned from the server
 IMPOSSIBLE = '$$--__--$$'
@@ -42,7 +50,12 @@ class TestCase(unittest.TestCase):
         Assert equal, but stripping the trailing newline from response
         """
         if not response.endswith(NEWLINE):
-            self.fail('Response does not end in newline sequence')
+            self.fail(
+                (
+                    'Response does not end in newline sequence: '
+                    'expected "%s", received "%s"'
+                ) % (expected, response)
+            )
         return self.assertEqual(response[:-len(NEWLINE)], expected)
 
 thread_id = 0
@@ -159,6 +172,11 @@ class Client(object):
                     raise
             else:
                 break
+        
+        # Turn on telnetlib debugging
+        if DEBUG_TN:
+            self.tn.set_debuglevel(1)
+
     
     def close(self):
         self.tn.close()
@@ -176,13 +194,15 @@ class Client(object):
         """
         Read the next line
         """
-        response = self.tn.read_until(NEWLINE)
+        response = self.read_until(NEWLINE, timeout=ATTEMPT_TIMEOUT)
         if DEBUG:
             print "test read>:", response[:-len(NEWLINE)]
         return response
     
     # Map fns through to tn
-    read_until = property(lambda self: self.tn.read_until)
+    def read_until(self, expected, timeout=ATTEMPT_TIMEOUT):
+        return self.tn.read_until(expected, timeout)
+    
     read_all = property(lambda self: self.tn.read_all)
 
 

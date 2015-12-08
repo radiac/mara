@@ -43,6 +43,8 @@ class Logger(object):
         
         # If no levels, logging is disabled
         if not levels:
+            self.levels = []
+            self.exclude = []
             return
         
         # See what to listen to and what to exclude

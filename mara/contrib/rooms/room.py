@@ -122,8 +122,9 @@ class BaseRoom(storage.Store, container.ClientContainer):
         self.intro = intro
         self.desc = desc
         
-        # Tell exits which room they're bound to
-        if self.exits:
+        # Tell exits which room they're bound to - unless they already know
+        # their room, which would happen if this is a clone
+        if self.exits and not self.exits.room:
             self.exits.room = self
             
         # Would be nice to load saved data here, but we can't do that until

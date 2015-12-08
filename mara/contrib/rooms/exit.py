@@ -86,7 +86,8 @@ class Exit(object):
         if not related:
             # Look for related exit on target's exits
             for target_name, target_exit in self.target.exits.items():
-                if target_exit.target == self.source:
+                # Compare by key so this matches cloned rooms
+                if target_exit.target.key == self.source.key:
                     related = target_exit
                     break
         self.__dict__['related'] = related

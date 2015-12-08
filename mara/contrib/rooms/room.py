@@ -116,9 +116,9 @@ class BaseRoom(storage.Store, container.ClientContainer):
         
         # Introduction and description can be a single line, or lists of lines
         if isinstance(intro, basestring):
-            intro = [intro]
+            intro = [line.strip() for line in intro.splitlines()]
         if isinstance(desc, basestring):
-            desc = [desc]
+            desc = [line.strip() for line in desc.splitlines()]
         self.intro = intro
         self.desc = desc
         

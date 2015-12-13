@@ -38,7 +38,7 @@ store, use the :ref:`class_storage_sessionstore` base class when defining it.
 Each store has one or more fields to hold data; once you have a ``store``
 instance, you can get and set data by accessing the field attributes. You can
 define a field with ``session=True`` to make it a temporary session variable.
-A plain :ref:`class_storage_field`` stores any variable and does not attempt to
+A plain :ref:`class_storage_field` stores any variable and does not attempt to
 do any type coercion - just make sure it can be serialised to JSON if it's a
 permanent field. Custom fields can be written to serialise and deserialise more
 complex data. Field names cannot start with an underscore, and cannot be one of
@@ -137,7 +137,7 @@ least:
 
     ``store``
         The internal store class name, usually the class name in lowercase -
-        see  :ref:`attr_storage_store__name` for more details
+        see  :ref:`attr_storage_store_name` for more details
     
     ``key``
         The key for the object
@@ -172,7 +172,7 @@ An example storage class::
             self.desc = desc
             self.items = items
 
-Defining a store in code:
+Defining a store in code::
 
     lobby = Room(
         key='lobby',
@@ -181,7 +181,7 @@ Defining a store in code:
         items=['cat', 'table', 'plant'],
     )
 
-Defining the same store in a YAML file:
+Defining the same store in a YAML file::
 
     store:  room
     key:    lobby
@@ -211,7 +211,7 @@ This must be set to the service responsible for this storage class.
 
 Abstract classes do not need a ``service``.
 
-.. _attr_storage_store__name:
+.. _attr_storage_store_name:
 
 ``_name``
 ~~~~~~~~~

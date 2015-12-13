@@ -547,7 +547,7 @@ YAML rooms::
 See :source:`examples/mud/rooms.py` for how to safely use relative paths when
 specifying the YAML file to load.
 
-The YAML room definition would look like this:
+The YAML room definition would look like this::
 
     store:  room
     key:    lobby

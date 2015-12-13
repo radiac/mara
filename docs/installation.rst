@@ -17,8 +17,9 @@ or to install with optional dependencies::
 
 This will install the following additional modules:
 
-* ``bcrypt`` for provides encryption in :ref:`module_contrib_users_password`
 * ``dateutil`` for the date-based timer :ref:`class_timers_date_datetimer`
+* ``pyyaml`` for the :ref:`YAML store instantiator <storage_yaml_instantiator>`
+* ``bcrypt`` for provides encryption in :ref:`module_contrib_users_password`
 
 You can now build and run your service, as described in :doc:`introduction`.
 

@@ -44,6 +44,154 @@ permanent field. Custom fields can be written to serialise and deserialise more
 complex data. Field names cannot start with an underscore, and cannot be one of
 the reserved store names (the attributes and methods listed below).
 
+Example
+-------
+
+A simple User store (although you don't need to write one of these yourself -
+see :ref:`module_contrib_users` for a fully-featured implementation).
+
+Define a store class::
+
+    from mara import storage
+    class User(storage.Store):
+        # Define class with the session instance it is tied to
+        service = service
+        
+        # Add a couple of fields to be saved
+        name = storage.Field()
+        desc = storage.Field(default='A poorly-defined blob')
+        
+        # Add a session field which will only be held in memory
+        client = storage.Field(session=True)
+        
+        # Add some helpful methods for this storage class
+        def write(self, *msg):
+        
+
+Use the store you have defined to create a store instance::
+
+    # Every store instance needs a key, and you can also pass in field values
+    user = User(key=name, name=name)
+    
+    # Set field values directly on the object
+    user.client = event.client
+    
+    # Save the object to disk
+    user.save()
+
+Get stores::
+    
+    # Active stores (the ones held in memory)
+    active_users = User.manager.active()
+    
+    # Saved stores (the ones only on disk, excluding ones in memory)
+    offline_users = User.manager.saved()
+    
+    # All stores (in memory and on disk)
+    all_users = User.manager.all()
+
+Look up a particular user by key::
+
+    # If you only want them if they're active:
+    # Returns None if not found
+    user = User.manager.get('bob')
+    
+    # Get them from active or disk
+    # Returns None if not found
+    user = User.manager.load('bob')
+
+
+.. _storage_yaml_instantiator:
+
+YAML instantiator
+=================
+
+You can instantiate storage objects using YAML to define the keyword arguments
+for the constructor. This can be used as an alternative way to provide defaults
+for fields, but is more useful if your constructor takes additional keyword
+arguments - particularly for objects which have text-heavy hard-coded values,
+or if you want to allow people to define store items without giving them access
+to the code. For example, this can be used for room or item descriptions
+(see :ref:`contrib_rooms_define` for how the ``rooms`` contrib module uses
+this).
+
+It requires PyYAML::
+
+    pip install pyyaml
+
+To use the Mara YAML instantiator, pass it the service that the stores are
+bound to, and the path to the YAML file::
+
+    from mara.storage import yaml
+    yaml.instantiate(service, '/path/to/rooms.yaml')
+
+You will normally call this from your code as it is instantiating, before you
+call ``service.run()``. If you want to use a relative path (using the
+:ref:`setting_root_path` setting), you will need to run the instantiator after
+the ``PreStart`` event once settings have been collected - see
+:source:`examples/mud/rooms.py` for an example.
+
+A YAML file can contain multiple documents, separated by ``---``; the Mara YAML
+instantiator expects each document to be a store object, so must provide at
+least:
+
+    ``store``
+        The internal store class name, usually the class name in lowercase -
+        see  :ref:`attr_storage_store__name` for more details
+    
+    ``key``
+        The key for the object
+
+It can also take any keyword arguments for the constructor, ie fields, or any
+custom keyword arguments your ``__init__()`` method accepts.
+
+
+See the
+`PyYAML documentation <http://pyyaml.org/wiki/PyYAMLDocumentation#YAMLsyntax>`_
+for more information about supported YAML syntax.
+
+
+Example
+-------
+
+An example storage class::
+    
+    class Room(storage.store):
+        service = service
+        
+        # Non-field values
+        name = None
+        desc = None
+        
+        # Saved field with room-specific defaults
+        items = storage.Field()
+    
+        def __init__(self, key, name, desc, items, **kwargs):
+            super(Room, self).__init__(key, **kwargs)
+            self.name = name
+            self.desc = desc
+            self.items = items
+
+Defining a store in code:
+
+    lobby = Room(
+        key='lobby',
+        name='Lobby',
+        desc='You are in the lobby.',
+        items=['cat', 'table', 'plant'],
+    )
+
+Defining the same store in a YAML file:
+
+    store:  room
+    key:    lobby
+    name:   Lobby
+    desc:   You are in the lobby.
+    items:
+    - cat
+    - table
+    - plant
+
 
 Storage classes
 ===============
@@ -62,6 +210,20 @@ Methods and attributes:
 This must be set to the service responsible for this storage class.
 
 Abstract classes do not need a ``service``.
+
+.. _attr_storage_store__name:
+
+``_name``
+~~~~~~~~~
+The internal name of the store, used as the directory name for saved stores,
+and used as the key to look up a store in the ``service.stores`` dict.
+
+This will normally be set automatically by converting the class name to
+lowercase and stripping all characters which aren't a-z, 0-9 or underscore
+(``_``) - eg the internal name for a class named ``User`` is ``user``.
+
+Alternatively you can set this variable yourself to force a different internal
+name.
 
 
 ``abstract``
@@ -321,3 +483,5 @@ This is called by the store when the class is first created. It normally
 creates and assigns a new instance of the manager. If your custom manager's
 constructor takes additional arguments, you should override
 ``__copy__`` to pass these to the new instance.
+
+

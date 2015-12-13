@@ -83,7 +83,7 @@ class Manager(object):
         self._started = True
         for obj in self.cache.values():
             obj._pre_start(event)
-        
+    
     def get(self, keys):
         """
         Get a cached object. Similar to load(), but only returns from the

@@ -20,6 +20,7 @@ Feature:
 * Added class-based event handlers, with support for use as command functions -
   see :ref:`class_events_handler`
 * Added room support - see :ref:`module_contrib_rooms`
+* Added YAML-based store instantiation - see :ref:`storage_yaml_instantiator`
 * Added command aliases - see :ref:`contrib_commands_aliases`
 * Refactored user-related commands from talker example into
   :source:`mara/contrib/users/commands.py`
@@ -37,6 +38,8 @@ Removed:
 Internal:
 
 * Added client containers
+* Added ``active`` to the list of reserved store field names
+* Changed test root dir to ``examples``
 
 
 0.4.0, 2015-11-21
@@ -158,3 +161,6 @@ now only needs the command registry, eg ``gen_social_cmds(commands)``.
 
 The undocumented colour functions and ``HR`` have been removed from ``util`` in
 favour of the new :ref:`module_styles` classes.
+
+``Store`` classes now cannot have fields named ``active`` - it is now a
+reserved word. If you have a field with this name, you will need to rename it.

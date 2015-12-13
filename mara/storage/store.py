@@ -12,7 +12,7 @@ __all__ = ['Store']
 
 # List of reserved words for Store objects
 RESERVED = [
-    'service', 'key', 'abstract', 'manager',
+    'service', 'key', 'active', 'abstract', 'manager',
     'to_dict', 'to_json', 'from_dict', 'from_json', 'save', 'load',
 ]
 
@@ -147,11 +147,14 @@ class Store(object):
     #   _permanent_fields   List of names of fields which can be saved
     #   _session_fields     List of names of fields which cannot be saved
     
-    def __init__(self, key, active=True):
+    def __init__(self, key, active=True, **kwargs):
         """
         Initialise a stored object
         
         If active is True, will be added to the manager's active list.
+        
+        Other keyword arguments must be field values, and will be set on the
+        object if provided.
         """
         # Support multiple inheritance
         super(Store, self).__init__()
@@ -169,6 +172,15 @@ class Store(object):
         # Tell fields to initialise themselves
         for field_name, field in self._fields.items():
             field.contribute_to_instance(self, field_name)
+        
+        # Now set any field values
+        for field_name, value in kwargs.items():
+            if field_name not in self._fields:
+                raise TypeError(
+                    "__init__() got an unexpected keyword argument '%s'" %
+                    field_name
+                )
+            setattr(self, field_name, value)
         
         # Ensure manager knows about it
         if active:

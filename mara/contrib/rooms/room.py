@@ -2,6 +2,7 @@
 Mara rooms
 """
 from . import constants
+from .exit import Exits
 from ... import container
 from ... import storage 
 from ... import styles
@@ -111,7 +112,6 @@ class BaseRoom(storage.Store, container.ClientContainer):
         # Store room instance arguments
         self.name = name
         self.short = short
-        self.exits = exits
         self.clone = clone
         
         # Introduction and description can be a single line, or lists of lines
@@ -121,6 +121,12 @@ class BaseRoom(storage.Store, container.ClientContainer):
             desc = [line.strip() for line in desc.splitlines()]
         self.intro = intro
         self.desc = desc
+        
+        # Ensure exits is an Exits object - it may not be if loading from YAML
+        # Exits is a subclass of dict
+        if isinstance(exits, dict) and not isinstance(exits, Exits):
+            exits = Exits(**exits)
+        self.exits = exits
         
         # Tell exits which room they're bound to - unless they already know
         # their room, which would happen if this is a clone

@@ -1,0 +1,19 @@
+store:  room
+key:    pool
+name:   Pool
+short:  by the pool
+desc:   A narrow path follows the edge of the pool around the room.
+exits:
+  south:    lobby
+---
+store:  room
+key:    clone_zone
+name:   Clone zone
+clone:  true
+short:  in the clone zone
+intro:  Everything shimmers as reality seems to distort for a moment.
+desc:   >
+  In the clone zone, no-one can hear you scream. Or, in fact, do
+  anything at all. You are forever alone.
+exits:
+  west: lobby

@@ -519,10 +519,47 @@ moving in the cardinal directions::
 Defining rooms
 --------------
 
-Rooms are defined in code as instances of your ``Room`` store. See
+Rooms can be defined in code as instances of your ``Room`` store. See
 :ref:`class_contrib_rooms_baseroom` for details. Rooms are linked to each other
 by instances of :ref:`class_contrib_rooms_exit`, managed by the
 :ref:`class_contrib_rooms_exits` class.
+
+For example::
+
+    from mara.contrib.rooms import BaseRoom, Exits
+    class Room(BaseRoom):
+        service=service
+
+    room_lobby = Room(
+        'lobby',
+        name='Lobby',
+        desc='You are in the lobby.',
+        exits=Exits(north='pool', south='road'),
+    )
+    
+
+Rooms can also be defined in YAML, using the YAML instantiator. To load your
+YAML rooms::
+
+    from mara.storage import yaml
+    yaml.instantiate(service, '/path/to/rooms.yaml')
+
+See :source:`examples/mud/rooms.py` for how to safely use relative paths when
+specifying the YAML file to load.
+
+The YAML room definition would look like this:
+
+    store:  room
+    key:    lobby
+    name:   Lobby
+    desc:   You are in the lobby.
+    exits:
+      north:    pool
+      south:    road
+
+To define multiple rooms in a single file, separate each store definition with
+the YAML document separator, ``---``. See :ref:`storage_yaml_instantiator` for
+more details.
 
 
 .. _contrib_rooms_referencing:

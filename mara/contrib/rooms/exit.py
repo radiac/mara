@@ -145,8 +145,9 @@ class Exits(dict):
                         a direction without an exit. If not set, uses default
                         defined on class.
             <direction> Exit definition. The key must be one of the directions
-                        defined in contrib.rooms.constants.DIRECTIONS; the
-                        value must be an Exit instance.
+                        defined in contrib.rooms.constants.DIRECTIONS. The
+                        value should be an Exit instance; if it is not, it
+                        will be used to instantiate one, eg ``Exit(value)``.
         
         Example::
         

@@ -6,7 +6,7 @@ from .core import service
 class Room(BaseRoom):
     service=service
 
-
+# Define a room in code
 room_lobby = Room(
     'lobby',
     name='Lobby',
@@ -22,29 +22,13 @@ room_lobby = Room(
     ),
 )
 
-room_pool = Room(
-    'pool',
-    name='Pool',
-    short='by the pool',
-    desc="A narrow path follows the edge of the pool around the room.",
-    exits=Exits(
-        south=Exit('lobby'),
-    ),
-)
-
-clone_zone = Room(
-    'clone_zone',
-    name='Clone zone',
-    clone=True,
-    intro=(
-        "Everything shimmers as reality seems to distort for a moment."
-    ),
-    short='in the clone zone',
-    desc=(
-        "In the clone zone, no-one can hear you scream. Or, in fact, do "
-        "anything at all. You are forever alone."
-    ),
-    exits=Exits(
-        west=Exit('lobby'),
-    ),
-)
+# Load other rooms using yaml instantiator
+from mara.storage.yaml import instantiate
+@service.listen(events.PreStart)
+def instantiate_rooms(event):
+    """
+    Now the service has collected its settings, make the relative path
+    absolute and instantiate the rooms defined in YAML
+    """
+    path = service.settings.abspath('mud/rooms.yaml')
+    instantiate(service, path)

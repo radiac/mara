@@ -106,15 +106,22 @@ class Settings(object):
 
     def get_path(self, setting):
         """
-        Return a setting as an absolute path
+        Return a setting's value as an absolute path
         """
-        setting_path = getattr(self, setting)
-        if not isinstance(setting_path, basestring):
-            return setting_path
+        path = getattr(self, setting)
+        if not isinstance(path, basestring):
+            return path
+        return self.abspath(path)
+    
+    def abspath(self, path):
+        """
+        Ensure that a path is absolute
         
+        Uses the service's root path if it is relative.
+        """
         # Return it if it's already an absolute path
-        if setting_path == os.path.abspath(setting_path):
-            return setting_path
+        if path == os.path.abspath(path):
+            return path
         
         # Get root path, or use script directory
         root_path = getattr(self, 'root_path', None)
@@ -122,4 +129,4 @@ class Settings(object):
             root_path = sys.path[0]
         
         # Add root path to our path
-        return os.path.normpath(os.path.join(root_path, setting_path))
+        return os.path.normpath(os.path.join(root_path, path))

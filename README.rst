@@ -1,9 +1,6 @@
-====
-Mara
-====
-
-A framework for network services, talkers and MUDs
-==================================================
+=======================================
+Mara - Python network service framework
+=======================================
 
 An event-based python framework designed for building TCP/IP services, such as
 echo servers, flash policy servers, chatrooms, talkers and MUDs. Batteries
@@ -29,10 +26,11 @@ Features
 
   * command manager
   * storage system
-  * accounts and login helpers
   * natural language processing tools
+  * accounts and login helpers
+  * rooms
 
-Version 0.5.0, in development. Supports Python 2.7.
+Version 0.5.0. Supports Python 2.7.
 
 See the `Documentation <http://radiac.net/projects/mara/documentation/>`_
 for details of how Mara works.

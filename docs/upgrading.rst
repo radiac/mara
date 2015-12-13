@@ -12,8 +12,8 @@ For instructions for upgrading from a specific version, see
 Changelog
 =========
 
-0.5.0, In development
----------------------
+0.5.0, 2015-12-13
+-----------------
 
 Feature:
 

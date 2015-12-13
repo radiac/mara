@@ -1,7 +1,7 @@
 import os
 from setuptools import setup
 
-VERSION = "0.4.0"
+VERSION = "0.5.0"
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
@@ -10,7 +10,7 @@ setup(
     name = "mara",
     version = VERSION,
     author = "Richard Terry",
-    author_email = "python@richardterry.co.uk",
+    author_email = "code@radiac.net",
     description = ("A framework for network services, talkers and MUDs"),
     license = "BSD",
     keywords = "socket telnet",

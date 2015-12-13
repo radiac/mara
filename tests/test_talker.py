@@ -8,7 +8,7 @@ import os
 import shutil
 
 
-TALKER_STORE = 'test_talker_store'
+TALKER_STORE = os.path.join(EXAMPLES_DIR, 'test_talker_store')
 
 class TalkerTestService(TestService):
     settings = TestService.settings + mara.settings.Settings(
@@ -51,7 +51,7 @@ class TalkerTest(TestCase):
     """
     def remove_store(self):
         # Sanity check store so we don't delete the wrong thing
-        if not TALKER_STORE or '/' in TALKER_STORE:
+        if not TALKER_STORE or not CWD or not TALKER_STORE.startswith(CWD):
             raise ValueError('Invalid talker store')
         
         # Ensure test store doesn't exist
@@ -102,7 +102,7 @@ class TalkerTest(TestCase):
         client.quit()
         
     def test_multiple(self):
-        "Test chat multiple connections"
+        "Test talker multiple connections"
         # Create accounts
         ann = TalkerClient(self)
         ann.create_account('ann', 'password1')

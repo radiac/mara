@@ -13,7 +13,10 @@ from mara import styles
 from mara.settings import defaults
 
 
-__all__ = ['unittest', 'TestCase', 'TestService', 'Client', 'hr']
+__all__ = [
+    'unittest', 'TestCase', 'TestService', 'Client', 'hr',
+    'CWD', 'EXAMPLES_DIR', 
+]
 
 
 # Debug everything that we do
@@ -32,6 +35,13 @@ ATTEMPT_TIMEOUT = 1
 # A string which will not be returned from the server
 IMPOSSIBLE = '$$--__--$$'
 NEWLINE = '\r\n'
+
+# Example scripts expect themselves to be in the root path
+# Find the examples dir and use that as the root path
+CWD = os.getcwd()
+EXAMPLES_DIR = os.path.join(CWD, 'examples')
+if not os.path.isdir(EXAMPLES_DIR):
+    raise ValueError('Examples dir not found')
 
 
 class FakeClient:
@@ -66,11 +76,14 @@ class TestService(object):
     
     Pass settings on the constructor, or set them on the settings attribute
     """
+    # Global settings
     settings = mara.settings.Settings(
-        root_path=os.getcwd(),
+        root_path=EXAMPLES_DIR,
         log='all' if DEBUG else False,
         settings_collect_args=False,
     )
+    
+    stores = property(lambda self: self.service.stores)
     
     def __init__(self, *args, **kwargs):
         """

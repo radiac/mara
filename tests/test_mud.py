@@ -7,10 +7,9 @@ import os
 import shutil
 
 from examples import mud
-from examples.mud.rooms import room_lobby, room_pool, clone_zone
+from examples.mud.rooms import room_lobby
 
-MUD_STORE = 'test_mud_store'
-
+MUD_STORE = os.path.join(EXAMPLES_DIR, 'test_mud_store')
 
 
 class MudTestService(TestService):
@@ -52,8 +51,8 @@ class MudTest(TestCase):
     """
     def remove_store(self):
         # Sanity check store so we don't delete the wrong thing
-        if not MUD_STORE or '/' in MUD_STORE:
-            raise ValueError('Invalid mud store')
+        if not MUD_STORE or not CWD or not MUD_STORE.startswith(CWD):
+            raise ValueError('Invalid talker store')
         
         # Ensure test store doesn't exist
         if os.path.isdir(MUD_STORE):
@@ -118,6 +117,10 @@ class MudTest(TestCase):
         """
         Test rooms, exits, movement and clone rooms
         """
+        # Collect yaml rooms
+        room_pool = self.service.stores['room'].manager.get('pool')
+        clone_zone = self.service.stores['room'].manager.get('clone_zone')
+        
         # Create accounts
         ann, bob, cat = self.create_accounts()
         

@@ -2,8 +2,8 @@
 mara.egg-info
 examples/talker_store
 examples/mud_store
-test_talker_store
-test_mud_store
+examples/test_talker_store
+examples/test_mud_store
 .coverage*
 .tox
 htmlcov

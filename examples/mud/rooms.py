@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from mara.contrib.rooms import BaseRoom, Exits, Exit, FakeExit
 from mara import events
 

@@ -5,6 +5,8 @@ Expects user_store to be a contrib.users.BaseUser subclass; user objects should
 have .name and .client attributes, and an optional .gender attribute for
 correct use of pronouns.
 """
+from __future__ import unicode_literals
+
 from ..language import DirectedAction, SOCIAL_VERBS
 from .core import Command
 

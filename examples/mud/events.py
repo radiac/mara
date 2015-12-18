@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from mara import events
 
 from .core import service

@@ -1,6 +1,8 @@
 """
 Pronoun mappings
 """
+from __future__ import unicode_literals
+
 
 # First and second person
 FIRST = 'first'

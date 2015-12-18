@@ -1,6 +1,8 @@
 """
 Mara storage fields
 """
+from __future__ import unicode_literals
+
 import copy
 
 from ..connection.client import Client, client_registry

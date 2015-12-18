@@ -1,6 +1,7 @@
 """
 Client-aware string styling and effects
 """
+from __future__ import unicode_literals
 
 __all__ = [
     'String',

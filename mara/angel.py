@@ -3,6 +3,8 @@ Angel
 
 Wrapper to start mara process, keep it running, and manage restarts
 """
+from __future__ import unicode_literals
+
 import multiprocessing
 from multiprocessing.connection import Listener, Client
 import os
@@ -12,9 +14,8 @@ import subprocess
 import sys
 import time
 
-from mara import settings
-from mara import timers
-from mara import logger
+from . import settings
+from . import logger
 
 
 # Commands sent by process to angel

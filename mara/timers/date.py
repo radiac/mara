@@ -3,6 +3,8 @@ Date timer
 
 Requires dateutil module: pip install python-dateutil
 """
+from __future__ import unicode_literals
+
 import datetime
 
 try:

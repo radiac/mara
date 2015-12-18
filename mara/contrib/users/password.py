@@ -3,6 +3,8 @@ Password mixin for BaseUser
 
 Requires bcrypt module: pip install bcrypt
 """
+from __future__ import unicode_literals
+
 import hashlib
 
 try:

@@ -3,14 +3,11 @@ Mara process manager
 
 Controls settings, server, and loaded modules
 """
+from __future__ import unicode_literals
+
 from collections import defaultdict
 import datetime
 import inspect
-import multiprocessing
-from multiprocessing import connection as multiprocessing_connection
-import os
-import socket
-import subprocess
 import sys
 import time
 

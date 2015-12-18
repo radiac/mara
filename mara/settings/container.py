@@ -1,6 +1,8 @@
 """
 Mara settings container
 """
+from __future__ import unicode_literals
+
 import os
 from types import ModuleType
 import sys

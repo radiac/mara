@@ -1,6 +1,8 @@
 """
 Mud communication and commands
 """
+from __future__ import unicode_literals
+
 from .core import service
 
 # Add command handler

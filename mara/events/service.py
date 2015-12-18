@@ -1,6 +1,8 @@
 """
 Service events
 """
+from __future__ import unicode_literals
+
 from .base import Event
 
 __all__ = [
@@ -8,6 +10,7 @@ __all__ = [
     'PreStart', 'PostStart', 'PreStop', 'PostStop',
     'PreRestart', 'PostRestart',
 ]
+
 
 class Service(Event):       "Service event"
 class PreStart(Service):    "Service starting"

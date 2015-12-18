@@ -1,8 +1,9 @@
 """
 Room-related commands
 """
-from ..users import commands as user_cmds
+from __future__ import unicode_literals
 
+from ..users import commands as user_cmds
 
 from . import constants
 from .. import commands
@@ -22,7 +23,6 @@ __all__ = [
     # Shortcut
     'register_cmds', 'register_aliases',
 ]
-
 
 
 ###############################################################################

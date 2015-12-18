@@ -1,6 +1,8 @@
 """
 Handler class
 """
+from __future__ import unicode_literals
+
 import inspect
 
 __all__ = ['Handler']

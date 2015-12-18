@@ -1,6 +1,8 @@
 """
 Client events
 """
+from __future__ import unicode_literals
+
 from .base import Event
 
 __all__ = ['Client', 'Connect', 'Receive', 'Disconnect']

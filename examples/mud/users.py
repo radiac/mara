@@ -3,6 +3,7 @@ Add user support to service
 
 Must be imported before any events are bound
 """
+from __future__ import unicode_literals
 
 from mara.contrib.users import BaseUser
 from mara.contrib.users.password import PasswordMixin

@@ -3,6 +3,7 @@ Gender value for user
 
 Used to generate pronouns
 """
+from __future__ import unicode_literals
 
 from ... import storage
 from ..commands import define_command

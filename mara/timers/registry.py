@@ -1,6 +1,8 @@
 """
 Timer registry
 """
+from __future__ import unicode_literals
+
 
 class Registry(object):
     def __init__(self, service):

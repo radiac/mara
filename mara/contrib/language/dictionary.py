@@ -1,6 +1,7 @@
 """
 Dictionary of socials and verbs
 """
+from __future__ import unicode_literals
 
 # Social verbs with default prepositions
 SOCIAL_PREPOSITIONS = {

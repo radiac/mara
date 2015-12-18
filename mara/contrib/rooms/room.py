@@ -1,6 +1,8 @@
 """
 Mara rooms
 """
+from __future__ import unicode_literals
+
 from . import constants
 from .exit import Exits
 from ... import container

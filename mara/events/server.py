@@ -1,9 +1,12 @@
 """
 Server events
 """
+from __future__ import unicode_literals
+
 from .base import Event
 
 __all__ = ['Server', 'ListenStart', 'Suspend', 'ListenStop']
+
 
 class Server(Event):        "Server event"
 

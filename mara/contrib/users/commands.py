@@ -7,12 +7,12 @@ to write to container other than the service.
 Commands which have a specific display style are also handlers, so the display
 code can be overridden while still using the same logic for preparing data.
 """
+from __future__ import unicode_literals
 
 from ..commands import define_command, MATCH_STR, RE_LIST
 from ... import events
 from ... import util
 from ... import styles
-
 
 __all__ = [
     # Standard commands

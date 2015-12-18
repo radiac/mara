@@ -1,9 +1,10 @@
 """
 Mara room exits
 """
+from __future__ import unicode_literals
+
 from . import constants
 from ... import util
-
 
 __all__ = ['Exits', 'Exit', 'FakeExit', 'ExitError']
 

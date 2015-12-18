@@ -11,6 +11,7 @@ restriction, or set it manually:
   to:
     "is_admin": true
 """
+from __future__ import unicode_literals
 
 from ..commands import define_command, RE_WORD
 from ... import storage

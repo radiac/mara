@@ -1,6 +1,8 @@
 """
 Registry for a data store
 """
+from __future__ import unicode_literals
+
 import copy
 import os
 

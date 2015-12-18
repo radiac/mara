@@ -1,6 +1,7 @@
 """
 Rooms for Mara
 """
+from __future__ import unicode_literals
 
 from .constants import *
 from .room import *

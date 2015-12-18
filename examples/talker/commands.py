@@ -1,6 +1,8 @@
 """
 Talker-style communication and commands
 """
+from __future__ import unicode_literals
+
 from .core import service, User
 
 # Add command handler

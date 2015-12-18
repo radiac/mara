@@ -1,12 +1,15 @@
 """
 Useful functions
 """
+from __future__ import unicode_literals
 
 import datetime
-import re
+
+TIME_UNITS = ['day', 'hour', 'minute', 'second']
+
 
 def detail_error():
-    from traceback import print_exc, format_exception
+    from traceback import format_exception
     import sys
     return [
         e.strip() for e in
@@ -22,15 +25,13 @@ def pretty_list(data):
         last = ' and ' + last
     return ', '.join(rest) + last
 
-
-time_units = ['day', 'hour', 'minute', 'second']
 def pretty_age(seconds=None, now=None, then=None):
     if not seconds:
         seconds = now - then
     
     sec_delta = datetime.timedelta(seconds = now - then)
     age = dict(zip(
-        time_units,
+        TIME_UNITS,
         [
             sec_delta.days,
             sec_delta.seconds // 3600,
@@ -38,7 +39,7 @@ def pretty_age(seconds=None, now=None, then=None):
             sec_delta.seconds % 60
         ]
     ))
-    for attr in time_units:
+    for attr in TIME_UNITS:
         if age[attr] > 0:
             return "%d %s%s ago" % (age[attr], attr, '' if age[attr]==1 else 's')
     return '0 seconds ago'

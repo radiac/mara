@@ -1,6 +1,7 @@
 """
 Extensions for users
 """
+from __future__ import unicode_literals
 
 from .exit import ExitError
 from .room import BaseRoom

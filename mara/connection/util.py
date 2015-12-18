@@ -1,6 +1,8 @@
 """
 Connection utils
 """
+from __future__ import unicode_literals
+
 from multiprocessing.reduction import reduce_handle, rebuild_handle
 import socket
 

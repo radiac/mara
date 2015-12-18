@@ -1,6 +1,8 @@
 """
 Mara events
 """
+from __future__ import unicode_literals
+
 
 class Event(object):
     "Non-specific event"

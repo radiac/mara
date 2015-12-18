@@ -1,6 +1,8 @@
 """
 English natural language processing
 """
+from __future__ import unicode_literals
+
 import re
 
 from .dictionary import *

@@ -67,9 +67,7 @@ class Pronoun(object):
         
     def __str__(self):
         return self.type
-    
-    def __unicode__(self):
-        return self.type
+    __unicode__ = __str__
     
     def __eq__(self, other):
         if isinstance(other, Pronoun):

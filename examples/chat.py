@@ -1,4 +1,6 @@
 #!/usr/bin/python
+from __future__ import unicode_literals
+
 import mara
 from mara import events
 service = mara.Service()
@@ -12,7 +14,7 @@ service.filter_all = filter_to_users
 @service.listen(events.Connect)
 def connect(event):
     """Deal with connection"""
-    event.client.write_raw('Welcome. What is your name? ')
+    event.client.write('Welcome. What is your name? ', newline=False)
     username = yield
     event.client.username = username
     event.client.write('Welcome, %s' % username)

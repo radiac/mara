@@ -144,8 +144,8 @@ Arguments:
 
 .. _method_service_write:
 
-``write(clients, *data)``
-~~~~~~~~~~~~~~~~~~~~~~~~~
+``write(clients, *data, newline=True)``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Send the lines of data to the specified clients. See
 :ref:`ClientContainer.write <method_clientcontainer_write>` for details.
@@ -306,15 +306,21 @@ The client object is the telnet socket manager.
 
 .. _method_client_write:
 
-``write(data)``
-~~~~~~~~~~~~~~~
+``write(*lines, newline=True)``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Send the data to the client
 
 Arguments:
 
-``data``
-    Raw data received from the client
+    ``lines``
+        One or more lines of data to send to the client. Should not contain
+        newline sequences.
+    
+    ``newline=True``
+        A boolean to determine if the newline character should be added to the
+        end of each line. Defaults to ``True``, can be set to ``False`` for use
+        in prompts etc.
 
 
 .. _module_events:
@@ -460,8 +466,8 @@ Remove the specified client from this container.
 
 .. _method_clientcontainer_write:
 
-``write(clients, *data)``
-~~~~~~~~~~~~~~~~~~~~~~~~~
+``write(clients, *data, newline=True)``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Send the lines of data to the specified clients.
 
@@ -473,6 +479,11 @@ Arguments:
     ``*data``
         One or more lines of data to send to the client. Should not contain
         newline sequences.
+    
+    ``newline=True``
+        A boolean to determine if the newline character should be added to the
+        end of each line. Defaults to ``True``, can be set to ``False`` for use
+        in prompts etc.
 
 
 .. _method_clientcontainer_write_all:

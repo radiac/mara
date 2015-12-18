@@ -4,6 +4,8 @@ Manage connections
 Based on miniboa's telnet.py
 http://miniboa.googlecode.com/svn/trunk/miniboa/telnet.py
 """
+from __future__ import unicode_literals
+
 from collections import defaultdict
 import inspect
 import socket
@@ -104,6 +106,10 @@ class TelnetOption(object):
         self.local, self.remote, self.pending = data
         
 
+class Buffer(bytearray):
+    def clear(self):
+        self[:] = b''
+
 
 ###############################################################################
 ############################################################### Client
@@ -121,10 +127,10 @@ class Client(object):
     got_iac = False     # Are we inside an IAC sequence?
     got_cmd = None      # Did we get a telnet command?
     got_sb = False      # Are we inside a subnegotiation?
-    options = {}        # Mapping for up to 256 TelnetOptions
+    options = defaultdict(TelnetOption) # Mapping for up to 256 TelnetOptions
     echo = False        # Echo input back to the client?
     _supress_echo = False   # Override echo option (control with supress_echo)
-    sb_buffer = ''      # Buffer for sub-negotiations
+    sb_buffer = b''     # Buffer for sub-negotiations
     terminal_type = None    # Negotiated telnet type
     columns = 80        # Number of columns on terminal
     rows = 50           # Number of rows on terminal
@@ -166,12 +172,12 @@ class Client(object):
             self._flash_waiting = None
         
         # Buffers
-        self._recv_buffer = ''
-        self._send_buffer = ''
+        self._recv_buffer = Buffer()
+        self._send_buffer = Buffer()
         
         # Start telnet negotiation
-        self._tn_request(DO, TTYPE)   # Get terminal type
-        self._tn_request(DO, NAWS)    # Do NAWS
+        self._tn_request(DO, TTYPE)     # Get terminal type
+        self._tn_request(DO, NAWS)      # Do NAWS - find window size
         
         # Log
         self.service.log.client('Client %s connected' % self.ip)
@@ -355,33 +361,42 @@ class Client(object):
         
         # Echo back to client
         if self.echo and not self._suppress_echo:
-            self._send_buffer += data
+            self._send_buffer.extend(data)
         
         # Add data to recv_buffer
-        self._recv_buffer += data
+        self._recv_buffer.extend(data)
         if (
             self.settings.client_buffer_size
             and len(self._recv_buffer) > self.settings.client_buffer_size
         ):
-            self._recv_buffer = ''
+            self._recv_buffer.clear()
             self.write('Input too long')
         
         # Standardise inbound line endings
         # RFC 854 says \r on its own is not allowed
-        self._recv_buffer = self._recv_buffer.replace('\r\n', '\n').replace('\r\0', '\n')
+        self._recv_buffer = self._recv_buffer.replace(
+            b'\r\n', b'\n',
+        ).replace(
+            b'\r\0', b'\n'
+        )
         
         # Test for a complete line
-        if not "\n" in self._recv_buffer:
+        if not b'\n' in self._recv_buffer:
             return None
         
         # Pull off first line
-        (line, self._recv_buffer) = self._recv_buffer.split("\n")
+        (line, self._recv_buffer) = self._recv_buffer.split(b'\n', 1)
+        line = line.decode('utf-8', 'replace')
         return line
         
-    def write(self, *lines):
+    def write(self, *lines, **kwargs):
         """
         Send data with newlines
         """
+        newline = kwargs.pop('newline', True)
+        if kwargs:
+            raise TypeError('Unexpected keyword arguments %s' % kwargs.keys())
+        
         # Handle raw mode
         if self.settings.socket_raw:
             return self.write_raw(''.join(lines))
@@ -401,16 +416,20 @@ class Client(object):
                 )
                 line = line.render(self, state) + state.__class__().render()
             
-            out.append(str(line))
+            line = line.encode('utf-8')
+            out.append(line)
         
-        self._send_buffer += "\r\n".join(out) + "\r\n"
+        if newline:
+            self._send_buffer.extend(b'\r\n'.join(out) + b'\r\n')
+        else:
+            self._send_buffer.extend(b''.join(out))
         
     def write_raw(self, raw):
-        self._send_buffer += raw
+        self._send_buffer.extend(raw)
     
     def _get_send_buffer(self):
-        out = self._send_buffer
-        self._send_buffer = ''
+        out = bytes(self._send_buffer)
+        self._send_buffer.clear()
         return out
     send_buffer = property(
         fget = _get_send_buffer,
@@ -437,9 +456,10 @@ class Client(object):
         self.service.log.client('Client %s asked for Flash policy' % self.ip)
         
         # The _flash_waiting flag has been cleared, so overwrite _send_buffer
-        self._send_buffer = self.settings.flash_policy % {
-            'port': self.settings.port
-        } + '\0'
+        self._send_buffer.clear()
+        self._send_buffer.extend(
+            self.settings.flash_policy % {'port': self.settings.port} + '\0'
+        )
         
         # Close the socket - it will still be able to send, just not read
         self.close()
@@ -495,7 +515,7 @@ class Client(object):
         Returns the input string without telnet commands
         """
         # Going to step through the string
-        safe = ''
+        safe = b''
         while True:
             #
             # First byte: IAC
@@ -617,21 +637,13 @@ class Client(object):
         # The raw string is either clear or empty
         return safe
         
-    def option(self, option):
-        """
-        Get an option object
-        """
-        if not self.options.has_key(option):
-            self.options[option] = TelnetOption()
-        return self.options[option]
-    
     def _three_byte_cmd(self, option):
         """
         Handle incoming Telnet commmands that are three bytes long
         """
         # Get command and setting for this option
         cmd = self.got_cmd
-        setting = self.option(option)
+        setting = self.options[option]
         
         #
         # Local status (incoming DO or DONT)
@@ -654,7 +666,7 @@ class Client(object):
                 
                 if option == ECHO:
                     self.echo = True
-                
+            
             # Otherwise refuse
             else:
                 if setting.local is UNKNOWN:
@@ -678,6 +690,7 @@ class Client(object):
             else:
                 # Just ignore, weren't going to do it anyway
                 pass
+        
         
         #
         # Remote end (incoming WILL or WONT)
@@ -754,7 +767,7 @@ class Client(object):
         self.got_iac = False
         self.got_cmd = False
         self.got_sb = False
-        self.sb_buffer = ''
+        self.sb_buffer = b''
     
     def _tn_reply(self, cmd, option):
         """
@@ -766,6 +779,6 @@ class Client(object):
         """
         Send a telnet negotiation request
         """
-        self.option(option).pending = True
+        self.options[option].pending = True
         self.write_raw(IAC + cmd + option)
     

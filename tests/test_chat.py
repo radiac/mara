@@ -1,6 +1,9 @@
+# -*- coding: utf-8 -*-
 """
 Test the example chat server
 """
+from __future__ import unicode_literals
+
 from .lib import *
 from examples import chat
 
@@ -64,3 +67,16 @@ class ChatTest(TestCase):
         
         client2.assertResponse('/quit', 'Goodbye!')
         client2.assertClosed()
+
+    def test_unicode(self):
+        "Test chat unicode"
+        client = ChatClient(self)
+        client.login('testuser')
+        client.assertLine('Welcome, testuser')
+        client.assertResponse('cash $£€ monies', 'testuser> cash $£€ monies')
+        client.assertResponse(
+            'niño, 男の子, เด็กผู้ชาย, garçon',
+            'testuser> niño, 男の子, เด็กผู้ชาย, garçon'
+        )
+        client.assertResponse('/quit', 'Goodbye!')
+        client.assertClosed()

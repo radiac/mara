@@ -66,8 +66,8 @@ class BaseUser(storage.Store):
     client = ClientField(session=True)
     name = storage.Field('')
     
-    def write(self, *lines):
-        self.client.write(*lines)
+    def write(self, *lines, **kwargs):
+        self.client.write(*lines, **kwargs)
     
     def disconnect(self):
         """
@@ -129,7 +129,7 @@ class ConnectHandler(events.Handler):
         """
         event.client.write(self.msg_welcome_initial)
         event.client.write('')
-        event.client.write_raw(self.name_prompt)
+        event.client.write(self.name_prompt, newline=False)
         name = yield
         
         # Validate name

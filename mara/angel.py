@@ -63,7 +63,7 @@ class Angel(object):
         """
         # Open angel socket
         listener = Listener(
-            self.settings.get_path('angel_socket'),
+            str(self.settings.get_path('angel_socket')),
             self.settings.angel_family,
             authkey=self.settings.angel_authkey,
         )
@@ -121,9 +121,9 @@ class Angel(object):
                     read_sockets, send_sockets = select.select(
                         [listener] + socket_to_process.keys(), [], [], 1,
                     )[0:2]
-                except select.error, e:
+                except select.error as e:
                     self.log.angel('Angel select error: %s' % e)
-                except socket.error, e:
+                except socket.error as e:
                     self.log.angel('Angel socket error: %s' % e)
                 
                 # Check listener socket for new connections
@@ -158,7 +158,7 @@ class Angel(object):
                     process = socket_to_process[process_socket]
                     try:
                         raw = process_socket.recv()
-                    except Exception, e:
+                    except Exception as e:
                         # We were told there would be something to read
                         process_socket.close()
                         process.terminate()
@@ -283,7 +283,7 @@ class Process(object):
         # Cannot log - service.log is defined based on outcome of this
         try:
             self.client = Client(
-                self.settings.get_path('angel_socket'),
+                str(self.settings.get_path('angel_socket')),
                 self.settings.angel_family,
                 authkey=self.settings.angel_authkey,
             )

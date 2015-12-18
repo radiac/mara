@@ -70,7 +70,7 @@ class NewPasswordHandler(events.Handler):
         # Grab echo
         client.supress_echo = True
         while True:
-            client.write_raw('Enter a password: ')
+            client.write('Enter a password: ', newline=False)
             password = yield
             client.write()
             if not password:
@@ -80,7 +80,7 @@ class NewPasswordHandler(events.Handler):
                 client.write('Your password must be at least 6 characters long.')
                 continue
                 
-            client.write_raw('Confirm password: ')
+            client.write('Confirm password: ', newline=False)
             confirm = yield
             client.write()
             if password != confirm:
@@ -121,7 +121,7 @@ class CheckPasswordHandler(events.Handler):
             return
         
         # Prompt and get password
-        event.client.write_raw(self.prompt_enter_password)
+        event.client.write(self.prompt_enter_password, newline=False)
         event.client.supress_echo = True
         password = yield
         event.client.supress_echo = False
@@ -216,7 +216,7 @@ class ConnectHandler(
             
         # Confirm they got their name right
         event.client.write(self.msg_new_user)
-        event.client.write_raw(self.prompt_new_user)
+        event.client.write(self.prompt_new_user, newline=False)
         answer = yield
         if not answer.lower().startswith('y'):
             # Wrong username, start again

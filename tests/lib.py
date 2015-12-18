@@ -1,6 +1,9 @@
 """
 Test library
 """
+from __future__ import print_function
+from __future__ import unicode_literals
+
 import os
 import socket
 import telnetlib
@@ -33,8 +36,8 @@ ATTEMPT_SLEEP = 0.1
 ATTEMPT_TIMEOUT = 1
 
 # A string which will not be returned from the server
-IMPOSSIBLE = '$$--__--$$'
-NEWLINE = '\r\n'
+IMPOSSIBLE = b'$$--__--$$'
+NEWLINE = b'\r\n'
 
 # Example scripts expect themselves to be in the root path
 # Find the examples dir and use that as the root path
@@ -138,7 +141,7 @@ class TestService(object):
         """
         try:
             self.service.run(self.settings)
-        except Exception, e:
+        except Exception as e:
             self._exception = e
             raise
     
@@ -199,8 +202,9 @@ class Client(object):
         Write one or more lines
         """
         for line in lines:
+            line = line.encode('utf-8')
             if DEBUG:
-                print "test write>:", line
+                print("test write>:", line)
             self.tn.write(line + NEWLINE)
     
     def read(self):
@@ -209,14 +213,15 @@ class Client(object):
         """
         response = self.read_until(NEWLINE, timeout=ATTEMPT_TIMEOUT)
         if DEBUG:
-            print "test read>:", response[:-len(NEWLINE)]
+            print("test read>:", response[:-len(NEWLINE)])
         return response
     
     # Map fns through to tn
     def read_until(self, expected, timeout=ATTEMPT_TIMEOUT):
-        return self.tn.read_until(expected, timeout)
+        response = self.tn.read_until(expected, timeout)
+        return response.decode('utf-8')
     
-    read_all = property(lambda self: self.tn.read_all)
+    read_all = property(lambda self: self.tn.read_all.decode('utf-8'))
 
 
     #
@@ -237,9 +242,9 @@ class Client(object):
         """
         if not self.tests:
             raise ValueError('Cannot have a client assert without self.tests')
-        response = self.tn.read_until(line, timeout=ATTEMPT_TIMEOUT)
+        response = self.read_until(line, timeout=ATTEMPT_TIMEOUT)
         if DEBUG:
-            print "test read> :", response
+            print("test read> :", response)
         self.tests.assertEqual(response, line)
         
     def assertLine(self, *lines):
@@ -269,8 +274,8 @@ class Client(object):
         self.tests.assertEqual(str(cm.exception), 'telnet connection closed')
     
     def login(self, username, password=None):
-        self.tn.read_until(self.username_prompt)
+        self.read_until(self.username_prompt)
         self.write(username)
         if password:
-            self.tn.read_until(self.password_prompt)
+            self.read_until(self.password_prompt)
             self.write(password)

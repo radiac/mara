@@ -180,9 +180,9 @@ class Server(object):
                     [self.serversocket.socket] + self._client_sockets,
                     send_pending, [], self.settings.socket_activity_timeout
                 )[0:2]
-            except select.error, e:
+            except select.error as e:
                 self.service.log.server('Server select error: %s' % e)
-            except socket.error, e:
+            except socket.error as e:
                 self.service.log.server('Server socket error: %s' % e)
             
             # Poll the service now to update time and run overdue game ticks
@@ -232,7 +232,7 @@ class Server(object):
         # Read data
         try:
             data = read_socket.recv(self.settings.socket_buffer_size)
-        except socket.error, e:
+        except socket.error:
             # We were told there was something to read, but there is not
             # Mark as disconnected, to be cleaned up next loop
             client.disconnected()
@@ -253,7 +253,7 @@ class Server(object):
         data = client.send_buffer
         try:
             sent = send_socket.send(data)
-        except socket.error, e:
+        except socket.error:
             # We were told the socket was ready to send, but it is not
             # Mark as disconnected, to be cleaned up next loop
             client.disconnected()

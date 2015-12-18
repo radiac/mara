@@ -1,6 +1,7 @@
 """
 Logging class for Mara
 """
+from __future__ import print_function
 
 import os
 import sys
@@ -83,8 +84,8 @@ class Logger(object):
         # Try to open file
         try:
             self.file = open(self.filename, 'a')
-        except IOError, e:
-            print >> sys.stderr, "Error opening logfile: %s" % e
+        except IOError as e:
+            print("Error opening logfile: %s" % e, file=sys.stderr)
             self.disabled = True
         
         # Pre-calculate prefix
@@ -150,7 +151,7 @@ class Logger(object):
         """
         # See if printing to STDOUT
         if not self.file:
-            print "\n".join(lines)
+            print("\n".join(lines))
             return
         
         # Write lines

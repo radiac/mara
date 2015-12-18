@@ -30,15 +30,16 @@ continue to ``yield`` to capture further lines. For example::
 
     @service.listen(mara.events.Connect)
     def connect(event):
-        event.client.write_raw('Welcome. Please enter your name: ')
+        event.client.write('Welcome. Please enter your name: ', newline=False)
         username = yield
         event.client.username = username
         event.client.write('Welcome, %s' % username)
         service.write_all('%s has connected' % username, exclude=event.client)
 
-This handler is from the ``chat.py`` example. Note the use of ``write_raw``
-instead of ``write``; this stops Mara from adding a newline when it's sent to
-the client, so they will type their name on the same line.
+This handler is from the ``chat.py`` example. Note that the first call to
+``write`` sets ``newline=False``; this stops Mara from adding a newline to the
+end of the line when it's sent to the client, so they will type their name on
+the same line.
 
 
 .. _class_events_handler:

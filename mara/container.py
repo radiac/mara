@@ -33,14 +33,14 @@ class ClientContainer(object):
     def remove_client(self, client):
         self._clients.remove(client.id)
     
-    def write(self, clients, *data):
+    def write(self, clients, *data, **kwargs):
         """
         Send the provided lines to the given client, or list of clients
         """
         if not hasattr(clients, '__iter__'):
             clients = [clients]
         for client in clients:
-            client.write(*data)
+            client.write(*data, **kwargs)
     
     def write_all(self, *data, **kwargs):
         """

@@ -12,6 +12,20 @@ For instructions for upgrading from a specific version, see
 Changelog
 =========
 
+0.6.0, in development
+---------------------
+
+Feature:
+
+* Python 3 support
+* Unicode support
+
+Changed:
+
+* Changed ``write`` to accept ``newline=False`` kwarg, to control whether the
+  line ends with a newline when the socket is not in raw mode
+
+
 0.5.0, 2015-12-13
 -----------------
 
@@ -125,6 +139,37 @@ Feature:
 
 Instructions
 ============
+
+1. Check which version of Mara you are upgrading from::
+
+    python -c "import mara; print mara.__version__"
+
+2. Upgrade the Mara package::
+
+    pip install mara --upgrade
+
+3. Upgrade your code following the upgrade instructions below for **all**
+   appropriate versions.
+
+
+Upgrading from 0.5.0
+--------------------
+
+Mara 0.6.0 now supports unicode when calling ``write`` and ``write_all`` on a
+client or container, or when receiving data. The ``client.write_raw`` method
+only supports bytestrings, so should not be used for suppressing the newline
+character; instead pass the ``newline`` keyword argument to ``write``
+(supported by client, container and user classes)::
+
+    client.write('Enter something: ', newline=False)
+
+There should not be any other changes required for unicode support; the client
+manages convertion between byte strings and utf-8, and the ``write`` methods
+support either. Received data in Receive events are now unicode strings.
+
+Unicode support does not affect services operating with
+:ref:`setting_socket_raw` set to ``True``.
+
 
 Upgrading from 0.4.0
 --------------------

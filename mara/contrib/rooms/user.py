@@ -37,7 +37,7 @@ class RoomUserMixin(storage.Store):
         # Try to use the exit
         try:
             self.room.exits[direction].use(self)
-        except ExitError, e:
+        except ExitError as e:
             self.write(str(e))
 
     def disconnected(self):

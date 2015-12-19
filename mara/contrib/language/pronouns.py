@@ -3,6 +3,8 @@ Pronoun mappings
 """
 from __future__ import unicode_literals
 
+import six
+
 
 # First and second person
 FIRST = 'first'
@@ -56,6 +58,7 @@ for _group in [SUBJECT, OBJECT, POSSESSIVE, SELF]:
         THIRD_LOOKUP[_group[_gender]] = (_group, _gender)
 
 
+@six.python_2_unicode_compatible
 class Pronoun(object):
     """
     Set of pronouns for a given person
@@ -69,7 +72,6 @@ class Pronoun(object):
         
     def __str__(self):
         return self.type
-    __unicode__ = __str__
     
     def __eq__(self, other):
         if isinstance(other, Pronoun):

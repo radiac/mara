@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 import copy
 import os
+import six
 
 from .. import events
 
@@ -97,7 +98,7 @@ class Manager(object):
         If a list of keys is passed, a dict keyed on object key will be
         returned; if an object is not cached, its value will be None.
         """
-        if isinstance(keys, basestring):
+        if isinstance(keys, six.string_types):
             return self.cache.get(keys.lower())
         else:
             objs = {}
@@ -122,7 +123,7 @@ class Manager(object):
         will be added to the cache.
         """
         # Single key passed
-        if isinstance(keys, basestring):
+        if isinstance(keys, six.string_types):
             key = keys.lower()
             
             # Check cache
@@ -177,7 +178,8 @@ class Manager(object):
         """
         Remove an object from the active cache
         """
-        del self.cache[obj.key]
+        if obj.key in self.cache:
+            del self.cache[obj.key]
     
     def active(self):
         """

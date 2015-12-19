@@ -17,13 +17,14 @@ Changelog
 
 Feature:
 
-* Python 3 support
+* Python 3 support (3.2, 3.3, 3.4 and 3.5)
 * Unicode support
 
 Changed:
 
 * Changed ``write`` to accept ``newline=False`` kwarg, to control whether the
   line ends with a newline when the socket is not in raw mode
+* Example echo service now runs in raw mode
 
 
 0.5.0, 2015-12-13

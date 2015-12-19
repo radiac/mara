@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 from collections import defaultdict
 import datetime
 import inspect
+import six
 import sys
 import time
 
@@ -139,7 +140,7 @@ class Service(ClientContainer):
             ):
                 generator = handler(event)
                 try:
-                    generator.next()
+                    next(generator)
                 except StopIteration:
                     pass
                 else:

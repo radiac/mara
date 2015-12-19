@@ -4,6 +4,7 @@ Mara users
 from __future__ import unicode_literals
 
 import re
+import six
 
 from ... import events
 from ... import storage
@@ -61,12 +62,19 @@ class UserManager(storage.Manager):
         return found
 
 
+@six.python_2_unicode_compatible
 class BaseUser(storage.Store):
     abstract = True
     manager = UserManager()
     
     client = ClientField(session=True)
     name = storage.Field('')
+    
+    def __str__(self):
+        return self.name
+    
+    def __lt__(self, other):
+        return self.name < other.name
     
     def write(self, *lines, **kwargs):
         self.client.write(*lines, **kwargs)

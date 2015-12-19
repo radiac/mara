@@ -150,7 +150,7 @@ Base class for event classes.
 Events are containers for event data; event attributes are passed as keyword
 arguments to the constructor. For example::
 
-    event = mara.events.Receive(client=client_obj, data=raw_input)
+    event = mara.events.Receive(client=client_obj, data=raw_data)
 
 Events can render to strings; this is used for logging.
 

@@ -3,6 +3,8 @@ Mara settings container
 """
 from __future__ import unicode_literals
 
+import six
+
 import os
 from types import ModuleType
 import sys
@@ -111,7 +113,7 @@ class Settings(object):
         Return a setting's value as an absolute path
         """
         path = getattr(self, setting)
-        if not isinstance(path, basestring):
+        if not isinstance(path, six.string_types):
             return path
         return self.abspath(path)
     

@@ -28,11 +28,11 @@ class MudClient(Client):
         self.assertLine('')
     
     def create_account(self, username, password):
-        self.tn.read_until(self.username_prompt)
+        self.read_until(self.username_prompt)
         self.write(username)
-        self.tn.read_until('Do you want to create an account? (Enter yes or no) ')
+        self.read_until('Do you want to create an account? (Enter yes or no) ')
         self.write('yes')
-        self.tn.read_until('Enter a password: ')
+        self.read_until('Enter a password: ')
         self.assertResponse(password, '')
         self.assertRead('Confirm password: ')
         self.assertResponse(password, '', 'Account created!')

@@ -95,8 +95,6 @@ Roadmap
 =======
 
 Planned but not scheduled for a specific version:
-* Python 3 support
-* Unicode support
 * More contrib modules:
   * Items and inventory
   * Combat (health, weapons and armour)

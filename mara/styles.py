@@ -33,6 +33,7 @@ MAGENTA     = '35'
 CYAN        = '36'
 WHITE       = '37'
 
+
 class State(object):
     """
     Hold style state and render the ANSI sequence
@@ -139,11 +140,11 @@ class hr(String):
             state = client.service.settings.hr_state + state
         
         # Build a pattern the size of the client's terminal
-        # Build it bigger and cut it down, to avoid rounding issues
         sequence = client.service.settings.hr_sequence
         len_sequence = len(sequence)
         pattern = (
-            sequence * ((client.columns / len_sequence) + 1)
+            # Ceiling division to build it bigger and cut it down
+            sequence * ((client.columns // len_sequence) + 1)
         )[:client.columns]
         
         # If no content, skip the rest and return with state
@@ -153,7 +154,7 @@ class hr(String):
         # Calculate left and right padding using width of content without style
         text_only = super(hr, self).render(client, StatePlain())
         space = (client.columns - (len(text_only) + 2))
-        left = space / 2
+        left = space // 2
         right = left
         if space % 2:
             right += 1

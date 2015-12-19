@@ -63,12 +63,13 @@ class Angel(object):
         Main angel loop
         """
         # Open angel socket
+        authkey = self.settings.angel_authkey.encode('utf-8')
         listener = Listener(
             str(self.settings.get_path('angel_socket')),
             self.settings.angel_family,
-            authkey=self.settings.angel_authkey,
+            authkey=authkey,
         )
-        multiprocessing.current_process().authkey = self.settings.angel_authkey
+        multiprocessing.current_process().authkey = authkey
         
         # Give the listener a fileno so we can use it directly with select
         listener.fileno = listener._listener._socket.fileno
@@ -81,7 +82,7 @@ class Angel(object):
         while True:
             # We don't have an active process, so there shouldn't be others
             # If there are, terminate them
-            for process, process_socket in process_to_socket.items():
+            for process, process_socket in list(process_to_socket.items()):
                 if process.poll():
                     process.terminate()
                 process_socket.close()
@@ -120,7 +121,7 @@ class Angel(object):
                 send_sockets = []
                 try:
                     read_sockets, send_sockets = select.select(
-                        [listener] + socket_to_process.keys(), [], [], 1,
+                        [listener] + list(socket_to_process.keys()), [], [], 1,
                     )[0:2]
                 except select.error as e:
                     self.log.angel('Angel select error: %s' % e)
@@ -283,13 +284,14 @@ class Process(object):
         """
         # Cannot log - service.log is defined based on outcome of this
         try:
+            authkey = self.settings.angel_authkey.encode('utf-8')
             self.client = Client(
                 str(self.settings.get_path('angel_socket')),
                 self.settings.angel_family,
-                authkey=self.settings.angel_authkey,
+                authkey=authkey,
             )
-            multiprocessing.current_process().authkey = self.settings.angel_authkey
-        except socket.error as e:
+            multiprocessing.current_process().authkey = authkey
+        except socket.error:
             return False
         return True
     

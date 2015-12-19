@@ -51,6 +51,7 @@ acknowledgement of it's own.
 If a party receives a request to enter a mode that it is already in, the
 request should not be acknowledged.
 """
+import six
 
 
 #
@@ -60,33 +61,34 @@ request should not be acknowledged.
 UNKNOWN = -1
 
 # Telnet commands
-SE      = chr(240)      # End of subnegotiation parameters
-NOP     = chr(241)      # No operation
-DATMK   = chr(242)      # Data stream portion of a sync.
-BREAK   = chr(243)      # NVT Character BRK
-IP      = chr(244)      # Interrupt Process
-AO      = chr(245)      # Abort Output
-AYT     = chr(246)      # Are you there
-EC      = chr(247)      # Erase Character
-EL      = chr(248)      # Erase Line
-GA      = chr(249)      # The Go Ahead Signal
-SB      = chr(250)      # Sub-option to follow
-WILL    = chr(251)      # Will; request or confirm option begin
-WONT    = chr(252)      # Wont; deny option request
-DO      = chr(253)      # Do = Request or confirm remote option
-DONT    = chr(254)      # Don't = Demand or confirm option halt
-IAC     = chr(255)      # Interpret as Command
-SEND    = chr(001)      # Sub-process negotiation SEND command
-IS      = chr(000)      # Sub-process negotiation IS command
+SE      = six.int2byte(240)     # End of subnegotiation parameters
+NOP     = six.int2byte(241)     # No operation
+DATMK   = six.int2byte(242)     # Data stream portion of a sync.
+BREAK   = six.int2byte(243)     # NVT Character BRK
+IP      = six.int2byte(244)     # Interrupt Process
+AO      = six.int2byte(245)     # Abort Output
+AYT     = six.int2byte(246)     # Are you there
+EC      = six.int2byte(247)     # Erase Character
+EL      = six.int2byte(248)     # Erase Line
+GA      = six.int2byte(249)     # The Go Ahead Signal
+SB      = six.int2byte(250)     # Sub-option to follow
+WILL    = six.int2byte(251)     # Will; request or confirm option begin
+WONT    = six.int2byte(252)     # Wont; deny option request
+DO      = six.int2byte(253)     # Do = Request or confirm remote option
+DONT    = six.int2byte(254)     # Don't = Demand or confirm option halt
+IAC     = six.int2byte(255)     # Interpret as Command
+SEND    = six.int2byte(  1)     # Sub-process negotiation SEND command
+IS      = six.int2byte(  0)     # Sub-process negotiation IS command
 
 # Telnet Options
-BINARY  = chr(  0)      # Transmit Binary
-ECHO    = chr(  1)      # Echo characters back to sender
-RECON   = chr(  2)      # Reconnection
-SGA     = chr(  3)      # Suppress Go-Ahead
-TTYPE   = chr( 24)      # Terminal Type
-NAWS    = chr( 31)      # Negotiate About Window Size
-LINEMO  = chr( 34)      # Line Mode
+BINARY  = six.int2byte(  0)     # Transmit Binary
+ECHO    = six.int2byte(  1)     # Echo characters back to sender
+RECON   = six.int2byte(  2)     # Reconnection
+SGA     = six.int2byte(  3)     # Suppress Go-Ahead
+TTYPE   = six.int2byte( 24)     # Terminal Type
+NAWS    = six.int2byte( 31)     # Negotiate About Window Size
+LINEMO  = six.int2byte( 34)     # Line Mode
+
 
 class TelnetOption(object):
     """
@@ -130,11 +132,15 @@ class Client(object):
     options = defaultdict(TelnetOption) # Mapping for up to 256 TelnetOptions
     echo = False        # Echo input back to the client?
     _supress_echo = False   # Override echo option (control with supress_echo)
-    sb_buffer = b''     # Buffer for sub-negotiations
     terminal_type = None    # Negotiated telnet type
     columns = 80        # Number of columns on terminal
     rows = 50           # Number of rows on terminal
     handler = None      # Handler for the next input buffer
+    
+    # Buffers
+    _recv_buffer = None     # Receive buffer
+    _send_buffer = None     # Send buffer
+    sb_buffer = None        # Buffer for sub-negotiations
     
     def __init__(self, service, socket, serialised=None):
         # Store vars
@@ -144,6 +150,11 @@ class Client(object):
         # Look up settings
         self.settings = service.settings
         self.timeout_time = self.settings.socket_timeout
+        
+        # Buffers
+        self._recv_buffer = Buffer()
+        self._send_buffer = Buffer()
+        self.sb_buffer = Buffer()
         
         # If socket is not defined, we are deserialising
         if serialised:
@@ -171,13 +182,10 @@ class Client(object):
         else:
             self._flash_waiting = None
         
-        # Buffers
-        self._recv_buffer = Buffer()
-        self._send_buffer = Buffer()
-        
-        # Start telnet negotiation
-        self._tn_request(DO, TTYPE)     # Get terminal type
-        self._tn_request(DO, NAWS)      # Do NAWS - find window size
+        # Start telnet negotiation (unless in raw mode)
+        if not self.settings.socket_raw:
+            self._tn_request(DO, TTYPE)     # Get terminal type
+            self._tn_request(DO, NAWS)      # Do NAWS - find window size
         
         # Log
         self.service.log.client('Client %s connected' % self.ip)
@@ -255,7 +263,10 @@ class Client(object):
             if key not in data:
                 self.service.log.client('Serialised client missing %s' % key)
                 continue
-            setattr(self, key, data[key])
+            if isinstance(getattr(self, key, None), Buffer):
+                getattr(self, key).extend(data[key])
+            else:
+                setattr(self, key, data[key])
         
         # Deserialise special fields
         self.socket = deserialise_socket(data['socket'])
@@ -515,7 +526,7 @@ class Client(object):
         Returns the input string without telnet commands
         """
         # Going to step through the string
-        safe = b''
+        safe = Buffer()
         while True:
             #
             # First byte: IAC
@@ -529,13 +540,13 @@ class Client(object):
                 # Catch no IAC
                 if next_iac == -1:
                     # Return raw string unchanged
-                    safe += raw
+                    safe.extend(raw)
                     break
                 # Have an IAC
                 self.got_iac = True
                 
                 # Pull off anything before the IAC
-                safe += raw[0:next_iac]
+                safe.extend(raw[0:next_iac])
                 raw = raw[next_iac + 1:]
             
             # We're in an IAC
@@ -551,13 +562,13 @@ class Client(object):
             # Make sure we have a command
             if not self.got_cmd:
                 # The next byte follows the IAC, so will be interesting
-                cmd = raw[0]
+                cmd = raw[0:1]
                 raw = raw[1:]
                 
                 # Check for escaped IAC
                 if cmd == IAC:
                     self.got_iac = False
-                    safe += cmd
+                    safe.extend(cmd)
                     continue
                 
                 # Check for 3-byte command
@@ -598,7 +609,7 @@ class Client(object):
                     next_esc_iac = raw.find(IAC + IAC)
                     next_se = raw.find(IAC + SE)
                     if next_esc_iac > -1 and next_esc_iac < next_se:
-                        self.sb_buffer += raw[0:next_esc_iac + 2]
+                        self.sb_buffer.extend(raw[0:next_esc_iac + 2])
                         raw = raw[next_esc_iac + 2:]
                         # Try again
                     else:
@@ -607,7 +618,7 @@ class Client(object):
                 
                 # Check for IAC SE
                 if next_se == -1:
-                    self.sb_buffer += raw
+                    self.sb_buffer.extend(raw)
                     raw = ''
                     
                     # Sanity check
@@ -621,14 +632,14 @@ class Client(object):
                     
                 # Otherwise found the end
                 else:
-                    self.sb_buffer += raw[0:next_se]
+                    self.sb_buffer.extend(raw[0:next_se])
                     raw = raw[next_se + 2:]
                     self._sb_decoder()
                     self._sb_done()
             
             # Otherwise it must be a 3 byte command
             else:
-                option = raw[0]
+                option = raw[0:1]
                 raw = raw[1:]
                 self._three_byte_cmd(option)
             
@@ -767,7 +778,7 @@ class Client(object):
         self.got_iac = False
         self.got_cmd = False
         self.got_sb = False
-        self.sb_buffer = b''
+        self.sb_buffer.clear()
     
     def _tn_reply(self, cmd, option):
         """

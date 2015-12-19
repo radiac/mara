@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 import json
 import os
+import six
 
 from .manager import Manager
 from .fields import Field
@@ -122,12 +123,12 @@ class StoreType(type):
         else:    
             raise ValueError('Store manager must be a Manager instance')
 
+
+@six.add_metaclass(StoreType)
 class Store(object):
     """
     Abstract base class to implement session and stored data
     """
-    __metaclass__ = StoreType
-    
     # Key for the store instance
     key = None
     

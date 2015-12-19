@@ -11,10 +11,7 @@ TIME_UNITS = ['day', 'hour', 'minute', 'second']
 def detail_error():
     from traceback import format_exception
     import sys
-    return [
-        e.strip() for e in
-        format_exception(sys.exc_type, sys.exc_value, sys.exc_traceback)
-    ]
+    return [e.strip() for e in format_exception(*sys.exc_info())]
 
 def pretty_list(data):
     if not data:

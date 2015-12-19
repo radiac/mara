@@ -30,7 +30,7 @@ Features
   * accounts and login helpers
   * rooms
 
-Version 0.5.0. Supports Python 2.7.
+Version 0.6.0-dev. Supports Python 2.7 and 3.2 or later.
 
 See the `Documentation <http://radiac.net/projects/mara/documentation/>`_
 for details of how Mara works.

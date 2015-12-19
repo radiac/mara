@@ -36,8 +36,8 @@ ATTEMPT_SLEEP = 0.1
 ATTEMPT_TIMEOUT = 1
 
 # A string which will not be returned from the server
-IMPOSSIBLE = b'$$--__--$$'
-NEWLINE = b'\r\n'
+IMPOSSIBLE = '$$--__--$$'
+NEWLINE = '\r\n'
 
 # Example scripts expect themselves to be in the root path
 # Find the examples dir and use that as the root path
@@ -202,10 +202,10 @@ class Client(object):
         Write one or more lines
         """
         for line in lines:
-            line = line.encode('utf-8')
             if DEBUG:
                 print("test write>:", line)
-            self.tn.write(line + NEWLINE)
+            line += NEWLINE
+            self.tn.write(line.encode('utf-8'))
     
     def read(self):
         """
@@ -218,10 +218,11 @@ class Client(object):
     
     # Map fns through to tn
     def read_until(self, expected, timeout=ATTEMPT_TIMEOUT):
-        response = self.tn.read_until(expected, timeout)
+        response = self.tn.read_until(expected.encode('utf-8'), timeout)
         return response.decode('utf-8')
     
-    read_all = property(lambda self: self.tn.read_all.decode('utf-8'))
+    def read_all(self):
+        return self.tn.read_all().decode('utf-8')
 
 
     #

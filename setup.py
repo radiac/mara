@@ -28,6 +28,7 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
     ],
+    install_requires=['six'],
     extras_require = {
         'dev':  ['nose'],
         'full': ['python-dateutil', 'pyyaml', 'bcrypt'],

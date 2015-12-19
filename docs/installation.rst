@@ -5,7 +5,7 @@ Installation
 Installing Mara
 ===============
 
-Requires Python 2.7 or later. There are no required dependencies.
+Supports Python 2.7 and 3.2 or later. The only required dependency is ``six``.
 
 Installation is simple with pip::
 

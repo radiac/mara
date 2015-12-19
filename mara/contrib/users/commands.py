@@ -104,8 +104,7 @@ class cmd_look(events.Handler):
 class cmd_list_active_users(events.Handler):
     def handler_10_collect(self, event):
         # Find users
-        self.users = event.user.manager.active().values()
-        self.users.sort(key=lambda user: user.name)
+        self.users = sorted(event.user.manager.active().values())
     
     def handler_20_display(self, event):
         # Build lines of output

@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 import inspect
 import re
+import six
 
 from collections import defaultdict
 from ... import events
@@ -149,7 +150,7 @@ class CommandRegistry(object):
         try:
             cmd, raw_args = self.parse(event)
         except ValueError as err:
-            event.client.write(err)
+            event.client.write(str(err))
             return
         
         # Run command
@@ -167,7 +168,7 @@ class CommandRegistry(object):
                 # ++ python 3.3 has yield from
                 generator = event.command.fn(event, *event.args, **event.kwargs)
                 try:
-                    generator.next()
+                    next(generator)
                 except StopIteration:
                     pass
                 else:

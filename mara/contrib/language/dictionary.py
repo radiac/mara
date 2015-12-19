@@ -182,7 +182,7 @@ SOCIAL_PREPOSITIONS = {
 
 
 # All social verbs
-SOCIAL_VERBS = SOCIAL_PREPOSITIONS.keys() + [
+SOCIAL_VERBS = list(SOCIAL_PREPOSITIONS.keys()) + [
     # Simple socials
     'accuse', 'annoy', 'bite', 'blame', 'bribe', 'caress', 'chase', 'chastise',
     'comfort', 'compliment', 'condemn', 'congratulate', 'defenestrate',

@@ -142,14 +142,14 @@ class Server(object):
         ))
         
         self._running = True
-        while self._running:
+        while self._running and self.serversocket.socket.fileno() != -1:
             #
             # Check all clients
             #
             send_pending = []
             
             # Loop backwards so we can delete as we go
-            for i in xrange(len(self._client_sockets)-1, -1, -1):
+            for i in range(len(self._client_sockets)-1, -1, -1):
                 client_socket = self._client_sockets[i]
                 client = self._clients[client_socket]
                 
@@ -158,14 +158,20 @@ class Server(object):
                     client.write('You have been idle for too long')
                     client.close()
                 
-                # Disconnected
+                # Manage connected socket
+                if client.is_connected:
+                    # Detect a dead socket
+                    if client_socket.fileno() == -1:
+                        client.disconnected()
+                        
+                    # Client has data on the send buffer
+                    elif client.send_pending:
+                        send_pending.append(client_socket)
+                
+                # Clean up disconnected client
                 if not client.is_connected:
                     del self._clients[client_socket]
                     del self._client_sockets[i]
-                    
-                # Client has data on the send buffer
-                if client.is_connected and client.send_pending:
-                    send_pending.append(client_socket)
             
             
             #
@@ -183,9 +189,13 @@ class Server(object):
                     send_pending, [], self.settings.socket_activity_timeout
                 )[0:2]
             except select.error as e:
-                self.service.log.server('Server select error: %s' % e)
+                self.service.log.server('Select error: %s' % e)
             except socket.error as e:
-                self.service.log.server('Server socket error: %s' % e)
+                self.service.log.server('Socket error: %s' % e)
+            except Exception as e:
+                # Most likely here because a thread cleaned out our sockets
+                # while we were waiting
+                self.service.log.server('Unknown error: %s' % e)
             
             # Poll the service now to update time and run overdue game ticks
             self.service.poll()
@@ -229,12 +239,16 @@ class Server(object):
         A client has sent data
         """
         # Find client
-        client = self._clients[read_socket]
+        client = self._clients.get(read_socket)
+        if not client:
+            # Client may have disappeared if a thread cleaned out our clients
+            self.service.log.server('Client disappeared when reading')
+            return
         
         # Read data
         try:
             data = read_socket.recv(self.settings.socket_buffer_size)
-        except socket.error:
+        except Exception:
             # We were told there was something to read, but there is not
             # Mark as disconnected, to be cleaned up next loop
             client.disconnected()
@@ -249,13 +263,17 @@ class Server(object):
         A client is ready to receive data
         """
         # Find client
-        client = self._clients[send_socket]
+        client = self._clients.get(send_socket)
+        if not client:
+            # Client may have disappeared if a thread cleaned out our clients
+            self.service.log.server('Client disappeared when sending')
+            return
         
         # Send data
         data = client.send_buffer
         try:
             sent = send_socket.send(data)
-        except socket.error:
+        except Exception:
             # We were told the socket was ready to send, but it is not
             # Mark as disconnected, to be cleaned up next loop
             client.disconnected()

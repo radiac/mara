@@ -3,6 +3,8 @@ Mara room exits
 """
 from __future__ import unicode_literals
 
+import six
+
 from . import constants
 from ... import util
 
@@ -53,7 +55,7 @@ class Exit(object):
         Look up target if it is a string, and cache value for future requests
         """
         target = self._target
-        if isinstance(target, basestring):
+        if isinstance(target, six.string_types):
             target = self.source.manager.get(target)
             if target is None:
                 raise ValueError(

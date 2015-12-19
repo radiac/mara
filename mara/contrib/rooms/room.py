@@ -3,6 +3,8 @@ Mara rooms
 """
 from __future__ import unicode_literals
 
+import six
+
 from . import constants
 from .exit import Exits
 from ... import container
@@ -117,9 +119,9 @@ class BaseRoom(storage.Store, container.ClientContainer):
         self.clone = clone
         
         # Introduction and description can be a single line, or lists of lines
-        if isinstance(intro, basestring):
+        if isinstance(intro, six.string_types):
             intro = [line.strip() for line in intro.splitlines()]
-        if isinstance(desc, basestring):
+        if isinstance(desc, six.string_types):
             desc = [line.strip() for line in desc.splitlines()]
         self.intro = intro
         self.desc = desc

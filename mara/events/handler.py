@@ -4,6 +4,7 @@ Handler class
 from __future__ import unicode_literals
 
 import inspect
+import six
 
 __all__ = ['Handler']
 
@@ -30,12 +31,11 @@ class HandlerType(type):
                     break
 
 
+@six.add_metaclass(HandlerType)
 class Handler(object):
     """
     Class-based event handler
     """
-    __metaclass__ = HandlerType
-    
     # Permanent list of all ordered handlers
     _handlers = None
     
@@ -76,7 +76,7 @@ class Handler(object):
                 # ++ python 3.3 has yield from
                 generator = handler(self, event, *args, **kwargs)
                 try:
-                    generator.next()
+                    next(generator)
                 except StopIteration:
                     pass
                 else:

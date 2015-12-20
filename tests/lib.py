@@ -17,8 +17,12 @@ from mara.settings import defaults
 
 
 __all__ = [
-    'unittest', 'TestCase', 'TestService', 'Client', 'hr',
-    'CWD', 'EXAMPLES_DIR', 
+    # Constants
+    'DEBUG', 'DEBUG_TN', 'ATTEMPT_MAX', 'ATTEMPT_SLEEP', 'ATTEMPT_TIMEOUT',
+    'IMPOSSIBLE', 'NEWLINE', 'CWD', 'EXAMPLES_DIR', 
+    
+    # Useful vars and classes
+    'thread_counter', 'unittest', 'TestCase', 'TestService', 'Client', 'hr',
 ]
 
 
@@ -46,6 +50,15 @@ EXAMPLES_DIR = os.path.join(CWD, 'examples')
 if not os.path.isdir(EXAMPLES_DIR):
     raise ValueError('Examples dir not found')
 
+# Global thread counter to generate unique ids
+class ThreadCounter(object):
+    def __init__(self):
+        self.count = 0
+    def get(self):
+        self.count += 1
+        return self.count
+thread_counter = ThreadCounter()
+
 
 class FakeClient:
     columns = 80
@@ -71,7 +84,6 @@ class TestCase(unittest.TestCase):
             )
         return self.assertEqual(response[:-len(NEWLINE)], expected)
 
-thread_id = 0
 
 class TestService(object):
     """
@@ -93,9 +105,7 @@ class TestService(object):
         Create and run a service
         """
         # Give service a thread
-        global thread_id
-        thread_id += 1
-        self.thread_id = thread_id
+        self.thread_id = thread_counter.get()
         
         # Create service
         self.service = self.define()

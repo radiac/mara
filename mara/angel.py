@@ -30,6 +30,9 @@ CMD_OK = 'OK'                   # Command received and OK
 # When 30, delays will be: 0, 1, 2, 4, 8, 16, 32, 32, 32, ...
 START_DELAY_MAX = 30
 
+# Time to wait after calling angel.stop(), to allow for the socket to release
+STOP_DELAY = 0.1
+
 
 class Angel(object):
     """
@@ -37,14 +40,12 @@ class Angel(object):
     """
     args = None
     settings = None
+    running = False
+    active_process = None
     
     def __init__(self, *args, **kwargs):
-        sys.argv.pop(0)
-        if len(sys.argv) < 1:
-            raise ValueError('Mara script must be the first argument')
-        
+        self.args = self.collect_args()
         self.settings = settings.collect(*args, **kwargs)
-        self.args = sys.argv
         
         # Move root_path to script's path
         if self.settings.root_path is None:
@@ -57,7 +58,16 @@ class Angel(object):
         # Start logger
         self.log = logger.Logger(self.settings)
         self.log.force_with_pid()
-        
+    
+    def collect_args(self):
+        """
+        Collect args for starting the Mara service
+        """
+        sys.argv.pop(0)
+        if len(sys.argv) < 1:
+            raise ValueError('First argument must be path to Mara service')
+        return sys.argv
+
     def run(self):
         """
         Main angel loop
@@ -79,7 +89,8 @@ class Angel(object):
         process_to_socket = {}
         old_process = None
         start_delay = 0
-        while True:
+        self.running = True
+        while self.running:
             # We don't have an active process, so there shouldn't be others
             # If there are, terminate them
             for process, process_socket in list(process_to_socket.items()):
@@ -101,13 +112,13 @@ class Angel(object):
                     start_delay *= 2
             else:
                 start_delay = 1
-            active_process = self.start_process()
+            self.active_process = self.start_process()
             
             # Loop while the script is running
-            while active_process.poll() is None:
+            while self.active_process.poll() is None:
                 # Check old processes for dead
                 for process in process_to_socket.keys():
-                    if process == active_process:
+                    if process == self.active_process:
                         # Already checked active process
                         continue
                     if process.poll() is not None:
@@ -137,23 +148,23 @@ class Angel(object):
                     process_socket = listener.accept()
                     
                     # Check this makes sense
-                    if active_process in process_to_socket:
+                    if self.active_process in process_to_socket:
                         # We already have a socket for the active process.
                         # This shouldn't happen - only explanation is this is
                         # an intruder. Ignore it.
                         self.log.angel(
                             'New connection for existing process %s ignored' %
-                            active_process.pid
+                            self.active_process.pid
                         )
                         process_socket.close()
                     
                     # Store against the current process
                     self.log.angel(
                         'Established connection to process %s' %
-                        active_process.pid
+                        self.active_process.pid
                     )
-                    socket_to_process[process_socket] = active_process
-                    process_to_socket[active_process] = process_socket
+                    socket_to_process[process_socket] = self.active_process
+                    process_to_socket[self.active_process] = process_socket
                     
                 # Check process sockets who want to say something
                 for process_socket in read_sockets:
@@ -163,7 +174,11 @@ class Angel(object):
                     except Exception as e:
                         # We were told there would be something to read
                         process_socket.close()
-                        process.terminate()
+                        try:
+                            process.terminate()
+                        except OSError:
+                            # Already terminated
+                            pass
                         del process_to_socket[process]
                         del socket_to_process[process_socket]
                         continue
@@ -191,7 +206,6 @@ class Angel(object):
                         # Empty store - can only be deserialised once
                         store = None
                         
-                        
                     elif cmd == CMD_SET_SERVICE:
                         # Process is sending us serialised service data
                         store = data
@@ -199,33 +213,36 @@ class Angel(object):
                         # Process is now waiting for the OK before it stops.
                         # Don't send it yet - only stop once we get CMD_STARTED
                         # from the new process.
-                        old_process = active_process
+                        old_process = self.active_process
                         
                         self.log.angel(
                             'Received service from process %s' % process.pid
                         )
                         
                         # Start new process
-                        active_process = self.start_process()
+                        self.active_process = self.start_process()
                         
                     elif cmd == CMD_STARTED:
-                        # New process has started, how nice for it
+                        # New process has started; cmd sent after PostStart
                         process_socket.send((CMD_OK, None))
                         
                         # It's not going to fall over immediately, reset delay
                         start_delay = 0
                         
                         # Tell old process it's ok to die now
-                        if old_process in process_to_socket:
-                            process_socket = process_to_socket[old_process]
-                            process_socket.send((CMD_OK, None))
-                        
-                        self.log.angel(
-                            'Process %s active, terminating process %s' % (
-                                process.pid, old_process.pid
+                        if old_process:
+                            if old_process in process_to_socket:
+                                process_socket = process_to_socket[old_process]
+                                process_socket.send((CMD_OK, None))
+                            
+                            self.log.angel(
+                                'Process %s active, terminating process %s' % (
+                                    process.pid, old_process.pid
+                                )
                             )
-                        )
-                    
+                        else:
+                            self.log.angel('Process %s active' % process.pid)
+
                     elif cmd == CMD_POLL:
                         process_socket.send((CMD_OK, None))
                     
@@ -240,27 +257,52 @@ class Angel(object):
                             process.pid
                         )
                         process_socket.close()
-                        process.terminate()
+                        if process.poll() is None:
+                            process.terminate()
                         del process_to_socket[process]
                         del socket_to_process[process_socket]
                         continue
             
-            # Active process has died unexpectedly
-            self.log.angel(
-                'Active process %s died unexpectedly' % active_process.pid
-            )
-            if active_process in process_to_socket:
+            # Active process has died
+            if self.running:
+                # It died unexpectedly
+                self.log.angel(
+                    'Active process %s died unexpectedly' % self.active_process.pid
+                )
+            else:
+                # We're shutting down
+                self.log.angel(
+                    'Active process %s terminating' % self.active_process.pid
+                )
+            
+            if self.active_process in process_to_socket:
                 # Clean up
-                process_socket = process_to_socket[active_process]
+                process_socket = process_to_socket[self.active_process]
                 process_socket.close()
-                del process_to_socket[active_process]
+                del process_to_socket[self.active_process]
                 del socket_to_process[process_socket]
     
     def start_process(self):
+        """
+        Start the Mara service in a separate process
+        """
         process = subprocess.Popen([sys.executable] + self.args)
         self.log.angel('Starting process %s' % process.pid)
         return process
     
+    def stop(self):
+        """
+        Terminate the current active process, wait for it to close, and stop
+        the main angel loop
+        """
+        self.running = False
+        
+        if self.active_process.poll() is None:
+            self.active_process.terminate()
+            self.active_process.wait()
+            # It should be ok, but give the system a moment to free the port
+            time.sleep(STOP_DELAY)
+
 
 class Process(object):
     """

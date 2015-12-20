@@ -230,7 +230,6 @@ class Service(ClientContainer):
             if serialised:
                 self.deserialise(serialised)
                 if self.angel:
-                    self.angel.started()
                     self.log.service('Service restarted')
                     self.trigger(events.PostStart())
                     self.trigger(events.PostRestart())
@@ -253,6 +252,10 @@ class Service(ClientContainer):
             self.server = Server(self)
             self.trigger(events.PostStart())
         
+        # If we have an angel, tell it we have started successfully
+        if self.angel:
+            self.angel.started()
+            
         self.server.listen()
         
     def poll(self):

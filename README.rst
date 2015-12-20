@@ -27,8 +27,7 @@ Features
   * command manager
   * storage system
   * natural language processing tools
-  * accounts and login helpers
-  * rooms
+  * accounts, login helpers and rooms
 
 Version 0.6.0-dev. Supports Python 2.7 and 3.2 or later.
 

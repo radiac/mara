@@ -25,6 +25,12 @@ Changed:
 * Changed ``write`` to accept ``newline=False`` kwarg, to control whether the
   line ends with a newline when the socket is not in raw mode
 * Example echo service now runs in raw mode
+* The command registry can now unregister commands
+
+Internal:
+
+* Added angel.stop() to terminate angel from threads
+* Fixed angel's start delay reset when starting a service without a saved state
 
 
 0.5.0, 2015-12-13
@@ -170,6 +176,11 @@ support either. Received data in Receive events are now unicode strings.
 
 Unicode support does not affect services operating with
 :ref:`setting_socket_raw` set to ``True``.
+
+The angel now waits until after a new service has called ``PostStart`` and
+``PostRestart`` before terminating the old service, so anything which needs to
+be cleaned (eg open filehandles) before that happens should take place in
+``PreRestart``.
 
 
 Upgrading from 0.4.0

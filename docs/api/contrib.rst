@@ -114,6 +114,10 @@ keyword arguments:
 ``context``
     Optional object to set as CommandEvent.context
 
+A command can be unregistered with ``unregister(name)``::
+
+    commands.unregister('prance')
+
 
 .. _contrib_commands_functions:
 

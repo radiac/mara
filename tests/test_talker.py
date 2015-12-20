@@ -1,14 +1,17 @@
 """
 Test the example talker
 """
+from __future__ import unicode_literals
+
 from .lib import *
-import mara
-from examples import talker
 import os
 import shutil
 
+import mara
+from examples import talker
 
 TALKER_STORE = os.path.join(EXAMPLES_DIR, 'test_talker_store')
+
 
 class TalkerTestService(TestService):
     settings = TestService.settings + mara.settings.Settings(

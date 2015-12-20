@@ -1,6 +1,8 @@
 """
 Test the example mud
 """
+from __future__ import unicode_literals
+
 from .lib import *
 import mara
 import os

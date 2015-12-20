@@ -1,6 +1,8 @@
 """
 Test the example echo server
 """
+from __future__ import unicode_literals
+
 from .lib import *
 from examples import echo
 

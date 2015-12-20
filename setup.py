@@ -1,7 +1,7 @@
 import os
 from setuptools import setup
 
-VERSION = "0.5.0"
+VERSION = "0.6.0"
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
@@ -22,11 +22,16 @@ setup(
         'Intended Audience :: Developers',
         "License :: OSI Approved :: BSD License",
         'Operating System :: OS Independent',
-        "Topic :: Communications :: Chat",
         "Topic :: Internet",
+        "Topic :: Communications :: Chat",
         "Topic :: Games/Entertainment :: Multi-User Dungeons (MUD)",
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
     ],
     install_requires=['six'],
     extras_require = {

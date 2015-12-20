@@ -113,6 +113,17 @@ class CommandRegistry(object):
         cmd.registry = self
         self.commands[cmd.name] = cmd
         self.groups[cmd.group].append(cmd)
+    
+    def unregister(self, name):
+        """
+        Unregister the named command
+        """
+        # Remove from command list
+        cmd = self.commands.pop(name, None)
+        
+        # Remove from group
+        cmd_group = self.groups[cmd.group]
+        del cmd_group[cmd_group.index(cmd)]
         
     def alias(self, match, replace):
         """

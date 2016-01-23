@@ -6,15 +6,23 @@ from __future__ import unicode_literals
 import datetime
 
 import mara
+from mara.contrib.users import BaseUser
+from mara.contrib.users.password import PasswordMixin
+from mara.contrib.users.admin import AdminMixin
+from mara.contrib.users.gender import GenderMixin
+from mara.timers.date import DateTimer
+
+
 service = mara.Service()
 
 
-@service.timer(period=60*60)
+@service.timer(period=60 * 60)
 def every_minute(timer):
     service.write_all('Another hour has passed')
 
-from mara.timers.date import DateTimer
-@service.timer(DateTimer, minute=0, second=0) # Defaults (explicit for clarity)
+
+# Defaults (explicit for clarity)
+@service.timer(DateTimer, minute=0, second=0)
 def church_bell(timer):
     hour = datetime.datetime.fromtimestamp(service.time).hour % 12
     if hour == 0:
@@ -25,10 +33,6 @@ def church_bell(timer):
 
 
 # Create User class
-from mara.contrib.users import BaseUser
-from mara.contrib.users.password import PasswordMixin
-from mara.contrib.users.admin import AdminMixin
-from mara.contrib.users.gender import GenderMixin
 class User(PasswordMixin, AdminMixin, GenderMixin, BaseUser):
     service = service
 

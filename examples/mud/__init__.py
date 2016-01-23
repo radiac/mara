@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from .core import service
-from . import users
-from . import events
-from . import commands
+from .core import service  # NOQA
+from . import users  # NOQA
+from . import events  # NOQA
+from . import commands  # NOQA

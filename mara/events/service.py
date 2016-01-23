@@ -12,10 +12,29 @@ __all__ = [
 ]
 
 
-class Service(Event):       "Service event"
-class PreStart(Service):    "Service starting"
-class PostStart(Service):   "Service started"
-class PreStop(Service):     "Service stopping"
-class PostStop(Service):    "Service stopped"
-class PreRestart(Service):  "Service restarting"
-class PostRestart(Service): "Service restarted"
+class Service(Event):
+    "Service event"
+
+
+class PreStart(Service):
+    "Service starting"
+
+
+class PostStart(Service):
+    "Service started"
+
+
+class PreStop(Service):
+    "Service stopping"
+
+
+class PostStop(Service):
+    "Service stopped"
+
+
+class PreRestart(Service):
+    "Service restarting"
+
+
+class PostRestart(Service):
+    "Service restarted"

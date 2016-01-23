@@ -14,32 +14,34 @@ class GenderFieldDescriptor(object):
     """
     Descriptor to hold the gender value and ensure it's an object
     """
+
     def __init__(self, name):
         self.name = name
-    
+
     def __get__(self, obj, type=None):
         if obj is None:
             return self
-            
+
         value = getattr(obj, self.name, None)
         if value is None:
             return OTHER
         return value
-        
+
     def __set__(self, obj, value):
         if obj is None:
             raise AttributeError('Cannot set gender on a class')
-        
+
         if value not in (MALE, FEMALE):
             value = OTHER
-        
+
         setattr(obj, self.name, value)
-    
+
     def __delete__(self, obj):
         delattr(obj, self.name)
 
 
 class GenderField(storage.Field):
+
     def contribute_to_class(self, store_cls, name):
         """
         Add a GenderFieldDescriptor to the object to hold the value

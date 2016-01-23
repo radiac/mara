@@ -6,12 +6,13 @@ from __future__ import unicode_literals
 
 class Event(object):
     "Non-specific event"
+
     def __init__(self):
         self.stopped = False
-        
+
         # Service will be added by service
         self.service = None
-    
+
     def stop(self):
         """
         Stop the event from being passed to any more handlers

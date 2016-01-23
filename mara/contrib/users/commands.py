@@ -18,14 +18,14 @@ __all__ = [
     # Standard commands
     'cmd_say', 'cmd_emote', 'cmd_tell',
     'cmd_look', 'cmd_list_active_users', 'cmd_list_all_users',
-    
+
     # Shortcut
     'register_cmds', 'register_aliases',
 ]
 
 
 ###############################################################################
-################################################################ Standard cmds
+# Standard cmds
 ###############################################################################
 
 @define_command(args=MATCH_STR, syntax='<message>')
@@ -33,6 +33,7 @@ class cmd_say(events.Handler):
     """
     Say something to the other users
     """
+
     def handler_10_do(self, event, message):
         event.client.write("You say: %s" % message)
         self.container.write_all(
@@ -46,6 +47,7 @@ class cmd_emote(events.Handler):
     """
     Emote something to the other users
     """
+
     def handler_10_do(self, event, action):
         if not action.startswith("'"):
             action = ' ' + action
@@ -62,12 +64,12 @@ def cmd_tell(event, usernames, msg):
     """
     usernames = [a.strip() for a in usernames.split(',')]
     users = event.user.manager.get_active_by_name(usernames)
-    
+
     # Validate target user
     if event.user.name.lower() in users:
         event.client.write('Why would you want to tell yourself that?')
         return
-        
+
     # Send
     user_objs = users.values()
     for target in user_objs:
@@ -88,12 +90,13 @@ class cmd_look(events.Handler):
     """
     Look around
     """
+
     def handler_10_container(self, event):
         self.container.write_all(
             '%s looks around' % event.user.name,
             exclude=event.client,
         )
-    
+
     def handler_10_user(self, event):
         event.user.write(
             self.container.get_who(exclude=event.user.client),
@@ -102,10 +105,11 @@ class cmd_look(events.Handler):
 
 @define_command()
 class cmd_list_active_users(events.Handler):
+
     def handler_10_collect(self, event):
         # Find users
         self.users = sorted(event.user.manager.active().values())
-    
+
     def handler_20_display(self, event):
         # Build lines of output
         lines = [styles.hr('Currently online')]
@@ -114,7 +118,7 @@ class cmd_list_active_users(events.Handler):
                 "%s\t%s" % (user.name, user.client.get_idle_age())
             )
         lines.append(styles.hr)
-        
+
         # Write to the user
         event.client.write(*lines)
 
@@ -124,11 +128,12 @@ class cmd_list_all_users(events.Handler):
     """
     List all online and offline users
     """
+
     def handler_10_collect(self, event):
         manager = event.user.manager
         self.online = [user.name for user in sorted(manager.active().values())]
         self.offline = [user.name for user in sorted(manager.saved().values())]
-    
+
     def handler_20_display(self, event):
         event.user.write(
             styles.hr('Users'),
@@ -139,7 +144,7 @@ class cmd_list_all_users(events.Handler):
 
 
 ###############################################################################
-################################################################ Shortcut
+# Shortcut
 ###############################################################################
 
 def register_cmds(registry):
@@ -152,6 +157,7 @@ def register_cmds(registry):
     registry.register('look', cmd_look)
     registry.register('who', cmd_list_active_users)
     registry.register('users', cmd_list_all_users)
+
 
 def register_aliases(registry):
     """

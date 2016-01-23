@@ -19,8 +19,8 @@ from mara.settings import defaults
 __all__ = [
     # Constants
     'DEBUG', 'DEBUG_TN', 'ATTEMPT_MAX', 'ATTEMPT_SLEEP', 'ATTEMPT_TIMEOUT',
-    'IMPOSSIBLE', 'NEWLINE', 'CWD', 'EXAMPLES_DIR', 
-    
+    'IMPOSSIBLE', 'NEWLINE', 'CWD', 'EXAMPLES_DIR',
+
     # Useful vars and classes
     'thread_counter', 'unittest', 'TestCase', 'TestService', 'Client', 'hr',
 ]
@@ -51,9 +51,13 @@ if not os.path.isdir(EXAMPLES_DIR):
     raise ValueError('Examples dir not found')
 
 # Global thread counter to generate unique ids
+
+
 class ThreadCounter(object):
+
     def __init__(self):
         self.count = 0
+
     def get(self):
         self.count += 1
         return self.count
@@ -62,15 +66,20 @@ thread_counter = ThreadCounter()
 
 class FakeClient:
     columns = 80
+
     class service:
+
         class settings:
             hr_sequence = '-'
             hr_state = None
 
+
 def hr(*msg):
     return styles.hr(*msg).render(FakeClient(), styles.StatePlain())
 
+
 class TestCase(unittest.TestCase):
+
     def assertLine(self, response, expected):
         """
         Assert equal, but stripping the trailing newline from response
@@ -88,7 +97,7 @@ class TestCase(unittest.TestCase):
 class TestService(object):
     """
     Wrapper for a Service instance being tested
-    
+
     Pass settings on the constructor, or set them on the settings attribute
     """
     # Global settings
@@ -97,26 +106,26 @@ class TestService(object):
         log='all' if DEBUG else False,
         settings_collect_args=False,
     )
-    
+
     stores = property(lambda self: self.service.stores)
-    
+
     def __init__(self, *args, **kwargs):
         """
         Create and run a service
         """
         # Give service a thread
         self.thread_id = thread_counter.get()
-        
+
         # Create service
         self.service = self.define()
-        
+
         # Collect settings
         new_settings = mara.settings.Settings(*args, **kwargs)
         if self.settings:
             self.settings.update(new_settings)
         else:
             self.settings = new_settings
-        
+
         # Start service thread
         self._exception = None
         self.thread = threading.Thread(
@@ -125,26 +134,26 @@ class TestService(object):
         )
         self.thread.daemon = True  # Kill with main process
         self.thread.start()
-        
+
         # Wait for service to run (or fail)
         while (
-            not self._exception
-            and not getattr(self.service, 'server', None)
-            and not getattr(self.service.server, 'running', False)
+            not self._exception and
+            not getattr(self.service, 'server', None) and
+            not getattr(self.service.server, 'running', False)
         ):
             time.sleep(ATTEMPT_SLEEP)
-        
+
         # Catch exception
         if self._exception:
             self.thread.join()
             raise RuntimeError("Thread %s failed" % self.thread.name)
-    
+
     def define(self):
         """
         Define the service
         """
         raise NotImplementedError('Test service must implement define()')
-        
+
     def run(self):
         """
         Run the service. Call this as a thread target.
@@ -154,7 +163,7 @@ class TestService(object):
         except Exception as e:
             self._exception = e
             raise
-    
+
     def stop(self):
         """
         Stop the service
@@ -163,16 +172,15 @@ class TestService(object):
         self.thread.join()
 
 
-
 class Client(object):
     """
     Telnet client
-    
+
     Wrapper for telnetlib.Telnet
     """
     username_prompt = 'Username: '
     password_prompt = 'Password: '
-    
+
     def __init__(self, tests=None, host=defaults.host, port=defaults.port):
         """
         Create a connection to the client
@@ -181,7 +189,7 @@ class Client(object):
         self.host = host
         self.port = port
         self.open()
-    
+
     def open(self):
         """
         Create a connection to the client
@@ -198,15 +206,14 @@ class Client(object):
                     raise
             else:
                 break
-        
+
         # Turn on telnetlib debugging
         if DEBUG_TN:
             self.tn.set_debuglevel(1)
 
-    
     def close(self):
         self.tn.close()
-    
+
     def write(self, *lines):
         """
         Write one or more lines
@@ -216,7 +223,7 @@ class Client(object):
                 print("test write>:", line)
             line += NEWLINE
             self.tn.write(line.encode('utf-8'))
-    
+
     def read(self):
         """
         Read the next line
@@ -225,20 +232,19 @@ class Client(object):
         if DEBUG:
             print("test read>:", response[:-len(NEWLINE)])
         return response
-    
+
     # Map fns through to tn
     def read_until(self, expected, timeout=ATTEMPT_TIMEOUT):
         response = self.tn.read_until(expected.encode('utf-8'), timeout)
         return response.decode('utf-8')
-    
+
     def read_all(self):
         return self.tn.read_all().decode('utf-8')
-
 
     #
     # Helper functions - common tasks
     #
-    
+
     def assertNothing(self):
         """
         Assert that there is nothing to read
@@ -246,7 +252,7 @@ class Client(object):
         if not self.tests:
             raise ValueError('Cannot have a client assert without self.tests')
         self.tests.assertFalse(self.tn.sock_avail())
-    
+
     def assertRead(self, line):
         """
         Assert that the exact response is received
@@ -257,7 +263,7 @@ class Client(object):
         if DEBUG:
             print("test read> :", response)
         self.tests.assertEqual(response, line)
-        
+
     def assertLine(self, *lines):
         """
         Assert that the specified response is received
@@ -266,7 +272,7 @@ class Client(object):
             raise ValueError('Cannot have a client assert without self.tests')
         for line in lines:
             self.tests.assertLine(self.read(), line)
-    
+
     def assertResponse(self, send, *lines):
         """
         Assert that the data sent receives the specified response
@@ -275,15 +281,15 @@ class Client(object):
             raise ValueError('Cannot have a client assert without self.tests')
         self.write(send)
         self.assertLine(*lines)
-    
+
     def assertClosed(self):
         if not self.tests:
             raise ValueError('Cannot have a client assert without self.tests')
-        
+
         with self.tests.assertRaises(EOFError) as cm:
             self.read_until(IMPOSSIBLE, timeout=ATTEMPT_TIMEOUT)
         self.tests.assertEqual(str(cm.exception), 'telnet connection closed')
-    
+
     def login(self, username, password=None):
         self.read_until(self.username_prompt)
         self.write(username)

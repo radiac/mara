@@ -10,18 +10,26 @@ __all__ = ['Client', 'Connect', 'Receive', 'Disconnect']
 
 class Client(Event):
     "Client event"
+
     def __init__(self, client):
         super(Client, self).__init__()
         self.client = client
-        
+
     def __str__(self):
         return super(Client, self).__str__().strip() + ' (%s)' % self.client.ip
 
-class Connect(Client):      "Client connected"
-class Disconnect(Client):   "Client disconnected"
+
+class Connect(Client):
+    "Client connected"
+
+
+class Disconnect(Client):
+    "Client disconnected"
+
 
 class Receive(Client):
     "Data received"
+
     def __init__(self, client, data):
         super(Receive, self).__init__(client)
         self.data = data

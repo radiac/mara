@@ -16,10 +16,11 @@ class Settings(object):
     """
     Settings container
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initialise settings
-        
+
         Arguments:
             *args       Settings sources
             **kwargs    Settings values
@@ -27,17 +28,17 @@ class Settings(object):
         self.__dict__['_settings'] = {}
         self.load(*args)
         self.__dict__['_settings'] = kwargs
-    
+
     def __getattr__(self, name):
         if name in self._settings:
             return self._settings[name]
         raise AttributeError(name)
-    
+
     def __setattr__(self, name, val):
         if name.startswith('_'):
             raise AttributeError(name)
         self._settings[name] = val
-    
+
     def __add__(self, settings):
         """
         Return a new Settings object with the settings from this, overridden
@@ -49,16 +50,16 @@ class Settings(object):
         dct.update(self._settings)
         dct.update(settings._settings)
         return Settings(**dct)
-    
+
     def update(self, dct):
         if isinstance(dct, Settings):
             dct = dct._settings
         self._settings.update(dct)
-        
+
     def load(self, *sources):
         """
         Load settings from the specified sources to override these settings
-        
+
         Accepted sources:
             module                  Reference to imported module
             settings                Reference to instance of this class
@@ -69,23 +70,23 @@ class Settings(object):
             # Reference to imported module
             if isinstance(source, ModuleType):
                 self.load_module(source)
-            
+
             # Settings instance
             elif isinstance(source, Settings):
                 self.update(source)
-            
+
             # Path to module to import
             elif source.startswith(MODULE_PREFIX):
                 module = __import__(source[len(MODULE_PREFIX):])
                 self._load_module(module)
-            
+
             # Path to json file
             elif source.endswith('.json'):
                 self._load_json(source)
-            
+
             else:
                 raise ValueError('Unknown settings source: %s' % source)
-    
+
     def load_module(self, module):
         """
         Load settings from imported python module to override these settings
@@ -97,7 +98,7 @@ class Settings(object):
             if not key.startswith('_')
         }
         self.update(dct)
-    
+
     def load_json(self, path):
         """
         Load settings from specified JSON file to override these settings
@@ -116,21 +117,21 @@ class Settings(object):
         if not isinstance(path, six.string_types):
             return path
         return self.abspath(path)
-    
+
     def abspath(self, path):
         """
         Ensure that a path is absolute
-        
+
         Uses the service's root path if it is relative.
         """
         # Return it if it's already an absolute path
         if path == os.path.abspath(path):
             return path
-        
+
         # Get root path, or use script directory
         root_path = getattr(self, 'root_path', None)
         if root_path is None:
             root_path = sys.path[0]
-        
+
         # Add root path to our path
         return os.path.normpath(os.path.join(root_path, path))

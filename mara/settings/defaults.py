@@ -76,17 +76,21 @@ store_path = 'store'
 # Set this too high and your clients will have a noticeable delay before
 # getting their prompt.
 # When possible, set flash_wait=False and serve policy requests on port 843
-#flash_wait = 0.5
 flash_wait = None
+# flash_wait = 0.5
 
 # Flash cross-doman policy
 # Note: You may need to change to-ports
-flash_policy = """<?xml version="1.0" encoding="UTF-8"?>
-<cross-domain-policy xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.adobe.com/xml/schemas/PolicyFileSocket.xsd">
-    <allow-access-from domain="*" to-ports="9000" secure="false" />
-</cross-domain-policy>
-\0"""
-
+flash_policy = (
+    '<?xml version="1.0" encoding="UTF-8"?>'
+    '<cross-domain-policy'
+    ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
+    ' xsi:noNamespaceSchemaLocation="http://www.adobe.com/xml/schemas'
+    '/PolicyFileSocket.xsd">'
+    '<allow-access-from domain="*" to-ports="9000" secure="false" />'
+    '</cross-domain-policy>'
+    '\0'
+)
 
 
 #
@@ -134,14 +138,14 @@ log_level = None
 # If set to 'AF_UNIX' it will use a unix socket
 # Set to 'AF_INET' for a TCP socket
 angel_family = 'AF_UNIX'
-#angel_family = 'AF_INET'
+# angel_family = 'AF_INET'
 
 # Socket for communication with the angel
 # * If family is AF_UNIX, this should be the path to the unix socket
 #   If it is not an absolute path, Mara will use the root_path setting
 # * If family is AF_INET, this should be a tuple of (ip, port)
 angel_socket = 'angel.sock'
-#angel_socket = ('127.0.0.1', 9001)
+# angel_socket = ('127.0.0.1', 9001)
 
 # Auth key for the angel socket
 angel_authkey = '1234567890'
@@ -161,8 +165,8 @@ hr_sequence = '-'
 # Base State instance for styles.hr
 hr_state = None
 # For bold red lines:
-#from .. import styles as _styles
-#hr_state = _styles.State(_styles.RED, _styles.BOLD)
+# from .. import styles as _styles
+# hr_state = _styles.State(_styles.RED, _styles.BOLD)
 
 
 #

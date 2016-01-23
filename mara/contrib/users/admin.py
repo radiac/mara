@@ -7,7 +7,7 @@ restriction, or set it manually:
 * disconnect
 * manually edit store/user/username.json
 * change:
-    "is_admin": false 
+    "is_admin": false
   to:
     "is_admin": true
 """
@@ -35,21 +35,21 @@ class AdminMixin(storage.Store):
 def if_admin(event):
     """
     Return True if the user is an admin.
-    
+
     For use as a command availability callback.
-    
+
     Example::
-    
+
         @commands.register(can=if_admin)
         def cmd_special(event):
             ...
-    
+
     """
     return event.user.is_admin is True
 
 
 ###############################################################################
-############################################################### Commands
+# Commands
 ###############################################################################
 
 @define_command(help='List admin users')
@@ -58,7 +58,7 @@ def cmd_list_admin(event):
     List admin users
     """
     User = event.user.__class__
-    
+
     # List active admins
     active = [
         user.name for user in sorted(User.manager.active().values())
@@ -69,7 +69,7 @@ def cmd_list_admin(event):
             styles.hr('Admin users here now'),
             util.pretty_list(active)
         )
-    
+
     # List saved admins
     saved = [
         user.name for user in sorted(User.manager.saved().values())
@@ -80,7 +80,7 @@ def cmd_list_admin(event):
             styles.hr('Admin users who are offline'),
             util.pretty_list(saved)
         )
-    
+
     if saved or active:
         event.user.write(styles.hr)
     else:
@@ -95,7 +95,7 @@ def cmd_list_admin(event):
 def cmd_set_admin(event, username, state):
     """
     Set or unset a user as an admin
-    
+
     Should probably be used with: can=if_admin
     """
     # Find user
@@ -104,7 +104,7 @@ def cmd_set_admin(event, username, state):
     if user is None:
         event.user.write('That user is not found')
         return
-    
+
     user.is_admin = (state.lower() == 'on')
     user.save()
     if user.is_admin:
@@ -114,7 +114,7 @@ def cmd_set_admin(event, username, state):
 
 
 ###############################################################################
-############################################################# Command shortcut
+# Command shortcut
 ###############################################################################
 
 def register_cmds(registry):

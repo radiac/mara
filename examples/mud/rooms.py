@@ -1,12 +1,14 @@
 from __future__ import unicode_literals
 
-from mara.contrib.rooms import BaseRoom, Exits, Exit, FakeExit
 from mara import events
+from mara.contrib.rooms import BaseRoom, Exits, Exit, FakeExit
+from mara.storage.yaml import instantiate
 
 from .core import service
 
+
 class Room(BaseRoom):
-    service=service
+    service = service
 
 # Define a room in code
 room_lobby = Room(
@@ -24,8 +26,8 @@ room_lobby = Room(
     ),
 )
 
+
 # Load other rooms using yaml instantiator
-from mara.storage.yaml import instantiate
 @service.listen(events.PreStart)
 def instantiate_rooms(event):
     """

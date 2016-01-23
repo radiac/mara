@@ -7,9 +7,12 @@ service = mara.Service()
 
 # Set up a filter for write_all to filter to users who have logged in,
 # otherwise they'll see things on the login prompt
+
+
 def filter_to_users(service, clients, **kwargs):
     return (c for c in clients if hasattr(c, 'username'))
 service.filter_all = filter_to_users
+
 
 @service.listen(events.Connect)
 def connect(event):
@@ -18,7 +21,8 @@ def connect(event):
     username = yield
     event.client.username = username
     event.client.write('Welcome, %s' % username)
-    service.write_all('-- %s has connected --' % username, exclude=event.client)
+    service.write_all('-- %s has connected --' %
+                      username, exclude=event.client)
 
 
 @service.listen(events.Disconnect)
@@ -32,10 +36,11 @@ def disconnect(event):
 
 # This example uses a simple custom command parser
 # Define some constants for the commands
-COMMAND_SAY     = ''
-COMMAND_EMOTE   = 'me'
-COMMAND_WHO     = 'who'
-COMMAND_QUIT    = 'quit'
+COMMAND_SAY = ''
+COMMAND_EMOTE = 'me'
+COMMAND_WHO = 'who'
+COMMAND_QUIT = 'quit'
+
 
 @service.listen(events.Receive)
 def receive(event):
@@ -53,14 +58,15 @@ def receive(event):
         else:
             cmd, data = data[1:], ''
         cmd = cmd.lower()
-    
+
     # Handle commands
     if cmd == COMMAND_SAY:
         service.write_all('%s> %s' % (event.client.username, data))
     elif cmd == COMMAND_EMOTE:
         service.write_all('%s %s' % (event.client.username, data))
     elif cmd == COMMAND_WHO:
-        clients = ['  %s' % n for n in sorted(c.username for c in service.clients)]
+        clients = ['  %s' % n for n in sorted(
+            c.username for c in service.clients)]
         event.client.write('Users here at the moment:', *clients)
     elif cmd == COMMAND_QUIT:
         event.client.write('Goodbye!')
@@ -69,7 +75,7 @@ def receive(event):
         event.client.write('Unknown command "%s"' % cmd)
 
 
-if __name__ == '__main__': # pragma: no cover
+if __name__ == '__main__':  # pragma: no cover
     service.run(
         host='0.0.0.0',
         post=9000,

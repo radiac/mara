@@ -44,6 +44,11 @@ permanent field. Custom fields can be written to serialise and deserialise more
 complex data. Field names cannot start with an underscore, and cannot be one of
 the reserved store names (the attributes and methods listed below).
 
+Objects which lack unique identifiers for keys can subclass the
+:ref:`class_storage_keylessstore` base class; these are session-only objects
+which are only serialised if they are values on a field of a non-keyless store.
+
+
 Example
 -------
 
@@ -277,6 +282,17 @@ Load permanent data from disk
 
 This can be used as a base class for session-only stores. It is a subclass of
 :ref:`class_storage_store` which disables saving and loading.
+
+
+.. _class_storage_keylessstore:
+
+``mara.storage.KeylessStore``
+-----------------------------
+
+This can be used as a base class for keyless session-only stores. It is a
+subclass of :ref:`class_storage_sessionstore`.
+
+For an example of its use, see :ref:`module_contrib_items`.
 
 
 .. _class_storage_field:

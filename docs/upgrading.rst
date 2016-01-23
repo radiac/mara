@@ -12,6 +12,23 @@ For instructions for upgrading from a specific version, see
 Changelog
 =========
 
+0.7.0, in progress
+------------------
+
+Feature:
+
+* Added contrib items and item containers
+
+Internal:
+
+* Added ``KeylessStore``, for session objects without keys.
+
+  These will not be serialised by their managers (managers store no cache), but instead they are serialised in-place when found ona fied, eg items - each
+  Sword instance may have its own attributes, but they will not have unique
+  keys, and do not need to be persisted individually.
+
+
+
 0.6.0, 2015-12-20
 -----------------
 

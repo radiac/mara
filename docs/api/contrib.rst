@@ -832,3 +832,67 @@ For example::
             down='hold',
         )
     )
+
+
+.. _module_contrib_items:
+
+``mara.contrib.items``
+======================
+
+Items are instances of :ref:`class_contrib_items_item` - keyless session-only
+objects which should be managed by stores which subclass
+:ref:`class_contrib_items_itemcontainermixin`.
+
+
+.. _class_contrib_items_itemcontainermixin:
+
+``mara.contrib.items.ItemContainerMixin``
+-----------------------------------------
+
+This is a mixin for stores which adds the following attributes and methods:
+
+
+``items``
+~~~~~~~~~
+
+A list field for :ref:`class_contrib_items_item` instances.
+
+
+``add_item(item)``
+~~~~~~~~~~~~~~~~~~
+
+Add the specified :ref:`class_contrib_items_item` instance to the container.
+
+This will cause the container to save itself.
+
+
+``remove_item(item)``
+~~~~~~~~~~~~~~~~~~~~~
+
+Remove the specified :ref:`class_contrib_items_item` instance from the
+container.
+
+This will cause the container to save itself.
+
+
+
+.. _class_contrib_items_item:
+
+``mara.contrib.items.Item``
+---------------------------
+
+This is a base class for item objects.
+
+Each item has the following attributes:
+
+``container``
+    A reference to the :ref:`class_contrib_items_itemcontainermixin` which
+    holds this item.
+
+``name``
+    Name of the item.
+
+``plural``
+    Plural name of the item.
+    
+    By default this is a property which pluralises the name.

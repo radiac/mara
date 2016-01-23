@@ -276,13 +276,3 @@ class Store(object):
         self.from_json(raw)
         return True
 
-
-class SessionStore(Store):
-    """
-    A session-only store, where saving and loading is disabled
-    """
-    abstract = True
-    def save(self):
-        return
-    def load(self):
-        return False

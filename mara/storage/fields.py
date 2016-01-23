@@ -70,20 +70,36 @@ class Field(object):
         * Serialises dict keys and values
         * Serialises list and tuple values into lists
         * Serialises Client objects
+        * Serialises KeylessStore objects in-place
+        * Stores key references to Store and SessionStore objects
+          (their own managers control their data serialisation)
         """
         from .store import Store
+        from .keyless import KeylessStore
         
         if isinstance(data, dict):
             return {
                 self.serialise_value(key): self.serialise_value(value)
                 for key, value in data.items()
             }
+            
         elif isinstance(data, list):
             # No duck typing here - we need to deserialise exactly
             return [self.serialise_value(value) for value in data]
+            
         elif isinstance(data, Client):
             return {'__client__': data.id}
+            
+        elif isinstance(data, KeylessStore):
+            # KeylessStore is serialised here and only here
+            return {
+                '__store__': data._name,
+                '__keyless__': data.to_dict(session=session)
+            }
+            
         elif isinstance(data, Store):
+            # Store (and SessionStore) is serialised by their manager,
+            # so just store key
             return {
                 '__store__': data._name,
                 'key': data.key,
@@ -117,7 +133,12 @@ class Field(object):
                 store = obj.service.stores.get(data['__store__'])
                 if not store:
                     return None
-                return store.manager.load_or_new(data['key'])
+                if '__keyless__' in data:
+                    # No key, instantiate store here
+                    return store(**data['__keyless__'])
+                else:
+                    # Load by key from store or cache
+                    return store.manager.load_or_new(data['key'])
                 
             return {
                 self.deserialise_value(obj, key):

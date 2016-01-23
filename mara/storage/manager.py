@@ -159,13 +159,19 @@ class Manager(object):
                 objs[key] = obj
             return objs
     
+    def new(self, key, active=True):
+        """
+        Create a new object
+        """
+        return self.store_cls(key, active)
+    
     def load_or_new(self, key, active=True):
         """
         Load an object from disk (or cache), or create it if it does not exist
         """
         obj = self.load(key, active)
         if not obj:
-            obj = self.store_cls(key, active)
+            obj = self.new(key, active)
         return obj
     
     def add_active(self, obj):

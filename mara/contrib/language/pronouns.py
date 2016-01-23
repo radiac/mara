@@ -17,35 +17,35 @@ FEMALE = 'female'
 OTHER = 'other'
 
 SUBJECT = {
-    FIRST:  'I',
+    FIRST: 'I',
     SECOND: 'you',
-    MALE:   'he',
+    MALE: 'he',
     FEMALE: 'she',
-    OTHER:  'they',
+    OTHER: 'they',
 }
 
 OBJECT = {
-    FIRST:  'me',
+    FIRST: 'me',
     SECOND: 'you',
-    MALE:   'him',
+    MALE: 'him',
     FEMALE: 'her',
-    OTHER:  'them',
+    OTHER: 'them',
 }
 
 POSSESSIVE = {
-    FIRST:  'my',
+    FIRST: 'my',
     SECOND: 'your',
-    MALE:   'his',
+    MALE: 'his',
     FEMALE: 'her',
-    OTHER:  'their',
+    OTHER: 'their',
 }
 
 SELF = {
-    FIRST:  'myself',
+    FIRST: 'myself',
     SECOND: 'yourself',
-    MALE:   'himself',
+    MALE: 'himself',
     FEMALE: 'herself',
-    OTHER:  'themselves',
+    OTHER: 'themselves',
 }
 
 # Build lookup for third person pronouns: pronoun => (group, gender)
@@ -63,16 +63,17 @@ class Pronoun(object):
     """
     Set of pronouns for a given person
     """
+
     def __init__(self, type):
         self.type = type
         self.subject = SUBJECT[self.type]
         self.object = OBJECT[self.type]
         self.possessive = POSSESSIVE[self.type]
         self.self = SELF[self.type]
-        
+
     def __str__(self):
         return self.type
-    
+
     def __eq__(self, other):
         if isinstance(other, Pronoun):
             other = other.type
@@ -84,4 +85,3 @@ second = Pronoun(SECOND)
 male = Pronoun(MALE)
 female = Pronoun(FEMALE)
 other = Pronoun(OTHER)
-

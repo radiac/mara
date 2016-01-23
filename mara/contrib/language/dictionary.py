@@ -199,7 +199,7 @@ SOCIAL_VERBS = list(SOCIAL_PREPOSITIONS.keys()) + [
     'strangle', 'stroke', 'sue', 'surprise', 'tackle', 'taunt', 'tease',
     'tempt', 'thank', 'threaten', 'tickle', 'toast', 'tongue', 'touch',
     'trust', 'warn', 'welcome',
-    
+
     # These will often have adjectives
     'applaud', 'boo', 'bleat', 'bleed', 'breakdance', 'breathe', 'burp',
     'cheer', 'chew', 'clap', 'code', 'collapse', 'cry', 'daydream', 'declare',
@@ -212,4 +212,3 @@ SOCIAL_VERBS = list(SOCIAL_PREPOSITIONS.keys()) + [
 
 # All known verbs
 VERBS = SOCIAL_VERBS
-

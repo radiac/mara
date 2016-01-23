@@ -1,4 +1,4 @@
 from __future__ import unicode_literals
 
-from .timer import *
-from .registry import *
+from .timer import *  # NOQA
+from .registry import *  # NOQA

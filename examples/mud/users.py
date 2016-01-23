@@ -19,6 +19,7 @@ from mara.contrib.users import event_add_user
 service.listen(events.Client, event_add_user)
 
 # Create User class
+
+
 class User(RoomUserMixin, PasswordMixin, AdminMixin, GenderMixin, BaseUser):
     service = service
-

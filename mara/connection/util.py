@@ -15,7 +15,7 @@ if hasattr(reduction, 'reduce_handle'):
     # Python 2.7, 3.2
     def serialise_socket(socket):
         return reduction.reduce_handle(socket.fileno())
-        
+
 elif hasattr(reduction, 'reduce_socket'):
     # Python 3.3
     def serialise_socket(socket):

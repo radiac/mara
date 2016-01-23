@@ -6,11 +6,14 @@ from __future__ import unicode_literals
 import datetime
 
 import mara
+from mara.timers.date import DateTimer
+
+
 service = mara.Service()
 
 
-from mara.timers.date import DateTimer
-@service.timer(DateTimer, minute=0, second=0) # Defaults (explicit for clarity)
+# Defaults (explicit for clarity)
+@service.timer(DateTimer, minute=0, second=0)
 def church_bell(timer):
     hour = datetime.datetime.fromtimestamp(service.time).hour % 12
     if hour == 0:

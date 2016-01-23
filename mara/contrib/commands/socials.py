@@ -19,35 +19,35 @@ class SocialCommand(Command):
     """
     # Command group to register it in
     group = 'social'
-    
+
     # Directed action parser
     parser = DirectedAction
-    
+
     def __init__(self, name):
         super(SocialCommand, self).__init__(
             name, args=r'^(.*)$', group=self.group,
         )
-    
+
     def get_container(self, event):
         "Get the container for this command"
         return event.service
-        
+
     def fn(self, event, action=None):
         # Find active users
         container = self.get_container(event)
         users = {client.user.key: client.user for client in container.clients}
-        
+
         # Run the directed action parser on the action string
         if not action:
             action = ''
         action = self.name + ' ' + action
         parsed = self.parser(action, users)
-        
+
         # Tell the originating user
         event.client.write(
             'You ' + parsed.second_person(event.user)
         )
-        
+
         # Tell the other targetted users
         for user in set(parsed.users):
             if user == event.user:
@@ -55,10 +55,10 @@ class SocialCommand(Command):
             user.write(
                 event.user.name + ' ' + parsed.third_person(user, event.user)
             )
-        
+
         # Tell remaining users
         others = [
-            user.client for user in 
+            user.client for user in
             set(users.values()).difference(set([event.user] + parsed.users))
         ]
         if others:
@@ -69,6 +69,7 @@ class SocialCommand(Command):
 
 
 class RoomSocialCommand(SocialCommand):
+
     def get_container(self, event):
         return event.user.room
 

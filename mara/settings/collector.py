@@ -16,15 +16,15 @@ def collect(*args, **kwargs):
     # Start with default settings
     settings = Settings()
     settings.load(defaults)
-    
+
     # Load settings from fn arguments
     settings.load(*args)
     settings.update(kwargs)
-    
+
     # We may have been told to not collect command line arguments
     if not settings.settings_collect_args:
         return settings
-    
+
     # Load settings from command line
     argv = sys.argv[1:]
     cmd_args = []
@@ -42,5 +42,5 @@ def collect(*args, **kwargs):
             cmd_args.append(arg)
     settings.load(*cmd_args)
     settings.update(cmd_kwargs)
-    
+
     return settings

@@ -3,26 +3,29 @@ Test the example echo server
 """
 from __future__ import unicode_literals
 
-from .lib import *
+from .lib import TestCase, TestService, Client
 from examples import echo
 
 
 class EchoTestService(TestService):
+
     def define(self):
         return echo.service
-    
+
+
 class EchoTest(TestCase):
     """
     Test the example echo server
-    
+
     Multiple tests of same service to check service.stop() cleans up correctly.
     """
+
     def setUp(self):
         self.service = EchoTestService()
-        
+
     def tearDown(self):
         self.service.stop()
-    
+
     def test_single(self):
         "Test echo single connection"
         client = Client(self)

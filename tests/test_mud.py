@@ -3,7 +3,7 @@ Test the example mud
 """
 from __future__ import unicode_literals
 
-from .lib import *
+from .lib import CWD, EXAMPLES_DIR, TestCase, TestService, Client, hr
 import mara
 import os
 import shutil
@@ -18,17 +18,21 @@ class MudTestService(TestService):
     settings = TestService.settings + mara.settings.Settings(
         store_path=MUD_STORE,
     )
+
     def define(self):
         return mud.service
 
+
 class MudClient(Client):
     username_prompt = 'What is your name? '
-    password_prompt = 'Enter your password, or press enter to pick a new name: '
-    
+    password_prompt = (
+        'Enter your password, or press enter to pick a new name: '
+    )
+
     def login(self, *args, **kwargs):
         super(MudClient, self).login(*args, **kwargs)
         self.assertLine('')
-    
+
     def create_account(self, username, password):
         self.read_until(self.username_prompt)
         self.write(username)
@@ -38,7 +42,7 @@ class MudClient(Client):
         self.assertResponse(password, '')
         self.assertRead('Confirm password: ')
         self.assertResponse(password, '', 'Account created!')
-        
+
     def quit(self):
         self.assertResponse(
             'quit',
@@ -51,24 +55,25 @@ class MudTest(TestCase):
     """
     Test the example mud
     """
+
     def remove_store(self):
         # Sanity check store so we don't delete the wrong thing
         if not MUD_STORE or not CWD or not MUD_STORE.startswith(CWD):
             raise ValueError('Invalid talker store')
-        
+
         # Ensure test store doesn't exist
         if os.path.isdir(MUD_STORE):
             shutil.rmtree(MUD_STORE)
-        
+
     def setUp(self):
         # Start service
         self.remove_store()
         self.service = MudTestService()
-        
+
     def tearDown(self):
         self.service.stop()
         self.remove_store()
-    
+
     def create_accounts(self):
         """
         Create accounts for 3 users
@@ -81,7 +86,7 @@ class MudTest(TestCase):
             'Nobody else is here.',
             'There are exits to the north, to the south and to the east.',
         )
-        
+
         bob = MudClient(self)
         bob.create_account('bob', 'password2')
         bob.assertLine(
@@ -94,7 +99,7 @@ class MudTest(TestCase):
             '-- bob has connected --',
             'bob appears from nowhere'
         )
-        
+
         cat = MudClient(self)
         cat.create_account('cat', 'password3')
         cat.assertLine(
@@ -111,10 +116,9 @@ class MudTest(TestCase):
             '-- cat has connected --',
             'cat appears from nowhere',
         )
-        
+
         return ann, bob, cat
-    
-    
+
     def test_rooms(self):
         """
         Test rooms, exits, movement and clone rooms
@@ -122,19 +126,19 @@ class MudTest(TestCase):
         # Collect yaml rooms
         room_pool = self.service.stores['room'].manager.get('pool')
         clone_zone = self.service.stores['room'].manager.get('clone_zone')
-        
+
         # Create accounts
         ann, bob, cat = self.create_accounts()
-        
+
         # Check commands work to all in room
         ann.assertResponse('say Hello', 'You say: Hello')
         bob.assertLine('ann says: Hello')
         cat.assertLine('ann says: Hello')
-        
+
         ann.assertResponse('dance', 'You dance')
         bob.assertLine('ann dances')
         cat.assertLine('ann dances')
-        
+
         # Fake exit
         ann.assertResponse(
             'south',
@@ -142,7 +146,7 @@ class MudTest(TestCase):
         )
         bob.assertNothing()
         cat.assertNothing()
-        
+
         # Exit north
         ann.assertResponse(
             'north',
@@ -154,17 +158,17 @@ class MudTest(TestCase):
         )
         bob.assertLine('ann leaves to the north')
         cat.assertLine('ann leaves to the north')
-        
+
         # Commands only work in the room
         ann.assertResponse('say Hello', 'You say: Hello')
         bob.assertNothing()
         cat.assertNothing()
-        
+
         # Socials only work in the room
         ann.assertResponse('dance', 'You dance')
         bob.assertNothing()
         cat.assertNothing()
-        
+
         # Return south
         ann.assertResponse(
             'south',
@@ -189,7 +193,7 @@ class MudTest(TestCase):
         )
         bob.assertLine('ann leaves to the east')
         cat.assertLine('ann leaves to the east')
-        
+
         # Bob enters the clone zone
         bob.assertResponse(
             'east',
@@ -215,7 +219,7 @@ class MudTest(TestCase):
         ann.assertResponse('say Hello', 'You say: Hello')
         bob.assertNothing()
         cat.assertNothing()
-        
+
         # Return from the cold
         ann.assertResponse(
             'west',
@@ -227,4 +231,3 @@ class MudTest(TestCase):
         )
         bob.assertNothing()
         cat.assertLine('ann enters from the east')
-

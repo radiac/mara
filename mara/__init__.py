@@ -1,11 +1,11 @@
 from __future__ import unicode_literals
 
-from .service import Service
-from .settings import Settings
-from .connection.client import Client
-from .connection.server import Server
-from . import storage
-from . import events
+from .service import Service  # NOQA
+from .settings import Settings  # NOQA
+from .connection.client import Client  # NOQA
+from .connection.server import Server  # NOQA
+from . import storage  # NOQA
+from . import events  # NOQA
 
 
 __version__ = "0.6.0"

@@ -32,14 +32,14 @@ DIRECTIONS_INDEX = {d: i for i, d in enumerate(DIRECTIONS)}
 # Abbreviations for directions
 # Used to generate exit command aliases
 SHORT_DIRECTIONS = {
-    'n':    NORTH,
-    's':    SOUTH,
-    'e':    EAST,
-    'w':    WEST,
-    'ne':   NORTHEAST,
-    'nw':   NORTHWEST,
-    'se':   SOUTHEAST,
-    'sw':   SOUTHWEST,
+    'n': NORTH,
+    's': SOUTH,
+    'e': EAST,
+    'w': WEST,
+    'ne': NORTHEAST,
+    'nw': NORTHWEST,
+    'se': SOUTHEAST,
+    'sw': SOUTHWEST,
 }
 
 # Descriptions for looking, entering, exiting
@@ -54,4 +54,3 @@ EXIT_TO[DOWN] = 'downwards'
 ENTER_FROM = {d: 'from the %s' % d for d in DIRECTIONS}
 ENTER_FROM[UP] = 'from above'
 ENTER_FROM[DOWN] = 'from below'
-

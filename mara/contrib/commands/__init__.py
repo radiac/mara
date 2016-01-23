@@ -1,4 +1,4 @@
 from __future__ import unicode_literals
 
-from .core import *
-from .standard import *
+from .core import *  # NOQA
+from .standard import *  # NOQA

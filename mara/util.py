@@ -13,6 +13,7 @@ def detail_error():
     import sys
     return [e.strip() for e in format_exception(*sys.exc_info())]
 
+
 def pretty_list(data):
     if not data:
         return ''
@@ -22,11 +23,12 @@ def pretty_list(data):
         last = ' and ' + last
     return ', '.join(rest) + last
 
+
 def pretty_age(seconds=None, now=None, then=None):
     if not seconds:
         seconds = now - then
-    
-    sec_delta = datetime.timedelta(seconds = now - then)
+
+    sec_delta = datetime.timedelta(seconds=now - then)
     age = dict(zip(
         TIME_UNITS,
         [
@@ -38,5 +40,7 @@ def pretty_age(seconds=None, now=None, then=None):
     ))
     for attr in TIME_UNITS:
         if age[attr] > 0:
-            return "%d %s%s ago" % (age[attr], attr, '' if age[attr]==1 else 's')
+            return "%d %s%s ago" % (
+                age[attr], attr, '' if age[attr] == 1 else 's'
+            )
     return '0 seconds ago'

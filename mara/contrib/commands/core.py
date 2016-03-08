@@ -54,7 +54,6 @@ class CommandEvent(events.Client):
 
 
 class CommandRegistry(object):
-
     def __init__(self, service):
         self.service = service
         self.commands = {}
@@ -128,6 +127,21 @@ class CommandRegistry(object):
         # Remove from group
         cmd_group = self.groups[cmd.group]
         del cmd_group[cmd_group.index(cmd)]
+
+    def extend(self, name, mixin):
+        """
+        If the command is a Handler, extend it with this mixin
+        """
+        if name not in self.commands:
+            raise ValueError('Unknown command')
+        command = self.commands[name]
+        if not isinstance(command.fn, events.handler.HandlerType):
+            raise TypeError('Can only extend Handler-based commands')
+
+        # Add this mixin to its base classes
+        if mixin in command.fn.__bases__:
+            raise ValueError('Handler already has this mixin')
+        command.fn.__bases__ = (mixin,) + command.fn.__bases__
 
     def alias(self, match, replace):
         """
@@ -248,6 +262,9 @@ class CommandRegistry(object):
         """
         for name in self.groups.keys():
             self.groups[name].sort(key=lambda cmd: cmd.name)
+
+    def __contains__(self, name):
+        return name in self.commands
 
 
 class Command(object):

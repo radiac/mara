@@ -3,8 +3,7 @@ Container mixin for stores which hold items
 """
 from __future__ import unicode_literals
 
-from collections import Counter
-import six
+from collections import defaultdict
 
 from ... import storage
 
@@ -27,7 +26,7 @@ class ItemContainerMixin(storage.Store):
         self.save()
 
     def get_items_display(
-        self, filter_cls=None, depth=0, indent=0, indent_size=0,
+        self, filter_cls=None, depth=0, indent=0, indent_size=0, prose=False
     ):
         """
         Return a list of formatted and nested item strings suitable to display,
@@ -67,23 +66,16 @@ class ItemContainerMixin(storage.Store):
                 Size of each indent, in characters.
 
                 Default: 2
+
+            prose
+                If True, list items using "an" or "a" instead of 1
         """
-
-        # ++ Ah. This won't work so good with things that contain things
-        # ++ Also, this will work on instance ref, so everthin will be 1.
-        # ++ Need to step through sorted list of items, build a string/list for
-        # ++ each item, then compare it to the previous (if exists); if it
-        # ++ matches, there are two, increase the item's count. If it doesn't,
-        # ++ add new item
-        # ++ Therefore build into a list of (item_strings:list, count) in the
-        # ++ first loop, then unbundle that into strings in a comprehension
-
-        # Sort items by their text value
-        items = sorted(self.items, key=lambda i: six.text_type(i))
-
-        # Make list of text lines
-        lines = []
-        for item in items:
+        # Make dict of items item description strings
+        # {item_str: [(children, count), ...] }
+        descs = defaultdict(list)
+        articles = {}
+        plurals = {}
+        for item in self.items:
             # Filter by class
             if filter_cls and not issubclass(item, filter_cls):
                 continue
@@ -91,29 +83,46 @@ class ItemContainerMixin(storage.Store):
             # Recurse containers to specified depth
             children = None
             if depth != 0 and issubclass(item, ItemContainerMixin):
+                # Get children at correct indent
                 children = item.get_items(
                     filter_cls=filter_cls, depth=depth - 1,
                     indent=indent + indent_size, indent_size=indent_size,
                 )
 
-            # Now store as a tuple
-            items.append(six.text_type(item), children)
+            # Store articles and plurals
+            item_str = item.name
+            articles[item_str] = item.article
+            plurals[item_str] = item.plural
 
-        # Now we've got strings for each item
-        counter = Counter(self.items)
-        for item, count in sorted(zip(counter.keys(), counter.values())):
-            # Filter by class
-            if filter_cls and not issubclass(item, filter_cls):
-                continue
+            # Now store children and count
+            added = False
+            if item_str in descs:
+                for (children2, count), i in enumerate(descs[item_str]):
+                    if children == children2:
+                        descs[i] = (children2, count + 1)
+                        added = True
+                        break
+            if not added:
+                descs[item_str].append((children, 1))
 
-            # Recurse containers to specified depth
-            if depth != 0 and issubclass(item, ItemContainerMixin):
-                lines.extend(
-                    item.get_items(
-                        filter_cls=filter_cls, depth=depth - 1,
-                        indent=indent + indent_size, indent_size=indent_size,
-                    )
-                )
-            else:
-                lines.append('%s%s' % (' ' * indent, item))
+        # Now render the strings alphabetically with indent
+        lines = []
+        for item_str in sorted(descs.keys()):
+            # Add in their children, sorted by number of parent items,
+            # then number of children
+            for children, count in sorted(
+                descs[item_str],
+                key=lambda children, count: (count, len(children)),
+            ):
+                lines.append('%(indent)s%(count)s %(item_str)s' % {
+                    'indent': ' ' * indent,
+                    'count': (
+                        articles[item_str] if prose and count == 1 else count
+                    ),
+                    'item_str': (
+                        item_str if count == 1 else plurals[item_str]
+                    ),
+                })
+                lines.extend(children)
+
         return lines

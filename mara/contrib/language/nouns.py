@@ -20,3 +20,15 @@ def plural_noun(noun, count=0):
         return noun[:-1] + 'ies'
 
     return noun + 's'
+
+
+def article_for_noun(noun):
+    """
+    Naieve method to return the indefinite article (a or an) for a noun
+
+    Correct articles depend on the sound of the word; this returns based on
+    the first character.
+    """
+    if noun.startswith(['a', 'e', 'i', 'o', 'u']):
+        return 'an'
+    return 'a'

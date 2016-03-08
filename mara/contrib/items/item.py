@@ -29,6 +29,9 @@ class BaseItem(storage.KeylessStore, ItemContainerMixin):
     # Plural name of the item
     plural = property(lambda self: language.plural_noun(self.name))
 
+    # Article for a single item
+    article = property(lambda self: language.article_for_noun(self.name))
+
     # A description to show when examined
     description = 'It looks fairly generic'
 

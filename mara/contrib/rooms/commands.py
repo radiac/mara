@@ -30,13 +30,11 @@ __all__ = [
 ###############################################################################
 
 class RoomHandler(events.Handler):
-
     def get_container(self, event):
         return event.user.room
 
+
 # Override container
-
-
 class cmd_say(RoomHandler, user_cmds.cmd_say):
     pass
 
@@ -44,17 +42,16 @@ class cmd_say(RoomHandler, user_cmds.cmd_say):
 class cmd_emote(RoomHandler, user_cmds.cmd_emote):
     pass
 
+
 # Nothing to override; add reference to this module for others to import
 cmd_tell = user_cmds.cmd_tell
 cmd_list_active_users = user_cmds.cmd_list_active_users
 cmd_list_all_users = user_cmds.cmd_list_all_users
 
+
 # Override container and functionality
-
-
 class cmd_look(RoomHandler, user_cmds.cmd_look):
-        # Change what the user sees
-
+    # Change what the user sees
     def handler_10_user(self, event):
         event.user.room.look(event.user)
 

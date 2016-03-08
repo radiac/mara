@@ -3,6 +3,7 @@ Mud communication and commands
 """
 from __future__ import unicode_literals
 
+# ++ from mara.contrib import items as contrib_items
 from mara.contrib import rooms as contrib_rooms
 from mara.contrib.commands import CommandRegistry
 from mara.contrib.commands import register_cmds as cmds_register_cmds
@@ -23,6 +24,9 @@ cmds_register_cmds(commands, admin=True)
 # Add room commands - includes room-aware replacements for user commands
 contrib_rooms.register_cmds(commands, admin=True)
 contrib_rooms.register_aliases(commands)
+
+# Add item commands
+# ++ contrib_items.register_cmds(commands, admin=True)
 
 # Add user extensions
 commands.register('gender', cmd_gender)

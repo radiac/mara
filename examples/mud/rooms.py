@@ -1,13 +1,14 @@
 from __future__ import unicode_literals
 
 from mara import events
+from mara.contrib.items import ItemContainerMixin
 from mara.contrib.rooms import BaseRoom, Exits, Exit, FakeExit
 from mara.storage.yaml import instantiate
 
 from .core import service
 
 
-class Room(BaseRoom):
+class Room(ItemContainerMixin, BaseRoom):
     service = service
 
 # Define a room in code

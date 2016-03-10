@@ -21,7 +21,7 @@ Features
 
 * Event-based framework with support for timers
 * Supports raw sockets or telnet with negotiation
-* Supports seamless restarts while maintaining connections
+* Supports seamless restarts while maintaining connections and state
 * Common extras included, such as:
 
   * command manager
@@ -39,7 +39,7 @@ Quickstart
 ==========
 
 Install Mara with ``pip install mara``, then write your service using
-event handlers.
+`event handlers <http://radiac.net/projects/mara/documentation/api/events/>`_.
 
 A minimal Mara service looks something like this::
 
@@ -57,6 +57,12 @@ Save it as ``echo.py`` and run it::
 
     python echo.py
     * Server listening on 127.0.0.1:9000
+
+Override settings `in code <http://radiac.net/projects/mara/documentation/introduction/#settings>`_,
+or by passing arguments on the command line::
+
+    python echo.py --host=10.0.0.11 --port=8000
+    * Server listening on 10.0.0.11:8000
 
 Take a look at the
 `examples <https://github.com/radiac/mara/tree/master/examples>`_ to see how to

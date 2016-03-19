@@ -9,7 +9,9 @@ from ... import storage
 from ... import events
 
 __all__ = [
-    'RoomUserMixin', 'RoomConnectHandler', 'room_restart_handler_factory',
+    'RoomUserMixin',
+    'event_add_room_container', 'RoomConnectHandler',
+    'room_restart_handler_factory',
 ]
 
 
@@ -56,6 +58,18 @@ class RoomUserMixin(storage.Store):
         room = self.room
         room.exit(self)
         self.room = room
+
+
+class event_add_room_container(events.Handler):
+    """
+    Event handler to make other event handlers aware of the Room container.
+
+    Bind to all client events with front=True::
+
+        service.listen(ClientEvent, event_add_room_container, front=True)
+    """
+    def handler_10_override_container(self, event):
+        event.container = getattr(event.user, 'room', None) or event.service
 
 
 class RoomConnectHandler(events.Handler):

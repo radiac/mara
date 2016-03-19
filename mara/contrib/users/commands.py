@@ -36,7 +36,7 @@ class cmd_say(events.Handler):
 
     def handler_10_do(self, event, message):
         event.client.write("You say: %s" % message)
-        self.container.write_all(
+        event.container.write_all(
             "%s says: %s" % (event.user.name, message),
             exclude=event.client,
         )
@@ -51,7 +51,7 @@ class cmd_emote(events.Handler):
     def handler_10_do(self, event, action):
         if not action.startswith("'"):
             action = ' ' + action
-        self.container.write_all("%s%s" % (event.user.name, action))
+        event.container.write_all("%s%s" % (event.user.name, action))
 
 
 @define_command(
@@ -92,14 +92,14 @@ class cmd_look(events.Handler):
     """
 
     def handler_10_container(self, event):
-        self.container.write_all(
+        event.container.write_all(
             '%s looks around' % event.user.name,
             exclude=event.client,
         )
 
     def handler_10_user(self, event):
         event.user.write(
-            self.container.get_who(exclude=event.user.client),
+            event.container.get_who(exclude=event.user.client),
         )
 
 

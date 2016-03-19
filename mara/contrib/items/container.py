@@ -10,20 +10,96 @@ from ... import storage
 __all__ = ['ItemContainerMixin']
 
 
+class ContainerError(Exception):
+    """Unable to comply"""
+
+
+class CannotContain(Exception):
+    """This cannot contain items"""
+
+
+class NotFound(Exception):
+    """Item not found"""
+
+
+class TooManyFound(Exception):
+    """Found more than one item by that name"""
+
+
 class ItemContainerMixin(storage.Store):
     """
     Mixin for a store so it can contain items
     """
+    abstract = True
+
+    # If can_contain, can contain other objects
+    can_contain = True
+
     # List of items
     items = storage.Field(list)
 
+    # Make exceptions available on the class for convenience
+    ContainerError = ContainerError
+    CannotContain = CannotContain
+    NotFound = NotFound
+    TooManyFound = TooManyFound
+
     def add_item(self, item):
+        if not self.can_contain:
+            raise CannotContain()
         self.items.append(item)
         self.save()
 
     def remove_item(self, item):
+        if not self.can_contain:
+            raise CannotContain()
         self.items.remove(item)
         self.save()
+
+    def _find_item(self, name, recurse):
+        """
+        Search this item (and optionally recurse) for the named item
+
+        Return a tuple of (singular, plural), containing singular and plural
+        matches
+        """
+        singular = []
+        plural = []
+        for item in self.items:
+            if name == item.name:
+                singular.append(item)
+            elif name == item.plural:
+                plural.append(item)
+
+            if recurse and item.can_contain:
+                child_singles, child_plurals = item.find_item(name, recurse)
+                singular.extend(child_singles)
+                plural.extend(child_plurals)
+        return singular, plural
+
+    def find_item(self, name, recurse=False):
+        """
+        Search this item (and optionally recurse) for the named item
+        Returns a list of items
+        """
+        singular, plural = self._find_item(name, recurse)
+
+        if singular:
+            # If we've found a single or more, also consider the plurals
+            singular.extend(plural)
+        elif plural:
+            # If we've only found plurals user must have been searching for all
+            return plural
+
+        # ++ Logic check here
+        '''
+        if not singular:
+            raise NotFound()
+        elif len(singular) > 1:
+            raise TooManyFound()
+        '''
+
+        return singular
 
     def get_items_display(
         self, filter_cls=None, depth=0, indent=0, indent_size=0, prose=False
@@ -81,7 +157,7 @@ class ItemContainerMixin(storage.Store):
                 continue
 
             # Recurse containers to specified depth
-            children = None
+            children = []
             if depth != 0 and issubclass(item, ItemContainerMixin):
                 # Get children at correct indent
                 children = item.get_items(
@@ -112,7 +188,7 @@ class ItemContainerMixin(storage.Store):
             # then number of children
             for children, count in sorted(
                 descs[item_str],
-                key=lambda children, count: (count, len(children)),
+                key=lambda (children, count): (count, len(children)),
             ):
                 lines.append('%(indent)s%(count)s %(item_str)s' % {
                     'indent': ' ' * indent,

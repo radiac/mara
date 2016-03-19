@@ -13,7 +13,7 @@ def plural_noun(noun, count=0):
     if count == 1:
         return noun
 
-    if noun.endswith(['s', 'x', 'z', 'ch', 'sh']):
+    if noun.endswith(('s', 'x', 'z', 'ch', 'sh')):
         return noun + 'es'
 
     elif re.search('[^aeiou]y$', noun):
@@ -29,6 +29,6 @@ def article_for_noun(noun):
     Correct articles depend on the sound of the word; this returns based on
     the first character.
     """
-    if noun.startswith(['a', 'e', 'i', 'o', 'u']):
+    if noun.startswith(('a', 'e', 'i', 'o', 'u')):
         return 'an'
     return 'a'

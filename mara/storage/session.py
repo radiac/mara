@@ -4,7 +4,7 @@ Keyless session store
 from __future__ import unicode_literals
 
 from .manager import Manager
-from .storage import Store
+from .store import Store
 
 __all__ = ['SessionManager', 'SessionStore']
 

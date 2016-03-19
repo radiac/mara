@@ -33,7 +33,10 @@ class BaseItem(storage.KeylessStore, ItemContainerMixin):
     article = property(lambda self: language.article_for_noun(self.name))
 
     # A description to show when examined
-    description = 'It looks fairly generic'
+    description = 'It looks unremarkable'
+
+    # If can_contain, this item can contain other objects
+    can_contain = False
 
     # If fixed, it cannot be taken, dropped etc
     fixed = True

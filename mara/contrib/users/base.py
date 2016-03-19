@@ -23,8 +23,8 @@ class ClientField(storage.Field):
     Manage the client.user attribute
     """
 
-    def deserialise(self, obj, name, data):
-        super(ClientField, self).deserialise(obj, name, data)
+    def deserialise(self, obj, name, data, session):
+        super(ClientField, self).deserialise(obj, name, data, session)
 
         # Link this client to this user
         client = self.get_value(obj, name)

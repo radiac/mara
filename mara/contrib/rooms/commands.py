@@ -10,9 +10,8 @@ from .. import commands
 from ... import events
 
 __all__ = [
-    # Standard commands referenced/overridden from contrib.users
-    'cmd_say', 'cmd_emote', 'cmd_tell',
-    'cmd_look', 'cmd_list_active_users', 'cmd_list_all_users',
+    # Standard command mixins
+    'LookMixin',
 
     # Room-specific commands
     'cmd_exits', 'cmd_where',
@@ -29,28 +28,8 @@ __all__ = [
 # Standard cmds
 ###############################################################################
 
-class RoomHandler(events.Handler):
-    def get_container(self, event):
-        return event.user.room
-
-
-# Override container
-class cmd_say(RoomHandler, user_cmds.cmd_say):
-    pass
-
-
-class cmd_emote(RoomHandler, user_cmds.cmd_emote):
-    pass
-
-
-# Nothing to override; add reference to this module for others to import
-cmd_tell = user_cmds.cmd_tell
-cmd_list_active_users = user_cmds.cmd_list_active_users
-cmd_list_all_users = user_cmds.cmd_list_all_users
-
-
 # Override container and functionality
-class cmd_look(RoomHandler, user_cmds.cmd_look):
+class LookMixin(events.Handler):
     # Change what the user sees
     def handler_10_user(self, event):
         event.user.room.look(event.user)
@@ -154,13 +133,8 @@ def register_cmds(registry, admin=False):
     if admin:
         from ..users.admin import if_admin
 
-    # Standard commands referenced/overridden from contrib.users
-    registry.register('say', cmd_say)
-    registry.register('emote', cmd_emote)
-    registry.register('tell', cmd_tell)
-    registry.register('look', cmd_look)
-    registry.register('who', cmd_list_active_users)
-    registry.register('users', cmd_list_all_users)
+    # Extend standard commands from contrib.users
+    registry.extend('look', LookMixin)
 
     # Room-specific commands
     registry.register('exits', cmd_exits)

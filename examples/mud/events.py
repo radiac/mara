@@ -1,7 +1,9 @@
 from __future__ import unicode_literals
 
 from mara import events
-from mara.contrib.rooms import room_restart_handler_factory, RoomConnectHandler
+from mara.contrib.rooms import (
+    room_restart_handler_factory, RoomConnectHandler, event_add_room_container,
+)
 from mara.contrib.users import event_add_user, DisconnectHandler
 from mara.contrib.users.password import ConnectHandler
 
@@ -10,8 +12,10 @@ from .users import User
 from .rooms import room_lobby
 
 
-# Make sure client events know about the user
+# Make sure client events know about the user and the room
+# These must be the first two events, in this order
 service.listen(events.Client, event_add_user)
+service.listen(events.Client, event_add_room_container)
 
 
 # Add handler to process new connections

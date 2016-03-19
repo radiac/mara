@@ -10,7 +10,6 @@ __all__ = ['Handler']
 
 
 class HandlerType(type):
-
     def __init__(self, name, bases, dct):
         super(HandlerType, self).__init__(name, bases, dct)
 
@@ -46,17 +45,8 @@ class Handler(object):
     # Reference to current event
     event = None
 
-    # Reference to current container
-    container = None
-
     def get_handlers(self):
         return self._handlers[:]
-
-    def get_container(self, event):
-        """
-        Given the event, find the container so it can be made available
-        """
-        return event.service
 
     def __call__(self, event, *args, **kwargs):
         """
@@ -64,7 +54,6 @@ class Handler(object):
         """
         # Prepare handler context
         self.event = event
-        self.container = self.get_container(event)
 
         # Load up clean queue of handlers and loop until they're all run
         self.handlers = self.get_handlers()
@@ -100,6 +89,21 @@ class Handler(object):
                 self.handlers = []
 
         # Clean up
+        self.clean()
+
+    def clean(self):
+        """
+        Clean the class after a __call__
+        """
         self.event = None
-        self.container = None
         self.handlers = []
+
+    def extend(self, mixin):
+        """
+        Extend this instance of this handler by adding the mixin to its base
+        classes
+        """
+        self.__class__ = type(
+            str('{}{}'.format(mixin.__name__, self.__class__.__name__)),
+            (mixin, self.__class__), {},
+        )

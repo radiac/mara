@@ -18,15 +18,33 @@ Changelog
 Feature:
 
 * Added contrib items and item containers
-
-Internal:
-
+* Event listeners can now be defined with ``front=True`` to add them to the
+  front of the event stack, rather than to the end.
+* Handler instances have an ``.extend(mixin)`` method to make reusable handlers
+  and mixins easier to work with
+* Command registry has a matching `.extend(cmd, mixin)` command
+* Standard commands are now all Handler-based
 * Added ``KeylessStore``, for session objects without keys.
 
   These will not be serialised by their managers (managers store no cache), but instead they are serialised in-place when found ona fied, eg items - each
   Sword instance may have its own attributes, but they will not have unique
   keys, and do not need to be persisted individually.
+* When using rooms, client events ``container`` attribute will now always point
+  at the user's room
 
+Internal:
+
+* Moved ``container`` attribute from ``Handler`` instances onto the ``event``
+* Changed service.events to a deque
+* Removed ``contrib.rooms.commands.RoomHandler`` in favour of the ``Client``
+  event handler ``contrib.rooms.user.event_add_room_container``
+* Removed user-related commands from ``contrib.rooms``, added a ``LookMixin``
+* ``Field.deserialise`` now has a 5th compulsory argument, the ``session`` flag
+
+Bugfixes:
+
+* Corrected manifest
+* Pinned travis virtualenv to maintain Python 3.2 support
 
 
 0.6.0, 2015-12-20
@@ -174,6 +192,62 @@ Instructions
 
 3. Upgrade your code following the upgrade instructions below for **all**
    appropriate versions.
+
+
+Upgrading from 0.6.0
+--------------------
+
+``event.container``
+~~~~~~~~~~~~~~~~~~~
+
+The ``handler.container`` has been removed, and ``event.container`` added in
+its place.
+
+Any ``handler_`` methods in your event handler classes which previously
+referred to ``self.container`` should now use ``event.container`` instead.
+
+
+Room command handler
+~~~~~~~~~~~~~~~~~~~~
+
+The base command handler ``contrib.rooms.commands.RoomHandler`` has been removed
+and replaced with a ``Client`` event handler
+``contrib.rooms.user.event_add_room_container``. This should be added to your
+``Client`` listeners immediately after ``event_add_user``::
+
+    service.listen(events.Client, event_add_user)
+    service.listen(events.Client, event_add_room_container)
+
+
+Room commands
+~~~~~~~~~~~~~
+
+User-related commands have been removed from ``contrib.rooms``, and should now
+be imported from ``contrib.users`` instead.
+
+If previously you called ``contrib.rooms.register_cmds``, you must now call
+``contrib.users.register_cmds`` first::
+
+    from mara.contrib.users import register_cmds as users_register_cmds
+    from mara.contrib.rooms import register_cmds as rooms_register_cmds
+
+    users_register_cmds(commands)
+    rooms_register_cmds(commands, admin=True)
+
+If instead you imported and defined commands from ``rooms`` individually, you
+must now import then from ``users``. There is a new ``LookMixin``, which should
+be used to extend ``users.cmd_look``:
+
+    commands.register('look', contrib.users.cmd_look)
+    commands.extend('look', contrib.rooms.LookMixin)
+
+
+Storage
+~~~~~~~
+
+Mara 0.7.0 changes the arguments for ``storage.Field.deserialise``. If any of
+your field subclasses have a custom ``deserialise`` method, they must now
+take a 5th argument ``session``.
 
 
 Upgrading from 0.5.0

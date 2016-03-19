@@ -87,6 +87,10 @@ classes in :ref:`module_contrib_users` and
 Event handlers are compatible with the :ref:`module_contrib_commands` module;
 see :ref:`contrib_commands_handlers` for more details.
 
+The ``handler.extend(mixin)`` method provides a convenient way to add mixins to
+existing handler instances without needing to create a subclass. This is used
+by the command registry - see :ref:`contrib_commands_handlers`.
+
 
 .. _event_inheritance:
 
@@ -105,9 +109,9 @@ example, a handler bound to ``events.Client`` will also be called for
     If you have an event listener which triggers a subclass of that event, be
     careful to avoid infinite loops; for example, you could check the event
     class before triggering it, eg::
-    
+
         class Subevent(mara.events.Receive): pass
-        
+
         @service.listen(mara.events.Receive)
         def receiver(event):
             if type(event) == mara.events.Receive:
@@ -174,7 +178,7 @@ When the service starts running:
         The service is about to start its server (``service.server`` is not
         yet defined). Settings have been collected, a connection to the angel
         (if present) has been established, and the logger has been initialised.
-        
+
     ``mara.events.PostStart``
         The server has been initialised and is about to enter its main listen
         loop. If the process is restarting, the clients and stores have now
@@ -186,20 +190,20 @@ When the service stops:
         The service is about to stop its server by telling it to terminate its
         main listen loop. This is the last opportunity to write to clients -
         but flush them to make sure the data gets to them.
-        
+
     ``mara.events.PostStop``
         The server has left its main listen loop and has closed its socket and
         those of its clients. Main program execution is about to resume from
         where it called ``service.run()``
 
 When the service restarts:
-    
+
     ``mara.events.PreRestart``
         The service is about to restart the process. It has confirmed that it
         is connected to the angel and can proceed; it is about to flush client
         sockets, suspend the server, serialise all client sockets and store
         data and send it to the angel, before terminating this process.
-    
+
     ``mara.events.PostRestart``
         The service has restarted. This is called immediately after
         ``PostStart``, so everything has been deserialised now. This is a new
@@ -252,7 +256,7 @@ When in raw mode this will be triggered as soon as data arrives on the socket,
 but when raw mode is disabled (by default), incoming data will be buffered
 until one or more newline sequences are found; at that point a new event will
 be created for each complete line.
-    
+
 Attributes:
     ``client``
         Instance of :ref:`class_client`
@@ -272,4 +276,3 @@ Client has disconnected (``client``)
 Attributes:
     ``client``
         Instance of :ref:`class_client`
-

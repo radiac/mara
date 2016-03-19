@@ -5,7 +5,7 @@ Controls settings, server, and loaded modules
 """
 from __future__ import unicode_literals
 
-from collections import defaultdict
+from collections import defaultdict, deque
 import datetime
 import inspect
 import sys
@@ -45,7 +45,7 @@ class Service(ClientContainer):
         self.time = time.time()
 
         # Initialise events
-        self.events = defaultdict(list)
+        self.events = defaultdict(deque)
         self._known_events = {}
 
         # Initialise timers
@@ -59,11 +59,23 @@ class Service(ClientContainer):
         doc="Get the current time as a datetime object"
     )
 
+    def get_stores(self, filter_cls=None):
+        """
+        Return the store classes for this service, optionally filtered by
+        issubclass(store_cls, filter_cls)
+        """
+        if not filter_cls:
+            return self.stores
+        return {
+            name: store for name, store in self.stores.items()
+            if issubclass(store, filter_cls)
+        }
+
     #
     # Events
     #
 
-    def listen(self, event_class, handler=None):
+    def listen(self, event_class, handler=None, front=None):
         """
         Bind a handler to the specified event class, and to its subclasses
         """
@@ -71,18 +83,18 @@ class Service(ClientContainer):
         if handler:
             if isinstance(handler, events.handler.HandlerType):
                 handler = handler()
-            self._listen(event_class, handler)
+            self._listen(event_class, handler, front)
             return
 
         # Called as a decorator
         def decorator(fn):
             if isinstance(fn, events.handler.HandlerType):
                 fn = fn()
-            self._listen(event_class, fn)
+            self._listen(event_class, fn, front)
             return fn
         return decorator
 
-    def _listen(self, event_class, handler):
+    def _listen(self, event_class, handler, front):
         """
         Internal method to recursively bind a handler to the specified event
         class and its subclasses. Call listen() instead.
@@ -90,11 +102,14 @@ class Service(ClientContainer):
         # Recurse subclasses. Do it before registering for this event in case
         # they're not known yet, then they'll copy handlers for this event
         for subclass in event_class.__subclasses__():
-            self._listen(subclass, handler)
+            self._listen(subclass, handler, front)
 
         # Register class
         self._ensure_known_event(event_class)
-        self.events[event_class].append(handler)
+        if front:
+            self.events[event_class].appendleft(handler)
+        else:
+            self.events[event_class].append(handler)
 
     def _ensure_known_event(self, event_class):
         """
@@ -125,6 +140,9 @@ class Service(ClientContainer):
         # Make sure all listeners have access to the service, in case they're
         # defined out of scope
         event.service = self
+
+        # Events need to know the ClientContainer for the current client
+        event.container = self
 
         self.log.event(event)
         for handler in self.events[event.__class__]:

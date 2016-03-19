@@ -422,13 +422,18 @@ class Client(object):
             if inspect.isclass(line) and issubclass(line, styles.String):
                 line = line()
 
-            # Render Strings
+            # Ensure a string
             if isinstance(line, styles.String):
+                # Render Strings
                 state = (
                     styles.State()
                     if self.terminal_type else styles.StatePlain()
                 )
                 line = line.render(self, state) + state.__class__().render()
+
+            elif not isinstance(line, six.string_types):
+                # Try to cast unknown object to a string
+                line = six.text_type(line)
 
             line = line.encode('utf-8')
             out.append(line)

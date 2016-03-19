@@ -20,10 +20,10 @@ Example usage::
     # This will add its own Receive handler
     from mara.contrib.commands import CommandRegistry, register_cmds
     commands = CommandRegistry(service)
-    
+
     # Register the standard commands
     register_cmds(commands)
-    
+
     # Start registering custom commands
     @commands.register('look')
     def cmd_look(event):
@@ -72,7 +72,7 @@ Register a command function with the ``CommandRegistry.register`` method::
     @commands.register
     def help(event):
         'Triggered when user sends "help" with no arguments'
-    
+
     @commands.register('look', args=r'(.*)', group='room'):
     def cmd_look(event, *args, **kwargs):
         'Triggered when user sends "look" with matching arguments'
@@ -85,10 +85,10 @@ name is known) can have their parameters pre-defined with the
     @define_command(args=r'(.*)')
     def dance(event, desc):
         ...
-    
+
     # Register dance() as "prance" command
     commands.register('prance', dance)
-    
+
     # Register dance() as "dance" command (take name of fn name)
     commands.register(dance)
 
@@ -129,7 +129,7 @@ Command functions are passed the following arguments:
 ``event``
     A ``CommandEvent`` based on the ``Receive`` event, (ie
     containing its ``service``, ``client`` etc), plus:
-    
+
     ``event.cmd``
         The command name which was matched for this command
     ``event.registry``
@@ -155,7 +155,7 @@ can also use the ``@define_command`` decorator.
 For example::
 
     @define_command(args=r'^(?:at\s+)?(?P<thing>.*)?$', group='room'):
-    class ContrivedLookHandler(events.Handler)
+    class ContrivedLookCommand(events.Handler)
         def handler_user(self, event, thing=None):
             event.client.write('You look at the %s' % thing or 'void')
         def handler_others(self, event, thing=None):
@@ -163,11 +163,33 @@ For example::
                 '%s looks at something' % event.user.name,
                 exclude=event.client,
             )
-    
-    commands.register('look', ContrivedLookHandler())
+
+    commands.register('look', ContrivedLookCommand)
 
 This is a contrived example, but in practice it means that complex commands
-can be split into multiple methods, and inherited from and overridden.
+can be split into multiple methods, and inherited from and overridden::
+
+    class BrightLookCommand(ContrivedLookHandler)
+        def handler_user(self, event, thing=None):
+            if self.container.is_bright:
+                event.client.write('You cannot see anything, it is too bright.')
+            return super(BrightLookMixin).handler_user(event, thing)
+
+    commands.register('look', BrightLookCommand')
+
+Although this works well in the contrived example, it is often more flexible to
+use reusable mixins. To simplify the use of these mixins, the handler class
+provides a ``extend(mixin)`` instance method, which is used by the command
+registry to provide an ``extend(name, mixin)`` method::
+
+    class BrightLookMixin(events.Handler)
+        def handler_user(self, event, thing=None):
+            if self.container.is_bright:
+                event.client.write('You cannot see anything, it is too bright.')
+            return super(BrightLookMixin).handler_user(event, thing)
+
+    commands.register('look', ContrivedLookCommand)
+    commands.extend('look', BrightLookMixin)
 
 
 .. _contrib_commands_aliases:
@@ -185,12 +207,12 @@ alises using the ``alias(match, replace)`` method; for example::
 
 Matches will be evaluated in order they are defined, before commands are
 checked.
-        
+
 The ``replace`` argument can include backreferences; the arguments will be used
 with ``re.sub``, equivalent to::
 
     input = re.sub(match, replace, input)
- 
+
 
 Subclassing the ``CommandRegistry``
 -----------------------------------
@@ -258,7 +280,7 @@ There is also an event handler to ask for a user's name when they connect; this
 should be used in conjunction with a ``SessionStore``-based user store (for
 saved users use the authenticating ``ConnectHandler`` in
 :ref:`module_contrib_users_password`)::
-    
+
     from mara.contrib.users import ConnectHandler
     service.listen(events.Connect, ConnectHandler(User))
 
@@ -322,7 +344,7 @@ methods:
 
 There is also an event handler to authenticate existing users, or create
 accounts for new users::
-    
+
     from mara.contrib.users.password import ConnectHandler
     service.listen(events.Connect, ConnectHandler(User))
 
@@ -391,16 +413,16 @@ object with the following attributes:
     A string set to one of ``'male'``, ``'female'`` or ``'other'``.
     These are available as constants on the class, as
     ``MALE``, ``FEMALE`` and ``OTHER``. Default is ``OTHER``.
-    
+
 ``subject``
     Pronoun for the subject (he, she or they)
-    
+
 ``object``
     Pronoun for the object (him, her, they)
-    
+
 ``possessive``
     Possessive pronoun (his, her, their)
-    
+
 ``self``
     Referring to oneself (himself, herself, themselves)
 
@@ -456,6 +478,14 @@ Create rooms by defining instances of the room store (see
         short='in the lobby',
         desc="You are standing in the lobby",
     )
+
+Add the ``event_add_room_container`` event handler to your ``Client`` event
+listeners, after ``event_add_user`` but before any other handlers. This will
+ensure that ``event.container`` will point at the room, rather than the
+service::
+
+    from mara.contrib.rooms import event_add_room_container
+    service.listen(events.Client, event_add_room_container)
 
 Add the ``RoomConnectHandler`` mixin to your connect handler to so new users
 go into the ``default_room``, and existing users return to the room they were
@@ -540,7 +570,7 @@ For example::
         desc='You are in the lobby.',
         exits=Exits(north='pool', south='road'),
     )
-    
+
 
 Rooms can also be defined in YAML, using the YAML instantiator. To load your
 YAML rooms::
@@ -579,21 +609,21 @@ example::
 
     class Room(BaseRoom):
         service = service
-    
+
     class FancyRoom(Room): pass
     class OtherRoom(Room): pass
-    
+
     class ForeignRoom(BaseRoom):
         service = service
-    
+
     # Instances of the related room classes can refer to each other by key
     r1 = Room('room1', exits=Exits(north='room2'))
     r2 = FancyRoom('room2', exits=Exits(south='room1', north='room3'))
     r3 = OtherRoom('room3', exits=Exits(south='room2'))
-    
+
     # This room can't refer to r1, r2 or r3, so this will fail:
     r4 = ForeignRoom('room4', exits=Exits(north='room1'))
-    
+
     # unless we define a room1 in that set of rooms:
     r5 = ForeignRoom('room1', exits=Exits(south='room4'))
     # Because r1 and r5 don't share a concrete base store class, they both
@@ -608,49 +638,49 @@ example::
 
 ``__init__(...)``
 
-Define a room in code by instantiating your ``Room`` store object with the 
+Define a room in code by instantiating your ``Room`` store object with the
 following arguments:
 
 key
     Internal name of room. Must be unique; used by ``Exit`` definitions to
     refer to rooms which have not yet been defined.
-    
+
     Keys are stored between room subclasses which share a concrete ancestor -
     see :ref:`contrib_rooms_referencing` for details.
 
 name
     Name of room, used for titles and describing exits.
-    
+
     Default: ``None``
 
 short
     Short description, used to describe the user's position in the room. This
     will be used after "You are" or "User is".
-    
+
     Default: ``'in the ' + name``
 
 intro
     Introductory block of text; shown on entry to the room, but not when the
     user looks around.
-    
+
     This can either be a single line as a string, or multiple lines as a list
     of strings.
-    
+
     Default: ``None``
 
 desc
     Full room description, shown on entry (after ``intro``) and when the user
     looks around.
-    
+
     This can either be a single line as a string, or multiple lines as a list
     of strings.
-    
+
     Default: ``None``
 
 exits
     Instance of the :ref:`class_contrib_rooms_exits` class, holding the list of
     exit definitions.
-    
+
     Default: ``None``
 
 
@@ -696,27 +726,27 @@ constructor takes the following arguments:
 
 desc
     Static description string for the exits in this room.
-    
+
     If not defined, will be built automatically by
     :ref:`method_contrib_rooms_exits_get_desc`
-    
+
 default
     Message to show when a user tries to exit in
     a direction without an exit.
-    
+
     If not set, uses the ``default`` attribute of the class.
-    
+
     To override messages for individual directions, see
     :ref:`class_contrib_rooms_fakeexit`.
-    
+
     Default: ``'You cannot go that way.'``
-    
+
 <direction>
     Exit definition
-    
+
     The key must be one of north, south, east, west, northeast, northwest,
     southeast, southwest, up or down.
-    
+
     The value should be an instance of `class_contrib_rooms_exit`, although
     as a shortcut it can be the first value for the ``Exit`` constructor
     (ie the room instance or key)
@@ -736,10 +766,10 @@ will be built with a list of the defined exits; for example::
 
     >>> Exits().get_desc()
     'There are no exits'
-    
+
     >>> Exits(south='room1')
     'There is one exit to the south.'
-    
+
     >>> Exits(south='room1', up='room2', east='room3')
     'There are exits to the south, to the east and upwards.'
 
@@ -843,6 +873,20 @@ Items are instances of :ref:`class_contrib_items_item` - keyless session-only
 objects which should be managed by stores which subclass
 :ref:`class_contrib_items_itemcontainermixin`.
 
+There is a set of commands for using items:
+
+    ``LookMixin``
+        Item-aware mixin for the standard :ref:`module_contrib_users`, to list
+        items in the user's container
+    ``cmd_inventory`` (aliased to ``i``)
+        List items the user is holding
+
+These can be registered individually, or with:
+
+    from mara.contrib.items import register_cmds, register_aliases
+    register_cmds(commands, admin=True)
+    register_aliases(commands)
+
 
 .. _class_contrib_items_itemcontainermixin:
 
@@ -894,5 +938,5 @@ Each item has the following attributes:
 
 ``plural``
     Plural name of the item.
-    
+
     By default this is a property which pluralises the name.

@@ -53,15 +53,15 @@ Arguments:
 
 .. _method_service_listen:
 
-``listen(event_class, handler)``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``listen(event_class, handler[, front=False])``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Bind a function to a class of event. It can be used as a direct call, or as a
 decorator::
-    
+
     # Direct call to bind defined handler function
     service.listen(Event, handler)
-    
+
     # Decorator to bind while defining handler function
     @service.listen(Event):
     def handler(event):
@@ -70,7 +70,9 @@ decorator::
 For information about writing an event handler, see :ref:`event_handlers`.
 
 The order of binding is important - the first handler to listen to an event
-sees it first, and any handler can stop the event.
+sees it first, and any handler can stop the event. Handlers added later will
+be receive the event after handlers added last. This can be overridden with the
+argument ``front=True``, which will insert it as the first handler.
 
 It will also be bound to any subclasses of the specified event, allowing you
 to listen to a category of events - see :ref:`event_inheritance` for details.
@@ -83,6 +85,12 @@ Arguments:
     ``handler``
         A reference to a handler. Omit this argument if you are using
         ``listen`` as a decorator. See :ref:`event_handlers` for details.
+
+    ``front``
+        If ``True``, this will be added to the front of the handler list, rather
+        than the back, meaning it will be the first handler to see it. If later
+        handlers are also bound with ``front=True``, they will be inserted
+        before this one.
 
 
 .. _method_service_trigger:
@@ -97,7 +105,7 @@ class of event, in the order they were bound, until either a handler calls
 Arguments:
 
     ``event``
-        An instance of an :ref:`class_events_event` subclass 
+        An instance of an :ref:`class_events_event` subclass
 
 
 .. _method_service_timer:
@@ -137,7 +145,7 @@ Arguments:
 
     ``cls``
         The class of timer to instantiate.
-    
+
     ``**kwargs``
         Keyword arguments used to instantiate the timer class
 
@@ -176,7 +184,7 @@ The callable that you assign should expect the following arguments:
 
 ``service``
     The service that is in the process of writing the data
-    
+
 ``clients``
     A list of :ref:`class_client` instances
 
@@ -186,7 +194,7 @@ If the callable is set to None, the filter will be reset and no filtering will
 be performed.
 
 For example::
-    
+
     # Only write to every other client
     service.filter_all = lambda service, clients: clients[::2]
 
@@ -196,11 +204,11 @@ or slightly more complex::
         if not room:
             return []
         return [c for c in clients if c in room.clients]
-    
+
     # We could set this as a global filter with:
     #   service.filter_all = room_filter
     # But this would stop us from broadcasting global events
-    
+
     @service.listen(mara.events.Receieve):
     def chat(event):
         client.write('You say %s' % event.data)
@@ -316,7 +324,7 @@ Arguments:
     ``lines``
         One or more lines of data to send to the client. Should not contain
         newline sequences.
-    
+
     ``newline=True``
         A boolean to determine if the newline character should be added to the
         end of each line. Defaults to ``True``, can be set to ``False`` for use
@@ -397,7 +405,7 @@ Default: ``False``
 
 Path to store directory. If it does not exist, it will be created.
 
-If it is a relative path, Mara will use the :ref:`setting_root_path` setting to 
+If it is a relative path, Mara will use the :ref:`setting_root_path` setting to
 determine the absolute path.
 
 Default: ``store``
@@ -479,7 +487,7 @@ Arguments:
     ``*data``
         One or more lines of data to send to the client. Should not contain
         newline sequences.
-    
+
     ``newline=True``
         A boolean to determine if the newline character should be added to the
         end of each line. Defaults to ``True``, can be set to ``False`` for use
@@ -518,14 +526,14 @@ Optional keyword arguments:
 
             ``service``
                 The service that is in the process of writing the data
-                
+
             ``clients``
                 A list of :ref:`class_client` instances
 
         It should then return a filtered list of clients.
-        
+
         Default: ``None``
-        
+
     ``exclude``
         A :ref:`class_client` instance, or list of ``Client`` instances.
 
@@ -549,16 +557,16 @@ Classes available for you to use are:
 
     ``normal``
         Reset all styles and colours
-    
+
     ``bold``, ``faint``, ``italic``, ``underline``, ``negative``, ``strike``
         Font styles
-    
+
     ``red``, ``green``, ``yellow``, ``blue``, ``magenta``, ``cyan``, ``white``
         Colours
-    
+
     ``hr``
         Horizontal rule; if it has any content, the content will be centered.
-        
+
         Takes its style state and sequence from the settings ``hr_state`` and
         ``hr_sequence``
 
@@ -567,17 +575,17 @@ Example usage::
     client.write(
         # Horizontal rule with centered message
         styles.hr('Welcome'),
-        
+
         # Multi-coloured concatenated style objects
         styles.red('Red') + ' and ' + styles.blue('blue'),
-        
+
         # Multiple nested style objects
         styles.bold(
             'This', styles.cyan('is'), ' ', styles.red(
                 styles.strike('dumb'), 'amazing',
             ), '.',
         ),
-        
+
         # Horizontal rule without message, does not need to be instantiated
         styles.hr,
     )

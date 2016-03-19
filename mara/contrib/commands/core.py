@@ -135,13 +135,11 @@ class CommandRegistry(object):
         if name not in self.commands:
             raise ValueError('Unknown command')
         command = self.commands[name]
-        if not isinstance(command.fn, events.handler.HandlerType):
-            raise TypeError('Can only extend Handler-based commands')
-
-        # Add this mixin to its base classes
-        if mixin in command.fn.__bases__:
-            raise ValueError('Handler already has this mixin')
-        command.fn.__bases__ = (mixin,) + command.fn.__bases__
+        if not isinstance(command.fn, events.Handler):
+            raise TypeError('Cannot extend %s, not a Handler command' % name)
+        if isinstance(command.fn, mixin):
+            raise ValueError('Cannot extend %s, already has this mixin' % name)
+        command.fn.extend(mixin)
 
     def alias(self, match, replace):
         """

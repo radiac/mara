@@ -1,5 +1,12 @@
-include LICENSE tox.ini docs/conf.py docs/Makefile
-recursive-include tests *
-recursive-exclude tests *.pyc
-recursive-include docs *.rst
+include LICENSE
+include tox.ini
+graft mara
+graft bin
+graft tests
+graft examples
+prune examples/mud_store
+prune examples/talker_store
+graft docs
 prune docs/_build
+global-exclude __pycache__
+global-exclude *.pyc

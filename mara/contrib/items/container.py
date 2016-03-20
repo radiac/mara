@@ -207,7 +207,7 @@ class ItemContainerMixin(storage.Store):
             # then number of children
             for children, count in sorted(
                 descs[item_str],
-                key=lambda (children, count): (count, len(children)),
+                key=lambda desc: (desc[1], len(desc[0])),
             ):
                 lines.append('%(indent)s%(count)s %(item_str)s' % {
                     'indent': ' ' * indent,

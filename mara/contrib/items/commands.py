@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 from .container import ItemContainerMixin
 from .item import BaseItem
 from .. import commands
+from .. import language
 from ... import events
 from ... import util
 
@@ -43,27 +44,88 @@ class cmd_inventory(events.Handler):
         event.client.write('You are holding:', *items)
 
 
+class ItemActionHandler(events.Handler):
+    """
+    A command handler base class for commands which take an item's name
+    * Finds the item(s) at handler_10, validates at handler_20
+    * Handles no item found, or ambiguous match
+    * Sets them on self.items
+    """
+    # Argument pattern and syntax
+    # ++ TODO: Add support for resolving ambiguous matches
+    # ++ Note: Subclasses should expect arguments to change in future versions
+    arg_pattern = r'^(?P<name>\w+)$'
+    arg_syntax = "<item>"
+
+    # If recurse=True, will check items within items within items
+    # Can also be set to a number to specify how many levels deep to go
+    recurse = False
+
+    def handler_10_find(self, event, name):
+        self.in_container = event.container.find_items(
+            name, recurse=self.recurse,
+        )
+        self.in_user = event.user.find_items(name, recurse=self.recurse)
+        self.items = self.in_container + self.in_user
+
+    def handler_20_validate(self, event, name):
+        # ++ TODO: Support for flagging ambiguous matches
+        if not self.items:
+            event.client.write('You cannot find %s %s' % (
+                language.article_for_noun(name), name,
+            ))
+            event.stop()
+
+
 @commands.define_command(
-    args=r'^(?P<name>\w+)$', syntax="<item>",
+    args=ItemActionHandler.arg_pattern, syntax=ItemActionHandler.arg_syntax,
     help="Examine an item",
 )
-class cmd_examine(events.Handler):
-    def handler_01_init(self, event, name):
-        self.items = None
+class cmd_examine(ItemActionHandler):
+    def handler_50_examine(self, event, name):
+        item = self.items[0]
+        event.client.write('You look at the %s' % item.full_name)
+        event.client.write(item.description)
 
-    def handler_10_find_item(self, event, name):
-        self.items = event.container.find_item(name)
-        self.items.extend(event.user.find_item(name))
 
-    def handler_20_examine(self, event, name):
-        # ++ TODO: Move this logic into ItemContainerMixin.find_items
-        if not self.items:
-            event.client.write('Item not found')
-        if len(self.items) > 1:
-            event.client.write('Too many items found')
+@commands.define_command(
+    args=ItemActionHandler.arg_pattern, syntax=ItemActionHandler.arg_syntax,
+    help="Drop an item",
+)
+class cmd_drop(ItemActionHandler):
+    def handler_30_user_only(self, event, name):
+        if not self.in_user:
+            event.client.write('You are not holding the %s' % name)
+            event.stop()
+        self.items = self.in_user
 
-        event.client.write('You look at the %s' % name)
-        event.client.write(self.items[0].description)
+    def handler_50_drop(self, event, name):
+        item = self.items[0]
+        event.client.write('You drop the %s' % item.name)
+        item.container.remove_item(item)
+        event.container.add_item(item)
+
+
+@commands.define_command(
+    args=ItemActionHandler.arg_pattern, syntax=ItemActionHandler.arg_syntax,
+    help="Take an item",
+)
+class cmd_take(ItemActionHandler):
+    def handler_30_container_only(self, event, name):
+        if not self.in_container:
+            event.client.write('You are already holding the %s' % name)
+            event.stop()
+
+    def handler_50_drop(self, event, name):
+        item = self.items[0]
+        if item.fixed:
+            event.client.write('You cannot take the %s' % item.name)
+            event.stop()
+            return
+
+        event.client.write('You take the %s' % item.name)
+        item.container.remove_item(item)
+        event.user.add_item(item)
 
 
 @commands.define_command(
@@ -105,6 +167,17 @@ class cmd_create_item(events.Handler):
         event.client.write('Created %s' % self.item_cls.name)
 
 
+@commands.define_command(
+    args=ItemActionHandler.arg_pattern, syntax=ItemActionHandler.arg_syntax,
+    help="Destroy an item",
+)
+class cmd_destroy_item(ItemActionHandler):
+    def handler_50_destroy(self, event, name):
+        item = self.items[0]
+        item.container.remove_item(item)
+        event.client.write('Removed %s' % item.name)
+
+
 ###############################################################################
 # Shortcut
 ###############################################################################
@@ -125,9 +198,12 @@ def register_cmds(registry, admin=False):
     # Item-specific commands
     registry.register('inventory', cmd_inventory)
     registry.register('examine', cmd_examine)
+    registry.register('drop', cmd_drop)
+    registry.register('take', cmd_take)
 
     # Admin commands
     registry.register('create_item', cmd_create_item, can=if_admin)
+    registry.register('destroy_item', cmd_destroy_item, can=if_admin)
 
 
 def register_aliases(registry):

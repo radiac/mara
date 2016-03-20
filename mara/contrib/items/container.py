@@ -18,12 +18,26 @@ class CannotContain(Exception):
     """This cannot contain items"""
 
 
-class NotFound(Exception):
-    """Item not found"""
+class DoesNotContain(Exception):
+    """Item not contained"""
 
 
-class TooManyFound(Exception):
-    """Found more than one item by that name"""
+class ItemsField(storage.Field):
+    """
+    Manage the item
+    """
+    def _associate_item_container(self, container, items):
+        for item in items:
+            item.container = container
+            if item.can_contain:
+                self._associate_item_container(self, item, item.items)
+
+    def deserialise(self, obj, name, data, session):
+        super(ItemsField, self).deserialise(obj, name, data, session)
+
+        # Containers know their items, but not vice versa
+        # Attach items to their container
+        self._associate_item_container(obj, self.get_value(obj, name))
 
 
 class ItemContainerMixin(storage.Store):
@@ -36,27 +50,30 @@ class ItemContainerMixin(storage.Store):
     can_contain = True
 
     # List of items
-    items = storage.Field(list)
+    items = ItemsField(list)
 
     # Make exceptions available on the class for convenience
     ContainerError = ContainerError
     CannotContain = CannotContain
-    NotFound = NotFound
-    TooManyFound = TooManyFound
+    DoesNotContain = DoesNotContain
 
     def add_item(self, item):
         if not self.can_contain:
             raise CannotContain()
         self.items.append(item)
+        item.container = self
         self.save()
 
     def remove_item(self, item):
         if not self.can_contain:
             raise CannotContain()
+        if item not in self.items:
+            raise DoesNotContain()
+        item.container = None
         self.items.remove(item)
         self.save()
 
-    def _find_item(self, name, recurse):
+    def _find_items(self, name, recurse):
         """
         Search this item (and optionally recurse) for the named item
 
@@ -72,17 +89,23 @@ class ItemContainerMixin(storage.Store):
                 plural.append(item)
 
             if recurse and item.can_contain:
-                child_singles, child_plurals = item.find_item(name, recurse)
+                if recurse is not True:
+                    recurse -= 1
+                child_singles, child_plurals = item.find_items(name, recurse)
                 singular.extend(child_singles)
                 plural.extend(child_plurals)
         return singular, plural
 
-    def find_item(self, name, recurse=False):
+    def find_items(self, name, recurse=False):
         """
         Search this item (and optionally recurse) for the named item
-        Returns a list of items
+
+        Recurse can be true for infinite recursion, or an integer specifying
+        the depth to recurse (0 => no recurse, 1 => check children etc)
+
+        Returns a list of items which match
         """
-        singular, plural = self._find_item(name, recurse)
+        singular, plural = self._find_items(name, recurse)
 
         if singular:
             # If we've found a single or more, also consider the plurals
@@ -91,18 +114,11 @@ class ItemContainerMixin(storage.Store):
             # If we've only found plurals user must have been searching for all
             return plural
 
-        # ++ Logic check here
-        '''
-        if not singular:
-            raise NotFound()
-        elif len(singular) > 1:
-            raise TooManyFound()
-        '''
-
         return singular
 
     def get_items_display(
-        self, filter_cls=None, depth=0, indent=0, indent_size=0, prose=False
+        self, filter_cls=None, depth=0, indent=0, indent_size=0, prose=False,
+        full_names=False,
     ):
         """
         Return a list of formatted and nested item strings suitable to display,
@@ -145,6 +161,9 @@ class ItemContainerMixin(storage.Store):
 
             prose
                 If True, list items using "an" or "a" instead of 1
+
+            full_names
+                If True, list items using their full names
         """
         # Make dict of items item description strings
         # {item_str: [(children, count), ...] }
@@ -158,15 +177,15 @@ class ItemContainerMixin(storage.Store):
 
             # Recurse containers to specified depth
             children = []
-            if depth != 0 and issubclass(item, ItemContainerMixin):
+            if depth != 0 and isinstance(item, ItemContainerMixin):
                 # Get children at correct indent
-                children = item.get_items(
+                children = item.get_items_display(
                     filter_cls=filter_cls, depth=depth - 1,
                     indent=indent + indent_size, indent_size=indent_size,
                 )
 
             # Store articles and plurals
-            item_str = item.name
+            item_str = item.full_name if full_names else item.name
             articles[item_str] = item.article
             plurals[item_str] = item.plural
 

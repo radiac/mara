@@ -12,7 +12,10 @@ from ... import styles
 # Definitions
 ###############################################################################
 
-@define_command(args=r'^(?P<group>\w+)?$', syntax="(groups|<group>)")
+@define_command(
+    args=r'^(?P<group>\w+)?$', syntax="(groups|<group>)",
+    help='List commands',
+)
 class cmd_commands(events.Handler):
     def handler_10_list(self, event, group=None):
         """
@@ -72,18 +75,15 @@ class cmd_help(events.Handler):
             event.client.write('Unknown command')
             return
 
-        syntax = 'Syntax: %s %s' % (command.name, command.syntax or '')
+        help_lines = [styles.hr('Help: %s' % command.name)]
+        if command.help:
+            help_lines.extend([command.help, ''])
+        help_lines.extend([
+            'Syntax: %s %s' % (command.name, command.syntax or ''),
+            styles.hr(),
+        ])
 
-        if not command.help:
-            event.client.write(syntax)
-            return
-
-        event.client.write(
-            styles.hr('Help: %s' % command.name),
-            command.help,
-            '', syntax,
-            styles.hr()
-        )
+        event.client.write(*help_lines)
 
 
 @define_command(help="Restart the server")

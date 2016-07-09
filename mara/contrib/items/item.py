@@ -37,22 +37,20 @@ class BaseItem(storage.KeylessStore, ItemContainerMixin):
     # _name =
 
     # Plural name of the item
-    plural = property(lambda self: language.plural_noun(self.name))
+    @property
+    def plural(self):
+        return language.plural_noun(self.name)
 
     # Adjective, optional - used to generate default full_name
     adjective = None
 
     # Article for a single item ("a" or "an")
-    article = property(lambda self: language.article_for_noun(self.name))
+    @property
+    def article(self):
+        return language.article_for_noun(self.name)
 
     # A description to show when examined
     description = 'It looks unremarkable'
-
-    # If can_contain, this item can contain other objects
-    can_contain = False
-
-    # If fixed, it cannot be taken, dropped etc
-    fixed = False
 
     # Full name - used for disambiguation
     # Normally built from adjective and name (eg "generic item", "red truck")
@@ -63,6 +61,23 @@ class BaseItem(storage.KeylessStore, ItemContainerMixin):
         if not self.adjective:
             return self.name
         return '{} {}'.format(self.adjective, self.name)
+
+    # Plural full name
+    @property
+    def full_plural(self):
+        return language.plural_noun(self.full_name)
+
+    # If can_contain, this item can contain other objects
+    can_contain = False
+
+    # If it is a property, it will not show in item lists
+    is_property = False
+
+    # If fixed, it cannot be taken, dropped etc
+    # By default, only items which have is_property=True are fixed
+    @property
+    def is_fixed(self):
+        return self.is_property
 
     def __str__(self):
         return self.full_name

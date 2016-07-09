@@ -52,7 +52,9 @@ class Handler(object):
         """
         Run all handlers
         """
-        # Prepare handler context
+        # Prepare handler args and context
+        self.args = args
+        self.kwargs = kwargs
         self.event = event
 
         # Load up clean queue of handlers and loop until they're all run
@@ -64,7 +66,7 @@ class Handler(object):
             # Process
             if inspect.isgeneratorfunction(handler):
                 # ++ python 3.3 has yield from
-                generator = handler(self, event, *args, **kwargs)
+                generator = handler(self, event, *self.args, **self.kwargs)
                 try:
                     next(generator)
                 except StopIteration:
@@ -82,7 +84,7 @@ class Handler(object):
                             break
                 # ++ end python 2.7 support
             else:
-                handler(self, event, *args, **kwargs)
+                handler(self, event, *self.args, **self.kwargs)
 
             # Option to terminate event
             if event.stopped:

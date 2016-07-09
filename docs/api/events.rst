@@ -68,6 +68,10 @@ Each handler method is passed two arguments:
         The event which triggered this handler class. This is also available
         on self.event.
 
+Handler methods are actually called with ``(self, event, *args, **kwargs)``,
+so an early handler can create additional positional and keyword arguments
+for later handlers by modifying ``self.args`` and ``self.kwargs``.
+
 There are two ways to manage flow between handler methods:
 
 * Calls to ``event.stop()`` are respected; no further handler methods will be

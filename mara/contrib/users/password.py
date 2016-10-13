@@ -134,9 +134,9 @@ class CheckPasswordHandler(events.Handler):
             event.client.write(self.msg_password_incorrect)
             # Password incorrect
             self.password_incorrect()
-        
-        # Password correct
-        self.password_correct()
+        else:
+            # Password correct
+            self.password_correct()
     
     def password_empty(self):
         "No password provided, abort future handlers"
@@ -281,6 +281,10 @@ class ConnectHandler(
         # then:
         #   password_correct or password_incorrect
         #   handler_60_existing_user
+
+    def password_empty(self):
+        "No password provided, start login again"
+        self.handlers = self.get_handlers()
     
     def password_incorrect(self):
         "Password incorrect, start login again"

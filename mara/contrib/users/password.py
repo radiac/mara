@@ -30,8 +30,8 @@ class PasswordMixin(storage.Store):
     def hash_password(self, password, salt):
         # Hash using sha512 first to get around 72 character limit
         password = password.encode('utf-8')
-        password = password.replace(b'\x00', b'')
         password = hashlib.sha512(password).digest()
+        password = password.replace(b'\x00', b'')
         return bcrypt.hashpw(password, salt.encode('utf-8')).decode('utf-8')
         
     def set_password(self, password):

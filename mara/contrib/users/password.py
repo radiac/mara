@@ -26,19 +26,19 @@ class PasswordAlgorithm(object):
     name = None
 
     def set_password(self, password):
-        return password
+        raise NotImplementedError
 
     def check_password(self, password, check):
-        return password == check
+        raise NotImplementedError
 
 
 class PasswordBcrypt1(PasswordAlgorithm):
     """
     Original flawed bcrypt password
     """
-    name = ''
+    name = 'bcrypt1'
 
-    def hash_password(self, password):
+    def hash_password(self, password, salt):
         # Hash using sha512 first to get around 72 character limit
         password = password.encode('utf-8')
         password = password.replace(b'\x00', b'')
@@ -50,13 +50,13 @@ class PasswordBcrypt1(PasswordAlgorithm):
         Create new salt and hash password
         """
         salt = bcrypt.gensalt().decode('utf-8')
-        self.password = self.hash_password(password, salt)
+        return self.hash_password(password, salt)
 
     def check_password(self, password, check):
         return password == self.hash_password(check, password)
 
 
-class PasswordBcrypt2(PasswordAlgorithm):
+class PasswordBcrypt2(PasswordBcrypt1):
     name = 'bcrypt2'
 
     def hash_password(self, password, salt):
@@ -74,7 +74,7 @@ class PasswordMixin(storage.Store):
     """
     abstract = True
     password = storage.Field()
-    password_algorithm = storage.Field()
+    password_algorithm = storage.Field(default=PasswordBcrypt1.name)
 
     # The active algorithm list determines which saved password algorithms are
     # valid. The first algorithm in the list is the algorithm used to encrypt
@@ -97,15 +97,14 @@ class PasswordMixin(storage.Store):
 
         User should be saved after this operation
         """
-        algorithm = password_algorithms[0]()
+        algorithm = self.password_algorithms[0]()
         self.password = algorithm.set_password(password)
         self.password_algorithm = algorithm.name
 
     def check_password(self, password):
-        algorithm = self._get_password_algorithm()
         for algorithm in self.password_algorithms:
             if algorithm.name == self.password_algorithm:
-                return algorithm.check_password(self.password, password)
+                return algorithm().check_password(self.password, password)
         return False
 
 
@@ -189,15 +188,21 @@ class CheckPasswordHandler(events.Handler):
         password = yield
         event.client.supress_echo = False
         event.client.write()
+
+        # Check password
         if not password:
             self.password_empty()
         elif not self.user.check_password(password):
-            event.client.write(self.msg_password_incorrect)
             # Password incorrect
+            event.client.write(self.msg_password_incorrect)
             self.password_incorrect()
+        else:
+            # Password correct - update password if there's a new algorithm
+            if self.user.password_algorithm != self.user.password_algorithms[0].name:
+                self.user.set_password(password)
+                self.user.save()
 
-        # Password correct
-        self.password_correct()
+            self.password_correct()
 
     def password_empty(self):
         "No password provided, abort future handlers"

@@ -205,11 +205,21 @@ class CheckPasswordHandler(events.Handler):
             self.password_correct()
 
     def password_empty(self):
-        "No password provided, abort future handlers"
+        """
+        No password provided, abort future handlers
+
+        This will not re-prompt, as that may not be desired behaviour for
+        subclasses. See ConnectHandler.password_empty for how to re-prompt.
+        """
         self.handlers = []
 
     def password_incorrect(self):
-        "Password incorrect, abort future handlers"
+        """
+        Password incorrect, abort future handlers
+
+        This will not re-prompt, as that may not be desired behaviour for
+        subclasses. See ConnectHandler.password_incorrect for how to re-prompt.
+        """
         self.handlers = []
 
     def password_correct(self):
@@ -347,6 +357,10 @@ class ConnectHandler(
         # then:
         #   password_correct or password_incorrect
         #   handler_60_existing_user
+
+    def password_empty(self):
+        "No password provided, start login again"
+        self.handlers = self.get_handlers()
 
     def password_incorrect(self):
         "Password incorrect, start login again"

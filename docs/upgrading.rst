@@ -12,7 +12,7 @@ For instructions for upgrading from a specific version, see
 Changelog
 =========
 
-0.6.1, 2016-
+0.6.1, 2016-10-20
 -----------------
 
 Bugfix:

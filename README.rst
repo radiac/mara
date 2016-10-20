@@ -13,7 +13,7 @@ included.
     :target: https://travis-ci.org/radiac/mara
 
 .. image:: https://coveralls.io/repos/radiac/mara/badge.svg?branch=master&service=github
-    :target: https://coveralls.io/github/radiac/mara?branch=master 
+    :target: https://coveralls.io/github/radiac/mara?branch=master
 
 
 Features
@@ -29,7 +29,7 @@ Features
   * natural language processing tools
   * accounts, login helpers and rooms
 
-Version 0.6.0. Supports Python 2.7 and 3.2 to 3.5.
+Version 0.6.1. Supports Python 2.7 and 3.2 to 3.5.
 
 See the `Documentation <http://radiac.net/projects/mara/documentation/>`_
 for details of how Mara works.
@@ -45,7 +45,7 @@ A minimal Mara service looks something like this::
 
     from mara import Service
     service = Service()
-    
+
     @service.listen(mara.events.Receive)
     def receive(event):
         event.client.write(event.data)

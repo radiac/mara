@@ -12,6 +12,24 @@ For instructions for upgrading from a specific version, see
 Changelog
 =========
 
+0.6.1, 2016-
+-----------------
+
+Bugfix:
+
+* Improved password hashing algorithm (merges #5)
+* Fixed empty password handling (merges #6)
+
+Internal:
+
+* Improved support for custom password hashing algorithms, with support for
+  passwords stored using old algorithms
+
+Thanks to:
+
+* Marcos Marado (marado) for #5 and #6
+
+
 0.6.0, 2015-12-20
 -----------------
 

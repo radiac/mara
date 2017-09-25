@@ -43,10 +43,10 @@ Install Mara with ``pip install mara``, then write your service using
 
 A minimal Mara service looks something like this::
 
-    from mara import Service
+    from mara import Service, events
     service = Service()
 
-    @service.listen(mara.events.Receive)
+    @service.listen(events.Receive)
     def receive(event):
         event.client.write(event.data)
 

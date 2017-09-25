@@ -29,7 +29,7 @@ Features
   * natural language processing tools
   * accounts, login helpers and rooms
 
-Version 0.6.1. Supports Python 2.7 and 3.2 to 3.5.
+Version 0.6.2. Supports Python 2.7 and 3.2 to 3.5.
 
 See the `Documentation <http://radiac.net/projects/mara/documentation/>`_
 for details of how Mara works.

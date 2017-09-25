@@ -5,7 +5,7 @@ Mara the Chat Server
 Mara is a framework for building telnet-based services such as IRC-like
 chatrooms, talkers or muds.
 
-Version 0.6.1
+Version 0.6.2
 
 .. seealso::
 

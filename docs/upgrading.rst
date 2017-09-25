@@ -12,6 +12,15 @@ For instructions for upgrading from a specific version, see
 Changelog
 =========
 
+0.6.2, 2017-07-25
+-----------------
+
+Bugfix:
+
+* Corrected docs
+* Corrected manifest
+
+
 0.6.1, 2016-10-20
 -----------------
 

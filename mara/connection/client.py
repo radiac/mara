@@ -436,6 +436,8 @@ class Client(object):
             self._send_buffer.extend(b''.join(out))
 
     def write_raw(self, raw):
+        if isinstance(raw, str):
+            raw = raw.encode()
         self._send_buffer.extend(raw)
 
     def _get_send_buffer(self):

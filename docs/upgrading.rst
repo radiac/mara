@@ -12,6 +12,15 @@ For instructions for upgrading from a specific version, see
 Changelog
 =========
 
+0.6.3, TBD
+----------
+
+Bugfix
+
+* Corrected raw socket writes
+* Corrected packaging
+
+
 0.6.2, 2017-07-25
 -----------------
 

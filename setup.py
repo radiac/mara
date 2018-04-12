@@ -1,5 +1,5 @@
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
 VERSION = "0.6.2"
 
@@ -40,6 +40,7 @@ setup(
     },
     test_suite = 'nose.collector',
     zip_safe=True,
-    packages=['mara'],
-    scripts=['bin/mara']
+    packages=find_packages(exclude=('docs', 'tests*',)),
+    scripts=['bin/mara'],
+    include_package_data=True,
 )

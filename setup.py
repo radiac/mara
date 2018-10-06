@@ -1,7 +1,7 @@
 import os
 from setuptools import setup, find_packages
 
-VERSION = "0.6.2"
+VERSION = "0.6.3"
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
@@ -32,6 +32,7 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
     install_requires=['six'],
     extras_require = {

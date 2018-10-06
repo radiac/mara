@@ -12,12 +12,20 @@ For instructions for upgrading from a specific version, see
 Changelog
 =========
 
-0.6.3, TBD
-----------
+0.6.3, 2018-10-06
+-----------------
+
+Feature:
+
+* Added Python 3.6 support
+
 
 Bugfix
 
 * Corrected packaging
+
+
+Note: tests are no longer performed for Python 3.2 or 3.3 as they are EOL
 
 
 0.6.2, 2017-07-25

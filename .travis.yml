@@ -1,13 +1,28 @@
 language: python
-# Ensure travis provides Python 3.5
-python: 3.5
+python: '3.6'
 install:
-  - pip install tox
+- pip install tox
 script:
-  - tox
+- tox
 env:
-  - TOXENV=py27
-  #- TOXENV=py32
-  - TOXENV=py33
-  - TOXENV=py34
-  - TOXENV=py35
+- TOXENV=py27
+- TOXENV=py34
+- TOXENV=py35
+- TOXENV=py36
+matrix:
+  include:
+  - python: '3.5'
+    env: TOXENV=py35
+  exclude:
+  - python: '3.6'
+    env: TOXENV=py35
+deploy:
+  provider: pypi
+  user: radiac
+  on:
+    tags: true
+    distributions: sdist bdist_wheel
+    repo: radiac/mara
+    condition: "$DEPLOY = true"
+  password:
+    secure: mpAOCq5gbL7w4aOBTro/xy2+dum6v+UnpVR9mpD/uMW8uFJKnIyOYfs3xfByZjIVPlW8v48g+qrWmF4zC5Rjng4kn1VaHYhhqjBXYOmQFL2T3GHHyG3/1gPt1ziDFwpbKXKqGq5L/3K6c7lDog8JDl08eaByUmKlGpysSqL3OhjeYsLYjI1CpC8tgEq0JSIlXPO4WC0L7tGDdKS3RR/Coqo1cF6cjtsWBZ395XqQtc7pYuVw1tXQa6DvFWPyrtaY48JRKssMjevAh68GLyV10rfxBLLOj8vTg9WdRFEGthBMd8DEwVhnrhwvp8ZCwKjx1Imr1Cz3kkV5fmbj89ro4M/1UtMNEgSo0fMqJD4qEDVx19FCDk33XATYYrQg6NfwRFrXBguS1EC8r94tX7w4LyJwK868gYtdhCcP+YlfRs60+YMjiehMfh7ZrDQN03RskhVjF0nNS60zKuiQJPPGVR6/USlRzahhuNu84yfgapZDusYe29aZVMAma0UCwEK02LHbqPr8VYzADjq2epkWfIIlpLs+sSLYnH33FbQ1perD4PD2JC4fpHGSQLmMUZyX/7PMgwesNv3sTGCUVWtYFlU8jOgqo331EM4tBVZguI717/BqpQLoWMTvnCjrP8QugOnTkehafMIP2SHbBZ+9sxwk9bsmXZg2QpyOfwufyZY=

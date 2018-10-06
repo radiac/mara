@@ -17,12 +17,7 @@ Changelog
 
 Bugfix
 
-* Corrected raw socket writes
 * Corrected packaging
-
-Thanks to:
-
-* Jonas Hagstedt (jonashagstedt) for raw socket write fix
 
 
 0.6.2, 2017-07-25

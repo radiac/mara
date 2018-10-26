@@ -12,6 +12,19 @@ For instructions for upgrading from a specific version, see
 Changelog
 =========
 
+0.7.0, TBC
+----------
+
+Feature:
+
+* Added Protocol to Client
+
+Internal:
+
+* Client no longer supports telnet by default; must be initialised with the
+  TelnetProtocol class
+
+
 0.6.3, 2018-10-06
 -----------------
 

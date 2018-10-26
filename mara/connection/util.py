@@ -8,14 +8,19 @@ from multiprocessing import reduction
 import socket
 import six
 
-__all__ = ['serialise_socket', 'deserialise_socket']
+__all__ = ['Buffer', 'serialise_socket', 'deserialise_socket']
+
+
+class Buffer(bytearray):
+    def clear(self):
+        self[:] = b''
 
 
 if hasattr(reduction, 'reduce_handle'):
     # Python 2.7, 3.2
     def serialise_socket(socket):
         return reduction.reduce_handle(socket.fileno())
-        
+
 elif hasattr(reduction, 'reduce_socket'):
     # Python 3.3
     def serialise_socket(socket):

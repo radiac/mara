@@ -3,12 +3,6 @@ python: '3.7'
 install:
 - pip install tox
 script:
-- tox
-env:
-- TOXENV=py27
-- TOXENV=py35
-- TOXENV=py36
-- TOXENV=py37 DEPLOY=true
 matrix:
   include:
   - python: '2.7'
@@ -18,7 +12,7 @@ matrix:
   - python: '3.6'
     env: TOXENV=py36
   - python: '3.7'
-    env: TOXENV=py37
+    env: TOXENV=py37 DEPLOY=true
 deploy:
   provider: pypi
   user: radiac

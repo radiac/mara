@@ -1,0 +1,8 @@
+*.pyc
+__pycache__
+mara.egg-info
+.coverage*
+.tox
+.*_cache
+htmlcov
+docs/_*

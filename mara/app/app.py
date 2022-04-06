@@ -1,0 +1,136 @@
+from __future__ import annotations
+
+import asyncio
+import logging
+from typing import TYPE_CHECKING, List
+
+from ..events import Event
+from ..status import Status
+from . import event_manager
+from .logging import configure as configure_logging
+
+
+if TYPE_CHECKING:
+    from ..servers import AbstractServer
+
+configure_logging()
+logger = logging.getLogger("mara.app")
+
+
+class App:
+    """
+    Orchestrate servers, clients and tasks
+    """
+
+    loop: asyncio.AbstractEventLoop | None = None
+    servers: List[AbstractServer]
+    events: event_manager.EventManager
+    _status: Status = Status.IDLE
+
+    def __init__(self):
+        self.servers = []
+        # TODO: move clients to server
+        self.clients = []
+
+        self.events = event_manager.EventManager(self)
+
+    def add_server(self, server: AbstractServer) -> AbstractServer:
+        """
+        Add a new Server instance to the async loop
+
+        The server will start listening when the app is ``run()``. If it is already
+        running, it will start listening immediately.
+        """
+        logger.debug(f"Add server {server}")
+        self.servers.append(server)
+
+        if self.loop:
+            logger.debug(f"Running server {server}")
+            self.loop.run_until_complete(server.create(self))
+            self.loop.create_task(server.listen())
+
+        return server
+
+    def run(self):
+        """
+        Start the main app async loop
+
+        This will start any Servers which have been added with ``add_server()``
+        """
+        self._status = Status.STARTING
+
+        # TODO: Should add some more logic around here from asyncio.run
+        self.loop = loop = asyncio.new_event_loop()
+        logger.debug("Loop starting")
+
+        for server in self.servers:
+            loop.run_until_complete(server.create(self))
+            loop.create_task(server.listen())
+
+        logger.debug("Loop running")
+        self._status = Status.RUNNING
+        try:
+            loop.run_forever()
+        finally:
+            logger.debug("Loop stopping")
+            self._status = Status.STOPPING
+            loop.run_until_complete(loop.shutdown_asyncgens())
+            loop.close()
+            self._status = Status.STOPPED
+            self.loop = None
+            logger.debug("Loop stopped")
+
+    def listen(
+        self,
+        event_class: type[Event],
+        handler: event_manager.HandlerType | None = None,
+        **filters: event_manager.FilterType,
+    ):
+        """
+        Bind a handler callback to the specified event class, and to its subclasses
+
+        Arguments:
+
+            event_class (Type[Event]): The Event class to listen for
+            handler (Awaitable | None): The handler, if not being decorated
+            **filters: Key value pairs to match against inbound events
+
+        Can be called directly::
+
+            app.listen(Event, handler)
+
+        or can be called as a decorator with no handler argument::
+
+            @app.listen(Event)
+            async def callback(event):
+                ...
+        """
+        return self.events.listen(event_class, handler, **filters)
+
+    @property
+    def status(self):
+        """
+        Get the status of the app and its servers
+
+        Difference between this and self._status is when the app loop is RUNNING, this
+        will return STARTING until all servers are listening
+        """
+        if not self._status == Status.RUNNING:
+            return self._status
+
+        if all([server.status == Status.RUNNING for server in self.servers]):
+            return Status.RUNNING
+        return Status.STARTING
+
+    def stop(self):
+        """
+        This will ask the main loop to stop, shutting down all servers, connections and
+        other async tasks.
+        """
+        if self.loop:
+            logger.debug("Stopping servers")
+            for server in self.servers:
+                server.stop()
+
+            logger.debug("Requesting loop stop")
+            self.loop.stop()

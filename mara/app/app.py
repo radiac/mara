@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, Any, Coroutine, List
 
 from ..events import Event
 from ..status import Status
@@ -12,6 +12,7 @@ from .logging import configure as configure_logging
 
 if TYPE_CHECKING:
     from ..servers import AbstractServer
+    from ..timers import AbstractTimer
 
 configure_logging()
 logger = logging.getLogger("mara.app")
@@ -25,12 +26,14 @@ class App:
     loop: asyncio.AbstractEventLoop | None = None
     servers: List[AbstractServer]
     events: event_manager.EventManager
+    timers: List[AbstractTimer]
     _status: Status = Status.IDLE
 
     def __init__(self):
         self.servers = []
         # TODO: move clients to server
         self.clients = []
+        self.timers = []
 
         self.events = event_manager.EventManager(self)
 
@@ -46,12 +49,47 @@ class App:
 
         if self.loop:
             logger.debug(f"Running server {server}")
-            self.loop.run_until_complete(server.create(self))
-            self.loop.create_task(server.listen())
+            self.create_task(server.run(self))
 
         return server
 
-    def run(self):
+    def add_timer(self, timer: AbstractTimer) -> AbstractTimer:
+        """
+        Add a new Timer instance to the async loop
+
+        The timer will start when the app is ``run()``. If it is already running, it
+        will start immediately.
+
+        Returns the timer instance. Because timer instances are callable decorators, you
+        can use this as a decorator to define a timer and its function in one::
+
+            @app.add_timer(PeriodicTimer(every=1))
+            async def tick(timer):
+                ...
+
+        which is shorthand for::
+
+            async def tick(timer):
+                ...
+
+            timer = PeriodicTimer(every=60)
+            app.add_timer(timer)
+            timer(tick)
+
+        """
+        logger.debug(f"Add timer {timer}")
+        self.timers.append(timer)
+
+        if self.loop:
+            logger.debug(f"Timer {timer} starting")
+            self.create_task(timer.run(self))
+            logger.debug(f"Timer {timer} stopped")
+
+            # TODO: extend self.create_task to callback to a fn to clean up self.timers
+
+        return timer
+
+    def run(self, debug=True):
         """
         Start the main app async loop
 
@@ -64,8 +102,10 @@ class App:
         logger.debug("Loop starting")
 
         for server in self.servers:
-            loop.run_until_complete(server.create(self))
-            loop.create_task(server.listen())
+            self.create_task(server.run(self))
+
+        for timer in self.timers:
+            self.create_task(timer.run(self))
 
         logger.debug("Loop running")
         self._status = Status.RUNNING
@@ -79,6 +119,22 @@ class App:
             self._status = Status.STOPPED
             self.loop = None
             logger.debug("Loop stopped")
+
+    def create_task(self, task_fn: Coroutine[Any, Any, Any]):
+        if self.loop is None:
+            # TODO: Handle pending tasks here
+            raise ValueError("Loop is not running")
+        task = self.loop.create_task(task_fn)
+        task.add_done_callback(self._handle_task_complete)
+        return task
+
+    def _handle_task_complete(self, task: asyncio.Task):
+        try:
+            task.result()
+        except asyncio.CancelledError:
+            pass
+        except Exception:
+            logger.exception("Task failed")
 
     def listen(
         self,

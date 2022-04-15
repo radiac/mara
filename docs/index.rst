@@ -24,6 +24,7 @@ Contents
     logging
     servers
     events
+    timers
     upgrading
     changelog
     contributing

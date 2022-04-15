@@ -5,7 +5,7 @@ from mara.servers.socket import SocketServer
 
 
 app = App()
-app.add_server(SocketServer(host="127.0.0.1", port=9000))
+app.add_server(SocketServer(host="0", port=9000))
 
 
 @app.listen(events.Receive)

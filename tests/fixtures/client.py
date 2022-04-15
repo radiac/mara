@@ -21,35 +21,38 @@ class BaseClient:
     def __init__(self, name: str):
         self.name = name
 
+    def __str__(self):
+        return self.name
+
 
 class SocketClient(BaseClient):
     socket: socket.socket | None
 
     def connect(self, host: str, port: int):
-        logger.debug("Socket client connecting")
+        logger.debug(f"Socket client {self} connecting")
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((host, port))
-        logger.debug("Socket client connected")
+        logger.debug(f"Socket client {self} connected")
 
     def write(self, raw: bytes):
         if not self.socket:
             raise ValueError("Socket not open")
-        logger.debug(f"Socket client writing {raw!r}")
+        logger.debug(f"Socket client {self} writing {raw!r}")
         self.socket.sendall(raw)
 
     def read(self, len: int = 1024) -> bytes:
         if not self.socket:
             raise ValueError("Socket not open")
         raw: bytes = self.socket.recv(len)
-        logger.debug(f"Socket client received {raw!r}")
+        logger.debug(f"Socket client {self} received {raw!r}")
         return raw
 
     def close(self):
         if not self.socket:
             raise ValueError("Socket not open")
-        logger.debug("Socket client closing")
+        logger.debug(f"Socket client {self} closing")
         self.socket.close()
-        logger.debug("Socket client closed")
+        logger.debug(f"Socket client {self} closed")
 
 
 @pytest.fixture
@@ -61,14 +64,18 @@ def socket_client_factory(request: pytest.FixtureRequest):
 
         def test_client(app_harness, socket_client_factory):
             app_harness(myapp)
-            client= socket_client_factory()
+            client = socket_client_factory()
             client.write(b'hello')
             assert client.read() == b'hello'
     """
     clients = []
 
-    def connect(host: str = TEST_HOST, port: int = TEST_PORT):
-        client = SocketClient(request.node.name)
+    def connect(name: str | None = None, host: str = TEST_HOST, port: int = TEST_PORT):
+        client_name = request.node.name
+        if name is not None:
+            client_name = f"{client_name}:{name}"
+
+        client = SocketClient(client_name)
         client.connect(host, port)
         clients.append(client)
         return client

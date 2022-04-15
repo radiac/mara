@@ -43,7 +43,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx_radiac_theme",
     "sphinx.ext.autodoc",
-    # "sphinx_gitref",
+    "sphinx_gitref",
 ]
 
 # Add any paths that contain templates here, relative to this directory.

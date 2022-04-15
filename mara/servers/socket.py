@@ -2,16 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING
 
 from ..clients.socket import SocketClient, SocketMixin, TextClient
 from ..events import ListenStart, ListenStop
 from ..status import Status
 from .base import AbstractServer
 
-
-if TYPE_CHECKING:
-    from ..app import App
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 9000
@@ -33,20 +29,17 @@ class AbstractSocketServer(AbstractServer):
     def __str__(self):
         return f"Socket {self.host}:{self.port}"
 
-    async def create(self, app: App):
-        await super().create(app)
+    async def create(self):
+        await super().create()
 
-        logger.debug(f"Server starting: {self}")
         self.server = await asyncio.start_server(
             self.handle_connect, self.host, self.port
         )
-        logger.debug(f"Server started: {self}")
 
     async def listen(self):
         await super().listen()
 
         # Raise the event
-        logger.info(f"Server listening: {self}")
         await self.app.events.trigger(ListenStart(self))
 
         # Main server loop

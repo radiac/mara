@@ -36,7 +36,8 @@ The key differences are:
 * Servers must be defined and added using ``add_server``
 * Event handlers need to be ``async``. Handler classes have been removed. To capture
   user data a handler must ``await event.client.read()`` instead of calling ``yield``.
+* Timers are now defined as instances.
 * All contrib modules have been removed in version 2. These will be brought back as a
   separate package.
-* Version 2.0.0 is missing the angel, ``mara`` command, telnet support, and timers.
+* Version 2.0.0 is missing the angel, ``mara`` command, and telnet support.
   These are planned for a future version.

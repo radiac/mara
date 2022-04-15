@@ -84,10 +84,15 @@ class TextClient(SocketMixin, AbstractClient[str]):
     """
 
     async def read(self) -> str:
-        # TODO: should read line
-        data: bytes = await super().read()
+        # TODO: read size and buffers
+        try:
+            data: bytes = await self.reader.readuntil(b"\r\n")
+        except asyncio.exceptions.IncompleteReadError:
+            self.connected = False
+            return ""
+        data = data.rstrip(b"\r\n")
+        self._check_is_active()
         text: str = data.decode()
-        text = text.rstrip("\r\n")
         return text
 
     def write(self, data: str, *, end: str = "\r\n"):

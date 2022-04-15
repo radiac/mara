@@ -24,17 +24,23 @@ class AbstractServer:
     def __str__(self):
         return "AbstractServer"
 
-    async def create(self, app: App):
+    async def run(self, app: App):
         """
         Create the server
         """
         self.app = app
+        await self.create()
+        await self.listen()
+
+    async def create(self):
+        logger.debug(f"Server starting: {self}")
         self._status = Status.STARTING
 
     async def listen(self):
         """
         Main listening loop
         """
+        logger.debug(f"Server running: {self}")
         self._status = Status.RUNNING
 
     async def connected(self, client: AbstractClient):

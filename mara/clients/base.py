@@ -60,9 +60,8 @@ class AbstractClient(Generic[ContentType]):
         """
         Add the client read and write tasks to the app's loop
         """
-        # TODO: move app.loop.create_task to app.create_loop_task
-        self.read_task = self.server.app.loop.create_task(self._read_loop())
-        self.write_task = self.server.app.loop.create_task(self._write_loop())
+        self.read_task = self.server.app.create_task(self._read_loop())
+        self.write_task = self.server.app.create_task(self._write_loop())
 
     async def _read_loop(self):
         app = self.server.app
@@ -70,7 +69,8 @@ class AbstractClient(Generic[ContentType]):
         logger.info(f"Client {self} connected")
         while self.connected:
             data: ContentType = await self.read()
-            await app.events.trigger(Receive(self, data))
+            if data:
+                await app.events.trigger(Receive(self, data))
 
         logger.info(f"Client {self} disconnected")
         await app.events.trigger(Disconnect(self))

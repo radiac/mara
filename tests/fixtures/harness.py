@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from mara.app.app import Status
-from mara.servers.socket import SocketServer
+from mara.servers.socket import AbstractSocketServer
 
 from .constants import TEST_HOST, TEST_PORT
 
@@ -125,7 +125,7 @@ def app_harness(request: pytest.FixtureRequest):
 
     def create_harness(app: App):
         for i, server in enumerate(app.servers):
-            if isinstance(server, SocketServer):
+            if isinstance(server, AbstractSocketServer):
                 server.host = TEST_HOST
                 server.port = TEST_PORT + i
         harness.run(app)

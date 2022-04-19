@@ -27,3 +27,10 @@ sphinx-gitref
 
 # Optional
 sphinx-autobuild
+
+
+#
+# Extra requires
+#
+
+telnetlib3

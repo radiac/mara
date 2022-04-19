@@ -2,15 +2,15 @@
 A basic chat server
 """
 from mara import App, events
+from mara.servers.base import AbstractServer
 from mara.servers.socket import TextServer
 from mara.timers import PeriodicTimer
 
 
 app = App()
-app.add_server(TextServer(host="0", port=9000))
 
 
-def broadcast(server: TextServer, msg: str):
+def broadcast(server: AbstractServer, msg: str):
     "Send a message out to all connected users"
     for client in server.clients:
         if not hasattr(client, "username"):
@@ -23,6 +23,7 @@ async def login(event: events.Connect):
     "Prompt for a username and announce to users"
     event.client.write("Username: ", end="")
     username = await event.client.read()
+    event.client.write("")
 
     event.client.username = username
     broadcast(event.client.server, f"* {username} has joined")
@@ -50,4 +51,5 @@ async def poll(timer):
 
 
 if __name__ == "__main__":
+    app.add_server(TextServer(host="0", port=9000))
     app.run()

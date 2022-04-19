@@ -75,7 +75,6 @@ class App:
             timer = PeriodicTimer(every=60)
             app.add_timer(timer)
             timer(tick)
-
         """
         logger.debug(f"Add timer {timer}")
         self.timers.append(timer)

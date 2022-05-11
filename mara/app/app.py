@@ -4,7 +4,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, Coroutine, List
 
-from ..events import Event
+from ..events import Event, PostStart, PostStop, PreStart, PreStop
 from ..status import Status
 from . import event_manager
 from .logging import configure as configure_logging
@@ -100,6 +100,7 @@ class App:
         # TODO: Should add some more logic around here from asyncio.run
         self.loop = loop = asyncio.new_event_loop()
         logger.debug("Loop starting")
+        loop.run_until_complete(self.events.trigger(PreStart()))
 
         for server in self.servers:
             self.create_task(server.run(self))
@@ -109,16 +110,19 @@ class App:
 
         logger.debug("Loop running")
         self._status = Status.RUNNING
+        loop.run_until_complete(self.events.trigger(PostStart()))
         try:
             loop.run_forever()
         finally:
             logger.debug("Loop stopping")
             self._status = Status.STOPPING
+            loop.run_until_complete(self.events.trigger(PreStop()))
             loop.run_until_complete(loop.shutdown_asyncgens())
             loop.close()
             self._status = Status.STOPPED
             self.loop = None
             logger.debug("Loop stopped")
+            loop.run_until_complete(self.events.trigger(PostStop()))
 
     def create_task(self, task_fn: Coroutine[Any, Any, Any]):
         if self.loop is None:

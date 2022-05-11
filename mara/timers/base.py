@@ -23,9 +23,12 @@ class AbstractTimer:
             return str(id(self))
         return self.callback.__name__
 
-    def __call__(self, callback: Callable[[AbstractTimer], Awaitable[None]]):
+    def __call__(
+        self, callback: Callable[[AbstractTimer], Awaitable[None]]
+    ) -> Callable[[AbstractTimer], Awaitable[None]]:
         logger.debug(f"Timer {self} assigned callback {callback.__name__}")
         self.callback = callback
+        return callback
 
     async def run(self, app: App):
         self.app = app

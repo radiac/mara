@@ -53,6 +53,17 @@ class App:
 
         return server
 
+    def remove_server(self, server: AbstractServer):
+        """
+        Stop and remove the specified Server instance
+        """
+        if server.status == Status.RUNNING:
+            logger.debug(f"Stopping server {server}")
+            server.stop()
+
+        logger.debug(f"Removing server {server}")
+        self.servers.remove(server)
+
     def add_timer(self, timer: AbstractTimer) -> AbstractTimer:
         """
         Add a new Timer instance to the async loop

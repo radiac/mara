@@ -27,6 +27,11 @@ class BaseClient:
 
 class SocketClient(BaseClient):
     socket: socket.socket | None
+    buffer: bytes
+
+    def __init__(self, name: str):
+        super().__init__(name)
+        self.buffer = b""
 
     def connect(self, host: str, port: int):
         logger.debug(f"Socket client {self} connecting")
@@ -46,6 +51,16 @@ class SocketClient(BaseClient):
         raw: bytes = self.socket.recv(len)
         logger.debug(f"Socket client {self} received {raw!r}")
         return raw
+
+    def read_line(self, len: int = 1024) -> bytes:
+        if b"\r\n" not in self.buffer:
+            self.buffer += self.read(len)
+
+        if b"\r\n" not in self.buffer:
+            raise ValueError("Line not found")
+
+        line, self.buffer = self.buffer.split(b"\r\n", 1)
+        return line
 
     def close(self):
         if not self.socket:

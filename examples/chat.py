@@ -8,12 +8,14 @@ from mara.timers import PeriodicTimer
 
 
 app = App()
+server = TextServer(host="0", port=9000)
+app.add_server(server)
 
 
 def broadcast(server: AbstractServer, msg: str):
     "Send a message out to all connected users"
     for client in server.clients:
-        if not hasattr(client, "username"):
+        if "username" not in client.session:
             continue
         client.write(msg)
 
@@ -25,31 +27,32 @@ async def login(event: events.Connect):
     username = await event.client.read()
     event.client.write("")
 
-    event.client.username = username
+    event.client.session.username = username
     broadcast(event.client.server, f"* {username} has joined")
 
 
 @app.listen(events.Receive)
 async def input(event: events.Receive):
     "Broadcast a chat message"
-    broadcast(event.client.server, f"{event.client.username} says: {event.data}")
+    broadcast(
+        event.client.server, f"{event.client.session.username} says: {event.data}"
+    )
 
 
 @app.listen(events.Disconnect)
 async def leave(event: events.Disconnect):
     "Announce departure to users"
-    broadcast(event.client.server, f"* {event.client.username} has left")
+    broadcast(event.client.server, f"* {event.client.session.username} has left")
 
 
 @app.add_timer(PeriodicTimer(every=60))
 async def poll(timer):
     for server in timer.app.servers:
         for client in server.clients:
-            if not hasattr(client, "username"):
+            if "username" not in client.session:
                 continue
             client.write("Beep!")
 
 
 if __name__ == "__main__":
-    app.add_server(TextServer(host="0", port=9000))
     app.run()

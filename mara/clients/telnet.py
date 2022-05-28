@@ -34,8 +34,8 @@ class TelnetClient(AbstractClient[str]):
             self._str = str(ip)
         return self._str
 
-    async def _write(self, data: bytes):
-        self.writer.write(data)
+    async def _write(self, data: str):
+        self.writer.write(data)  # type: ignore - says it takes bytes but needs str
         await self.writer.drain()
         self._check_is_active()
 
@@ -47,13 +47,18 @@ class TelnetClient(AbstractClient[str]):
         # Close the streams
         self.writer.close()
 
+        # Can't wait to make sure the socket is closed:
+        # https://github.com/jquast/telnetlib3/issues/55
+        #
+        # await self.writer.wait_closed()
+
         # Terminate the listener loop
         # TODO
         # this.listener_task
 
         await super().close()
 
-    async def read(self) -> bytes | str:
+    async def read(self) -> str:
         # TODO: read size and buffers
         data = await self.reader.readline()
         data = data.rstrip("\r\n")

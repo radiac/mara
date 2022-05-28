@@ -5,6 +5,7 @@ import logging
 from typing import TYPE_CHECKING, Generic, TypeVar
 
 from ..events import Connect, Disconnect, Receive
+from ..storage.dict import DictStore
 
 
 if TYPE_CHECKING:
@@ -22,10 +23,12 @@ class AbstractClient(Generic[ContentType]):
     read_task: asyncio.Task
     write_task: asyncio.Task
     write_queue: asyncio.Queue
+    session: DictStore
 
     def __init__(self, server: AbstractServer):
         self.server = server
         self.connected = True
+        self.session = DictStore()
         # TODO: Queue(maxsize=?) - configure from server
         self.write_queue = asyncio.Queue()
 
@@ -55,6 +58,7 @@ class AbstractClient(Generic[ContentType]):
 
     async def close(self):
         logger.info(f"Client {self} closed")
+        await self.server.disconnected(self)
 
     def run(self):
         """
@@ -79,3 +83,4 @@ class AbstractClient(Generic[ContentType]):
         while self.connected:
             data: ContentType = await self.write_queue.get()
             await self._write(data)
+            self.write_queue.task_done()

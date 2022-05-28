@@ -71,6 +71,12 @@ class AbstractServer:
         self.clients.append(client)
         client.run()
 
+    async def disconnected(self, client: AbstractClient):
+        """
+        Unregister a client who has disconnected
+        """
+        self.clients.remove(client)
+
     def stop(self):
         """
         Shut down the server

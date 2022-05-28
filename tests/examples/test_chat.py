@@ -12,9 +12,10 @@ def test_single(socket_client_factory):
     alice = socket_client_factory()
     assert alice.read() == b"Username: "
     alice.write(b"alice\r\n")
-    assert alice.read() == b"* alice has joined\r\n"
+    assert alice.read_line() == b""
+    assert alice.read_line() == b"* alice has joined"
     alice.write(b"hello\r\n")
-    assert alice.read() == b"alice says: hello\r\n"
+    assert alice.read_line() == b"alice says: hello"
 
 
 def test_multiple__login_private__chat_public(socket_client_factory):
@@ -24,24 +25,26 @@ def test_multiple__login_private__chat_public(socket_client_factory):
     # Alice logs in
     assert alice.read() == b"Username: "
     alice.write(b"alice\r\n")
-    assert alice.read() == b"* alice has joined\r\n"
+    assert alice.read_line() == b""
+    assert alice.read_line() == b"* alice has joined"
 
     # Alice cannot talk to bob until he is logged in
     alice.write(b"alone\r\n")
-    assert alice.read() == b"alice says: alone\r\n"
+    assert alice.read_line() == b"alice says: alone"
 
     # Bob logs in
     assert bob.read() == b"Username: "
     bob.write(b"bob\r\n")
-    assert bob.read() == b"* bob has joined\r\n"
+    assert bob.read_line() == b""
+    assert bob.read_line() == b"* bob has joined"
 
     # Alice sees this
-    assert alice.read() == b"* bob has joined\r\n"
+    assert alice.read_line() == b"* bob has joined"
 
     # They can now talk
     alice.write(b"hello\r\n")
-    assert alice.read() == b"alice says: hello\r\n"
-    assert bob.read() == b"alice says: hello\r\n"
+    assert alice.read_line() == b"alice says: hello"
+    assert bob.read_line() == b"alice says: hello"
     bob.write(b"goodbye\r\n")
-    assert alice.read() == b"bob says: goodbye\r\n"
-    assert bob.read() == b"bob says: goodbye\r\n"
+    assert alice.read_line() == b"bob says: goodbye"
+    assert bob.read_line() == b"bob says: goodbye"

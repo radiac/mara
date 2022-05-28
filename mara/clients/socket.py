@@ -58,6 +58,7 @@ class SocketMixin(AbstractClient):
     async def close(self):
         # Close the streams
         self.writer.close()
+        await self.writer.wait_closed()
 
         # Terminate the listener loop
         # TODO

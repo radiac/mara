@@ -5,8 +5,6 @@ Wrapper around telnetlib3, https://pypi.org/project/telnetlib3/
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from telnetlib3 import TelnetReader, TelnetWriter
 
 from ..clients.telnet import TelnetClient

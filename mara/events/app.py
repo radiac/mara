@@ -7,7 +7,7 @@ from .base import Event
 
 
 __all__ = [
-    "Service",
+    "App",
     "PreStart",
     "PostStart",
     "PreStop",
@@ -17,29 +17,29 @@ __all__ = [
 ]
 
 
-class Service(Event):
+class App(Event):
     "Service event"
 
 
-class PreStart(Service):
+class PreStart(App):
     "Service starting"
 
 
-class PostStart(Service):
+class PostStart(App):
     "Service started"
 
 
-class PreStop(Service):
+class PreStop(App):
     "Service stopping"
 
 
-class PostStop(Service):
+class PostStop(App):
     "Service stopped"
 
 
-class PreRestart(Service):
+class PreRestart(App):
     "Service restarting"
 
 
-class PostRestart(Service):
+class PostRestart(App):
     "Service restarted"

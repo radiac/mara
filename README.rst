@@ -5,6 +5,19 @@ Mara - Python network service framework
 An asynchronous event-based python framework designed for building TCP/IP services, such
 as telnet, HTTP and websocket servers.
 
+.. image:: https://img.shields.io/pypi/v/mara.svg
+    :target: https://pypi.org/project/mara/
+    :alt: PyPI
+
+.. image:: https://github.com/radiac/mara/actions/workflows/ci.yml/badge.svg
+    :target: https://github.com/radiac/mara/actions/workflows/ci.yml
+    :alt: Tests
+
+.. image:: https://codecov.io/gh/radiac/mara/branch/main/graph/badge.svg?token=BCNM45T6GI
+    :target: https://codecov.io/gh/radiac/mara
+    :alt: Test coverage
+
+
 * Project site: https://radiac.net/projects/mara/
 * Source code: https://github.com/radiac/mara
 

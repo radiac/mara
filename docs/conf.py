@@ -32,7 +32,7 @@ from setup import find_version  # noqa
 project = "mara"
 copyright = "2022, Richard Terry"
 author = "Richard Terry"
-release = find_version("..", "docker0s", "__init__.py")
+release = find_version("..", "mara", "__init__.py")
 
 
 # -- General configuration ---------------------------------------------------

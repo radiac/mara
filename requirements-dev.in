@@ -16,20 +16,6 @@ pytest-mypy
 
 
 #
-# Documentation
-#
-
-# Core build requirements
-doc8
-sphinx
-sphinx-gitref
--e git+https://github.com/radiac/sphinx_radiac_theme.git#egg=sphinx_radiac_theme
-
-# Optional
-sphinx-autobuild
-
-
-#
 # Extra requires
 #
 

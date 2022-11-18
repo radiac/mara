@@ -9,6 +9,10 @@ as telnet, HTTP and websocket servers.
     :target: https://pypi.org/project/mara/
     :alt: PyPI
 
+.. image:: https://readthedocs.org/projects/python-mara/badge/?version=latest
+    :target: https://python-mara.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
 .. image:: https://github.com/radiac/mara/actions/workflows/ci.yml/badge.svg
     :target: https://github.com/radiac/mara/actions/workflows/ci.yml
     :alt: Tests

@@ -132,7 +132,9 @@ class App:
             self._status = Status.STOPPED
             self.loop = None
             logger.debug("Loop stopped")
-            loop.run_until_complete(self.events.trigger(PostStop()))
+
+            # Loop has terminated
+            asyncio.run(self.events.trigger(PostStop()))
 
     def create_task(self, task_fn: Coroutine[Any, Any, Any]):
         if self.loop is None:

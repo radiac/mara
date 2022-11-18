@@ -24,14 +24,15 @@ import sphinx_radiac_theme  # noqa
 sys.path.insert(0, os.path.abspath("../"))
 sys.path.insert(0, os.path.abspath("../examples/"))
 
+from setup import find_version  # noqa
+
+
 # -- Project information -----------------------------------------------------
 
 project = "mara"
 copyright = "2022, Richard Terry"
 author = "Richard Terry"
-
-# The full version, including alpha/beta/rc tags
-release = "2.0.0"
+release = find_version("..", "docker0s", "__init__.py")
 
 
 # -- General configuration ---------------------------------------------------

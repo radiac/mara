@@ -35,7 +35,8 @@ class TelnetClient(AbstractClient[str]):
         return self._str
 
     async def _write(self, data: str):
-        self.writer.write(data)  # type: ignore - says it takes bytes but needs str
+        # TODO: says it takes bytes but needs str
+        self.writer.write(data)  # type: ignore
         await self.writer.drain()
         self._check_is_active()
 

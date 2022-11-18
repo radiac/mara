@@ -1,10 +1,11 @@
 import re
+import sys
 from pathlib import Path
 
 from setuptools import setup
 
 
-def find_version(*paths):
+def find_version(*paths: str):
     path = Path(*paths)
     content = path.read_text()
     match = re.search(r"^__version__\s*=\s*['\"]([^'\"]*)['\"]", content, re.M)
@@ -13,4 +14,6 @@ def find_version(*paths):
     raise RuntimeError("Unable to find version string.")
 
 
-setup(version=find_version("mara", "__init__.py"))
+# Setup unless this is being imported by Sphinx, which just wants find_version
+if "sphinx" not in sys.modules:
+    setup(version=find_version("mara", "__init__.py"))
